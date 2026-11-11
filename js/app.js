@@ -1,25 +1,28 @@
 let dataState = {
-    tickets: [],
     clientes: [],
     sedes: [],
     usuarios: [],
-    fallas: ["CCTV - Pérdida de Video", "Control de Acceso Bloqueado", "Alarma - Falsa Activación"],
-    sistemas: ["CCTV (Dahua/Hikvision)", "Intrusión (AX PRO/DSC)", "Automatización (Sonoff)"],
-    currentUser: null
+    fallas: ["CCTV - Pérdida de Video", "Control de Acceso Bloqueado", "Alarma - Falsa Activación"]
 };
 
 const app = {
     init() {
         this.loadStorage();
-        this.updateSelectors();
+        this.renderLists();
     },
-    login() {
-        const role = document.getElementById('login-role').value;
-        dataState.currentUser = { role: role };
-        document.getElementById('login-view').classList.remove('active');
-        document.getElementById('app-view').classList.add('active');
-        document.getElementById('user-role-display').innerText = role.toUpperCase();
-        this.navigateTo('dashboard');
+    login(e) {
+        e.preventDefault();
+        const user = document.getElementById('login-user').value;
+        const pass = document.getElementById('login-pass').value;
+        
+        // Validación de acceso
+        if(user === "admin" && pass === "admin") {
+            document.getElementById('login-view').classList.remove('active');
+            document.getElementById('app-view').classList.add('active');
+            this.navigateTo('dashboard');
+        } else {
+            alert("Usuario o contraseña incorrectos. Pruebe con: admin / admin");
+        }
     },
     logout() {
         document.getElementById('app-view').classList.remove('active');
@@ -30,9 +33,9 @@ const app = {
         document.getElementById(`view-${section}`).style.display = 'block';
         if(section === 'dashboard') this.renderDashboard();
     },
-    toggleSettings(panel) {
+    toggleTab(tab) {
         document.querySelectorAll('.settings-panel').forEach(el => el.style.display = 'none');
-        document.getElementById(`settings-${panel}`).style.display = 'block';
+        document.getElementById(`tab-${tab}`).style.display = 'block';
     },
     addClient(e) {
         e.preventDefault();
@@ -42,17 +45,18 @@ const app = {
         this.saveStorage();
         alert(`Cliente "${name}" creado exitosamente.`);
         e.target.reset();
-        this.updateSelectors();
+        this.renderLists();
     },
     addSede(e) {
         e.preventDefault();
         const client = document.getElementById('sede-client-select').value;
         const sede = document.getElementById('new-sede-name').value;
-        if(!client) { alert("Seleccione un cliente válido."); return; }
+        if(!client) { alert("Seleccione un cliente primero."); return; }
         dataState.sedes.push({ client, sede });
         this.saveStorage();
-        alert(`Sede "${sede}" agregada al cliente ${client}.`);
+        alert(`Sede "${sede}" agregada.`);
         e.target.reset();
+        this.renderLists();
     },
     addUser(e) {
         e.preventDefault();
@@ -60,38 +64,68 @@ const app = {
         const role = document.getElementById('new-user-role').value;
         dataState.usuarios.push({ name, role });
         this.saveStorage();
-        alert(`Usuario "${name}" registrado con rol ${role.toUpperCase()}.`);
+        alert(`Usuario "${name}" registrado.`);
         e.target.reset();
+        this.renderLists();
     },
     addFalla(e) {
         e.preventDefault();
         const falla = document.getElementById('new-falla-name').value;
         dataState.fallas.push(falla);
         this.saveStorage();
-        alert(`Tipo de falla "${falla}" agregada.`);
+        alert(`Tipo de falla agregado.`);
         e.target.reset();
+        this.renderLists();
     },
-    updateSelectors() {
-        const clientSelect = document.getElementById('sede-client-select');
-        if(clientSelect) {
-            clientSelect.innerHTML = '<option value="">Seleccione Cliente...</option>';
+    renderLists() {
+        // Render Clientes
+        const listC = document.getElementById('list-clientes');
+        const selectC = document.getElementById('sede-client-select');
+        if(listC) {
+            listC.innerHTML = '';
+            selectC.innerHTML = '<option value="">Seleccione Cliente...</option>';
             dataState.clientes.forEach(c => {
-                clientSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+                listC.innerHTML += `<li><span style="display:inline-block;width:12px;height:12px;background:${c.color};border-radius:50%;margin-right:5px;"></span><strong>${c.name}</strong></li>`;
+                selectC.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+            });
+        }
+        // Render Sedes
+        const listS = document.getElementById('list-sedes');
+        if(listS) {
+            listS.innerHTML = '';
+            dataState.sedes.forEach(s => {
+                listS.innerHTML += `<li>${s.sede} <em style="color:#666;">(Cliente: ${s.client})</em></li>`;
+            });
+        }
+        // Render Usuarios
+        const listU = document.getElementById('list-usuarios');
+        if(listU) {
+            listU.innerHTML = '';
+            dataState.usuarios.forEach(u => {
+                listU.innerHTML += `<li><strong>${u.name}</strong> - <span class="badge" style="background:#FF6B35;color:white;padding:2px 8px;border-radius:10px;font-size:0.75rem;">${u.role}</span></li>`;
+            });
+        }
+        // Render Fallas
+        const listF = document.getElementById('list-fallas');
+        if(listF) {
+            listF.innerHTML = '';
+            dataState.fallas.forEach(f => {
+                listF.innerHTML += `<li>${f}</li>`;
             });
         }
     },
+    renderDashboard() {
+        document.getElementById('kpi-clientes').innerText = dataState.clientes.length;
+        document.getElementById('kpi-sedes').innerText = dataState.sedes.length;
+        document.getElementById('kpi-usuarios').innerText = dataState.usuarios.length;
+        document.getElementById('kpi-fallas').innerText = dataState.fallas.length;
+    },
     saveStorage() {
-        localStorage.setItem('servitrack_db', JSON.stringify(dataState));
+        localStorage.setItem('servitrack_db_v2', JSON.stringify(dataState));
     },
     loadStorage() {
-        const saved = localStorage.getItem('servitrack_db');
+        const saved = localStorage.getItem('servitrack_db_v2');
         if(saved) { dataState = JSON.parse(saved); }
-    },
-    renderDashboard() {
-        document.getElementById('kpi-creados').innerText = dataState.tickets.length;
-        document.getElementById('ai-insight-text').innerText = dataState.clientes.length === 0 ? 
-            "Recomendación: Vaya a Ajustes y cree su primer cliente y sedes para iniciar operaciones." : 
-            "Operación sincronizada con éxito. Monitoreando SLAs en tiempo real.";
     }
 };
 
