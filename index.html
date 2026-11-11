@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ServiTrack - Gestión de Servicios Técnicos</title>
-    <!-- Fuentes y Estilos -->
+    <!-- Fuentes y Estilos con Neurolingüística (Azul Confianza & Naranja Acción) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -12,11 +12,11 @@
 </head>
 <body>
 
-    <!-- Pantalla de Login -->
+    <!-- Pantalla de Login con Credenciales Reales -->
     <div id="login-view" class="view active">
         <div class="login-card">
-            <h2>Bienvenido a ServiTrack</h2>
-            <p>Ingresa tus credenciales para acceder</p>
+            <h2>ServiTrack Inteligente</h2>
+            <p>Control y Trazabilidad Operativa</p>
             <form onsubmit="app.login(event)">
                 <div class="form-group" style="text-align: left;">
                     <label>Usuario</label>
@@ -28,13 +28,13 @@
                 </div>
                 <button type="submit" class="btn btn-primary btn-block mt-1">Ingresar al Sistema</button>
             </form>
-            <p class="mt-1" style="font-size: 0.8rem; color: #909CC2;">(Acceso: admin / admin)</p>
+            <p class="mt-1" style="font-size: 0.8rem; color: #909CC2;">(Acceso Admin: admin / admin)</p>
         </div>
     </div>
 
     <!-- Aplicación Principal -->
     <div id="app-view" class="view">
-        <!-- Sidebar con todas las opciones -->
+        <!-- Sidebar -->
         <nav class="sidebar">
             <div class="sidebar-header">
                 <h2>ServiTrack</h2>
@@ -46,6 +46,7 @@
                 <li id="nav-create-ticket" onclick="app.navigateTo('create-ticket')"><i class="fas fa-plus-circle"></i> Nuevo Ticket</li>
                 <li id="nav-map" onclick="app.navigateTo('map')"><i class="fas fa-map-marker-alt"></i> Mapa Técnicos</li>
                 <li id="nav-settings" onclick="app.navigateTo('settings')"><i class="fas fa-cog"></i> Ajustes</li>
+                <li onclick="app.openMobileModal()"><i class="fas fa-mobile-alt"></i> Descargar App Móvil</li>
             </ul>
             <div class="sidebar-footer">
                 <button onclick="app.logout()" class="btn btn-outline btn-block"><i class="fas fa-sign-out-alt"></i> Salir</button>
@@ -57,30 +58,48 @@
             
             <!-- Dashboard View -->
             <section id="view-dashboard" class="content-section">
-                <h1>Panel de Control & Analítica</h1>
-                <div class="kpi-grid">
-                    <div class="kpi-card"><h3>Tickets</h3><p id="kpi-tickets" class="kpi-value">0</p></div>
-                    <div class="kpi-card"><h3>Clientes</h3><p id="kpi-clientes" class="kpi-value text-blue">0</p></div>
-                    <div class="kpi-card"><h3>Sedes</h3><p id="kpi-sedes" class="kpi-value text-orange">0</p></div>
-                    <div class="kpi-card"><h3>Usuarios</h3><p id="kpi-usuarios" class="kpi-value text-green">0</p></div>
+                <div class="header-action">
+                    <h1>Panel de Control & Analítica</h1>
+                    <button class="btn btn-secondary" onclick="app.generatePDF()"><i class="fas fa-file-pdf"></i> Exportar Informe PDF</button>
                 </div>
+
+                <!-- Filtros del Dashboard -->
+                <div class="card filters-card mb-2">
+                    <div class="grid-5">
+                        <select id="filt-mes" class="form-control" onchange="app.renderDashboard()"><option value="">Mes (Todos)</option></select>
+                        <select id="filt-cliente" class="form-control" onchange="app.renderDashboard()"><option value="">Cliente (Todos)</option></select>
+                        <select id="filt-sede" class="form-control" onchange="app.renderDashboard()"><option value="">Sede (Todas)</option></select>
+                        <select id="filt-tecnico" class="form-control" onchange="app.renderDashboard()"><option value="">Técnico (Todos)</option></select>
+                        <select id="filt-falla" class="form-control" onchange="app.renderDashboard()"><option value="">Tipo Falla</option></select>
+                    </div>
+                </div>
+
+                <!-- KPIs -->
+                <div class="kpi-grid">
+                    <div class="kpi-card"><h3>Creados</h3><p id="kpi-creados" class="kpi-value">0</p></div>
+                    <div class="kpi-card"><h3>Asignados</h3><p id="kpi-asignados" class="kpi-value text-blue">0</p></div>
+                    <div class="kpi-card"><h3>En Proceso</h3><p id="kpi-proceso" class="kpi-value text-orange">0</p></div>
+                    <div class="kpi-card"><h3>Retrasados</h3><p id="kpi-retrasados" class="kpi-value text-red">0</p></div>
+                    <div class="kpi-card"><h3>Cumplidos</h3><p id="kpi-cumplidos" class="kpi-value text-green">0</p></div>
+                    <div class="kpi-card"><h3>Tiempo Cierre Prom.</h3><p id="kpi-tiempo" class="kpi-value">0h</p></div>
+                </div>
+
+                <!-- IA Insights -->
                 <div class="card insight-card mt-2">
                     <h3><i class="fas fa-brain"></i> Análisis en Tiempo Real & Recomendaciones</h3>
-                    <p id="ai-insight-text">Sistema sincronizado. Monitoreo de operaciones activo.</p>
+                    <p id="ai-insight-text">Sincronizando operaciones para optimizar SLAs de servicio técnico...</p>
                 </div>
             </section>
 
             <!-- Tickets View -->
             <section id="view-tickets" class="content-section" style="display: none;">
-                <h1>Gestión de Tickets</h1>
+                <h1>Gestión de Tickets y Trazabilidad</h1>
                 <div class="card">
                     <table class="table">
                         <thead>
-                            <tr><th>ID</th><th>Cliente</th><th>Sede</th><th>Sistema</th><th>Falla</th><th>Estado</th></tr>
+                            <tr><th>ID</th><th>Cliente</th><th>Sede</th><th>Sistema</th><th>Falla</th><th>Técnico</th><th>SLA (Días)</th><th>Estado</th><th>Acciones</th></tr>
                         </thead>
-                        <tbody id="tickets-tbody">
-                            <tr><td colspan="6" style="text-align:center; color:#999;">No hay tickets registrados.</td></tr>
-                        </tbody>
+                        <tbody id="tickets-tbody"></tbody>
                     </table>
                 </div>
             </section>
@@ -90,13 +109,13 @@
                 <h1>Generación de Novedad / Ticket</h1>
                 <div class="card">
                     <form onsubmit="app.saveTicket(event)">
-                        <div class="grid-2">
+                        <div class="grid-3">
                             <div class="form-group">
                                 <label>Cliente</label>
                                 <select id="ticket-cliente" class="form-control" onchange="app.loadSedesForClient()" required></select>
                             </div>
                             <div class="form-group">
-                                <label>Sede</label>
+                                <label>Sede (Búsqueda Rápida)</label>
                                 <select id="ticket-sede" class="form-control" required></select>
                             </div>
                             <div class="form-group">
@@ -106,6 +125,14 @@
                             <div class="form-group">
                                 <label>Tipo de Falla</label>
                                 <select id="ticket-falla" class="form-control" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Asignar Técnico</label>
+                                <select id="ticket-tecnico" class="form-control" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Tiempo Meta SLA (Días)</label>
+                                <input type="number" id="ticket-sla" class="form-control" value="3" required>
                             </div>
                         </div>
                         <div class="form-group mt-1">
@@ -119,28 +146,29 @@
 
             <!-- Map View -->
             <section id="view-map" class="content-section" style="display: none;">
-                <h1>Geolocalización de Personal Técnico</h1>
+                <h1>Geolocalización en Tiempo Real de Técnicos</h1>
                 <div class="card">
-                    <div id="tech-map" style="height: 450px; width: 100%; border-radius: 8px;"></div>
+                    <div id="tech-map" style="height: 480px; width: 100%; border-radius: 8px;"></div>
                 </div>
             </section>
 
             <!-- Settings View -->
             <section id="view-settings" class="content-section" style="display: none;">
-                <h1>Ajustes de la Plataforma</h1>
+                <h1>Ajustes y Parametrización</h1>
                 
                 <div class="settings-tabs">
                     <button class="btn btn-outline" onclick="app.toggleTab('clientes')">Clientes & Sedes</button>
-                    <button class="btn btn-outline" onclick="app.toggleTab('usuarios')">Usuarios</button>
-                    <button class="btn btn-outline" onclick="app.toggleTab('fallas')">Tipos de Fallas</button>
+                    <button class="btn btn-outline" onclick="app.toggleTab('usuarios')">Usuarios & Roles</button>
+                    <button class="btn btn-outline" onclick="app.toggleTab('fallas')">Fallas & Sistemas</button>
                 </div>
 
+                <!-- Clientes y Sedes -->
                 <div id="tab-clientes" class="card mt-2 settings-panel">
-                    <h3>Crear Cliente</h3>
+                    <h3>Crear Clientes (Logo y Color con Neurolingüística)</h3>
                     <form onsubmit="app.addClient(event)">
                         <div class="grid-3">
                             <input type="text" id="new-client-name" placeholder="Nombre de Cliente" class="form-control" required>
-                            <input type="color" id="new-client-color" class="form-control" required>
+                            <input type="color" id="new-client-color" class="form-control" title="Color de Impacto" required>
                             <button type="submit" class="btn btn-secondary">Guardar Cliente</button>
                         </div>
                     </form>
@@ -148,7 +176,7 @@
                     <ul id="list-clientes" style="margin-top: 0.5rem; padding-left: 1.2rem;"></ul>
 
                     <hr class="mt-2">
-                    <h3>Crear Sede para Cliente</h3>
+                    <h3>Crear Sedes por Cliente</h3>
                     <form onsubmit="app.addSede(event)">
                         <div class="grid-3">
                             <select id="sede-client-select" class="form-control" required></select>
@@ -160,36 +188,110 @@
                     <ul id="list-sedes" style="margin-top: 0.5rem; padding-left: 1.2rem;"></ul>
                 </div>
 
+                <!-- Usuarios y Roles -->
                 <div id="tab-usuarios" class="card mt-2 settings-panel" style="display:none;">
-                    <h3>Crear Usuario</h3>
+                    <h3>Gestión de Usuarios, Roles y Privilegios</h3>
                     <form onsubmit="app.addUser(event)">
                         <div class="grid-3">
                             <input type="text" id="new-user-name" placeholder="Nombre de Usuario" class="form-control" required>
-                            <select id="new-user-role" class="form-control">
-                                <option value="Técnico">Técnico</option>
-                                <option value="Operador">Operador</option>
-                                <option value="Administrador">Administrador</option>
-                            </select>
-                            <button type="submit" class="btn btn-secondary">Guardar Usuario</button>
+                            <input type="text" id="new-role-name" placeholder="Rol (Ej. Supervisor, Técnico)" class="form-control" required>
+                            <button type="submit" class="btn btn-secondary">Registrar Usuario/Rol</button>
+                        </div>
+                        <div class="form-group mt-1">
+                            <label><strong>Asignar Privilegios (Selección Múltiple):</strong></label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" class="perm-cb" value="crear_ticket"> Crear Tickets</label>
+                                <label><input type="checkbox" class="perm-cb" value="ver_dashboard"> Ver Dashboard</label>
+                                <label><input type="checkbox" class="perm-cb" value="atender_ticket"> Atender/Cerrar Tickets</label>
+                                <label><input type="checkbox" class="perm-cb" value="ver_mapa"> Ver Geolocalización</label>
+                                <label><input type="checkbox" class="perm-cb" value="configurar"> Configuración Total</label>
+                            </div>
                         </div>
                     </form>
-                    <h4 class="mt-1">Usuarios Registrados:</h4>
+                    <h4 class="mt-1">Usuarios y Roles Activos:</h4>
                     <ul id="list-usuarios" style="margin-top: 0.5rem; padding-left: 1.2rem;"></ul>
                 </div>
 
+                <!-- Fallas y Sistemas -->
                 <div id="tab-fallas" class="card mt-2 settings-panel" style="display:none;">
-                    <h3>Crear Tipo de Falla</h3>
-                    <form onsubmit="app.addFalla(event)">
-                        <div class="grid-2">
-                            <input type="text" id="new-falla-name" placeholder="Descripción de la Falla" class="form-control" required>
-                            <button type="submit" class="btn btn-secondary">Guardar Falla</button>
+                    <h3>Administrar Tipos de Sistemas y Fallas</h3>
+                    <div class="grid-2">
+                        <form onsubmit="app.addSistema(event)">
+                            <div class="form-group">
+                                <label>Nuevo Tipo de Sistema</label>
+                                <input type="text" id="new-sistema-name" placeholder="Ej. CCTV Dahua" class="form-control" required>
+                                <button type="submit" class="btn btn-secondary mt-1">Guardar Sistema</button>
+                            </div>
+                        </form>
+                        <form onsubmit="app.addFalla(event)">
+                            <div class="form-group">
+                                <label>Nuevo Tipo de Falla</label>
+                                <input type="text" id="new-falla-name" placeholder="Ej. Pérdida de Enlace" class="form-control" required>
+                                <button type="submit" class="btn btn-secondary mt-1">Guardar Falla</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="grid-2 mt-2">
+                        <div>
+                            <h4>Sistemas Registrados:</h4>
+                            <ul id="list-sistemas" style="margin-top: 0.5rem; padding-left: 1.2rem;"></ul>
                         </div>
-                    </form>
-                    <h4 class="mt-1">Tipos de Fallas Registradas:</h4>
-                    <ul id="list-fallas" style="margin-top: 0.5rem; padding-left: 1.2rem;"></ul>
+                        <div>
+                            <h4>Fallas Registradas:</h4>
+                            <ul id="list-fallas" style="margin-top: 0.5rem; padding-left: 1.2rem;"></ul>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Modal Cierre / Atención de Ticket (Técnico) -->
+    <div id="modal-cierre" class="modal">
+        <div class="modal-content">
+            <h2>Atender y Cerrar Ticket <span id="modal-ticket-id"></span></h2>
+            <form onsubmit="app.submitCierre(event)">
+                <div class="form-group">
+                    <label>Actividades Realizadas</label>
+                    <textarea id="cierre-act" class="form-control" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Materiales Utilizados</label>
+                    <textarea id="cierre-mat" class="form-control" rows="2" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Observaciones / Recomendaciones</label>
+                    <textarea id="cierre-obs" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Registro Fotográfico (Evidencia)</label>
+                    <input type="file" class="form-control" multiple accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Correo para Envío Automático de Informe PDF</label>
+                    <input type="email" id="cierre-email" class="form-control" placeholder="cliente@empresa.com" required>
+                </div>
+                <p style="font-size:0.85rem; color:#0B2545;"><i class="fas fa-map-marker-alt"></i> Georreferenciación GPS capturada automáticamente.</p>
+                <div class="modal-actions mt-1">
+                    <button type="button" class="btn btn-outline" onclick="document.getElementById('modal-cierre').style.display='none'">Cancelar</button>
+                    <button type="submit" class="btn btn-green">Confirmar y Cerrar Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Descarga App Móvil -->
+    <div id="modal-mobile" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <i class="fas fa-mobile-alt" style="font-size: 3rem; color: #FF6B35; margin-bottom: 1rem;"></i>
+            <h2>Descargar App Móvil ServiTrack</h2>
+            <p style="margin: 1rem 0; color: #555;">Instala la aplicación en tu smartphone Android o iOS para recibir alertas en tiempo real y ejecutar cierres en campo con geolocalización.</p>
+            <div style="background: #F4F7F6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <strong>Enlace Directo de Instalación PWA:</strong><br>
+                <span style="font-size: 0.9rem; color: #0B2545;">https://techfixapp.netlify.app</span>
+            </div>
+            <button onclick="document.getElementById('modal-mobile').style.display='none'" class="btn btn-primary btn-block">Cerrar</button>
+        </div>
     </div>
 
     <!-- Scripts -->
