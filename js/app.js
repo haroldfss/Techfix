@@ -1,13 +1,27 @@
 let dataState = {
     tickets: [],
-    clientes: [],
-    sedes: [],
-    usuarios: [],
-    sistemas: ["CCTV (Dahua/Hikvision)", "Intrusión (AX PRO/DSC)", "Automatización (Sonoff)", "Control de Acceso"],
-    fallas: ["CCTV - Pérdida de Video", "Control de Acceso Bloqueado", "Alarma - Falsa Activación", "Red - Sin Conexión"]
+    clientes: [
+        { name: "Banco de Bogotá", color: "#1E3A8A" },
+        { name: "Centro Comercial Andino", color: "#FF6B35" }
+    ],
+    sedes: [
+        { client: "Banco de Bogotá", sede: "Sede Principal Calle 72" },
+        { client: "Centro Comercial Andino", sede: "Torre Administrativa" }
+    ],
+    usuarios: [
+        { name: "Carlos Pérez", role: "Técnico Especialista", perms: ["Atender/Cerrar Tickets", "Ver Geolocalización"] },
+        { name: "Oscar Muñoz", role: "Operador SLA", perms: ["Crear Tickets", "Ver Dashboard"] }
+    ],
+    sistemas: ["CCTV IP Dahua", "Intrusión AX PRO", "Control de Acceso Biométrico"],
+    fallas: ["Pérdida de Enlace Video", "Batería Baja Panel", "Falla Lector Biométrico"],
+    slaList: [
+        { desc: "Crítico - Urgente", days: 1 },
+        { desc: "Estándar Operativo", days: 3 }
+    ]
 };
 
 const app = {
+    charts: { tend: null, sist: null },
     map: null,
     init() {
         this.loadStorage();
@@ -22,7 +36,7 @@ const app = {
             document.getElementById('app-view').classList.add('active');
             this.navigateTo('dashboard');
         } else {
-            alert("Credenciales inválidas. Use: admin / admin");
+            alert("Credenciales incorrectas. Use: admin / admin");
         }
     },
     logout() {
@@ -37,22 +51,33 @@ const app = {
         if(section === 'tickets') this.renderTicketsTable();
         if(section === 'map') this.initMap();
     },
-    toggleTab(tab) {
-        document.querySelectorAll('.settings-panel').forEach(el => el.style.display = 'none');
+    switchTab(tab, btn) {
+        document.querySelectorAll('.settings-tab-content').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.settings-tabs button').forEach(b => b.classList.remove('active-tab'));
         document.getElementById(`tab-${tab}`).style.display = 'block';
+        btn.classList.add('active-tab');
     },
     openMobileModal() {
         document.getElementById('modal-mobile').style.display = 'flex';
     },
+
+    // --- CRUD CLIENTES & SEDES ---
     addClient(e) {
         e.preventDefault();
         const name = document.getElementById('new-client-name').value;
         const color = document.getElementById('new-client-color').value;
         dataState.clientes.push({ name, color });
         this.saveStorage();
-        alert(`Cliente "${name}" registrado.`);
         e.target.reset();
         this.renderAll();
+        alert("Cliente registrado exitosamente.");
+    },
+    deleteClient(idx) {
+        if(confirm("¿Desea eliminar este cliente?")) {
+            dataState.clientes.splice(idx, 1);
+            this.saveStorage();
+            this.renderAll();
+        }
     },
     addSede(e) {
         e.preventDefault();
@@ -61,10 +86,19 @@ const app = {
         if(!client) { alert("Seleccione un cliente."); return; }
         dataState.sedes.push({ client, sede });
         this.saveStorage();
-        alert(`Sede "${sede}" agregada.`);
         e.target.reset();
         this.renderAll();
+        alert("Sede agregada exitosamente.");
     },
+    deleteSede(idx) {
+        if(confirm("¿Desea eliminar esta sede?")) {
+            dataState.sedes.splice(idx, 1);
+            this.saveStorage();
+            this.renderAll();
+        }
+    },
+
+    // --- CRUD USUARIOS ---
     addUser(e) {
         e.preventDefault();
         const name = document.getElementById('new-user-name').value;
@@ -72,17 +106,31 @@ const app = {
         const perms = Array.from(document.querySelectorAll('.perm-cb:checked')).map(cb => cb.value);
         dataState.usuarios.push({ name, role, perms });
         this.saveStorage();
-        alert(`Usuario "${name}" con rol "${role}" registrado con éxito.`);
         e.target.reset();
+        document.querySelectorAll('.perm-cb').forEach(cb => cb.checked = false);
         this.renderAll();
+        alert("Usuario registrado con éxito.");
     },
+    deleteUser(idx) {
+        if(confirm("¿Desea eliminar este usuario?")) {
+            dataState.usuarios.splice(idx, 1);
+            this.saveStorage();
+            this.renderAll();
+        }
+    },
+
+    // --- CRUD SISTEMAS & FALLAS ---
     addSistema(e) {
         e.preventDefault();
         const sis = document.getElementById('new-sistema-name').value;
         dataState.sistemas.push(sis);
         this.saveStorage();
-        alert(`Tipo de sistema agregado.`);
         e.target.reset();
+        this.renderAll();
+    },
+    deleteSistema(idx) {
+        dataState.sistemas.splice(idx, 1);
+        this.saveStorage();
         this.renderAll();
     },
     addFalla(e) {
@@ -90,9 +138,75 @@ const app = {
         const falla = document.getElementById('new-falla-name').value;
         dataState.fallas.push(falla);
         this.saveStorage();
-        alert(`Tipo de falla agregado.`);
         e.target.reset();
         this.renderAll();
+    },
+    deleteFalla(idx) {
+        dataState.fallas.splice(idx, 1);
+        this.saveStorage();
+        this.renderAll();
+    },
+
+    // --- CRUD SLA ---
+    addSla(e) {
+        e.preventDefault();
+        const desc = document.getElementById('new-sla-desc').value;
+        const days = document.getElementById('new-sla-days').value;
+        dataState.slaList.push({ desc, days });
+        this.saveStorage();
+        e.target.reset();
+        this.renderAll();
+    },
+    deleteSla(idx) {
+        dataState.slaList.splice(idx, 1);
+        this.saveStorage();
+        this.renderAll();
+    },
+
+    // --- TICKETS & BÚSQUEDA ---
+    loadTicketSelectors() {
+        const clientEl = document.getElementById('ticket-cliente');
+        clientEl.innerHTML = '';
+        dataState.clientes.forEach(c => clientEl.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+        this.loadSedesForClient();
+
+        const sisEl = document.getElementById('ticket-sistema');
+        sisEl.innerHTML = '';
+        dataState.sistemas.forEach(s => sisEl.innerHTML += `<option value="${s}">${s}</option>`);
+
+        const fallaEl = document.getElementById('ticket-falla');
+        fallaEl.innerHTML = '';
+        dataState.fallas.forEach(f => fallaEl.innerHTML += `<option value="${f}">${f}</option>`);
+
+        const tecEl = document.getElementById('ticket-tecnico');
+        tecEl.innerHTML = '';
+        dataState.usuarios.forEach(u => tecEl.innerHTML += `<option value="${u.name}">${u.name} (${u.role})</option>`);
+    },
+    loadSedesForClient() {
+        const client = document.getElementById('ticket-cliente').value;
+        const sedeEl = document.getElementById('ticket-sede');
+        sedeEl.innerHTML = '';
+        dataState.sedes.filter(s => s.client === client).forEach(s => {
+            sedeEl.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
+        });
+    },
+    filterClientDropdown() {
+        const query = document.getElementById('search-client').value.toLowerCase();
+        const select = document.getElementById('ticket-cliente');
+        select.innerHTML = '';
+        dataState.clientes.filter(c => c.name.toLowerCase().includes(query)).forEach(c => {
+            select.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+        });
+        this.loadSedesForClient();
+    },
+    filterSedeDropdown() {
+        const query = document.getElementById('search-sede').value.toLowerCase();
+        const client = document.getElementById('ticket-cliente').value;
+        const select = document.getElementById('ticket-sede');
+        select.innerHTML = '';
+        dataState.sedes.filter(s => s.client === client && s.sede.toLowerCase().includes(query)).forEach(s => {
+            select.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
+        });
     },
     saveTicket(e) {
         e.preventDefault();
@@ -106,42 +220,13 @@ const app = {
             sla: document.getElementById('ticket-sla').value,
             desc: document.getElementById('ticket-desc').value,
             estado: 'Asignado',
-            fecha: new Date().toLocaleDateString()
+            fecha: '2026-11'
         };
         dataState.tickets.push(ticket);
         this.saveStorage();
-        alert(`Ticket ${ticket.id} creado y asignado correctamente.`);
+        alert(`Ticket ${ticket.id} creado y asignado exitosamente.`);
         e.target.reset();
         this.navigateTo('tickets');
-    },
-    loadTicketSelectors() {
-        const fill = (id, arr) => {
-            const el = document.getElementById(id);
-            if(!el) return;
-            el.innerHTML = '<option value="">Seleccione...</option>';
-            arr.forEach(i => el.innerHTML += `<option value="${i}">${i}</option>`);
-        };
-        const clientEl = document.getElementById('ticket-cliente');
-        if(clientEl) {
-            clientEl.innerHTML = '<option value="">Seleccione Cliente...</option>';
-            dataState.clientes.forEach(c => clientEl.innerHTML += `<option value="${c.name}">${c.name}</option>`);
-        }
-        const tecEl = document.getElementById('ticket-tecnico');
-        if(tecEl) {
-            tecEl.innerHTML = '<option value="">Seleccione Técnico...</option>';
-            dataState.usuarios.forEach(u => tecEl.innerHTML += `<option value="${u.name}">${u.name} (${u.role})</option>`);
-        }
-        fill('ticket-sistema', dataState.sistemas);
-        fill('ticket-falla', dataState.fallas);
-    },
-    loadSedesForClient() {
-        const client = document.getElementById('ticket-cliente').value;
-        const sedeEl = document.getElementById('ticket-sede');
-        if(!sedeEl) return;
-        sedeEl.innerHTML = '<option value="">Seleccione Sede...</option>';
-        dataState.sedes.filter(s => s.client === client).forEach(s => {
-            sedeEl.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
-        });
     },
     abrirCierre(id) {
         document.getElementById('modal-ticket-id').innerText = id;
@@ -151,24 +236,21 @@ const app = {
         e.preventDefault();
         const id = document.getElementById('modal-ticket-id').innerText;
         const ticket = dataState.tickets.find(t => t.id === id);
-        if(ticket) {
-            ticket.estado = 'Cumplido';
-        }
+        if(ticket) ticket.estado = 'Cumplido';
         this.saveStorage();
         document.getElementById('modal-cierre').style.display = 'none';
-        alert('Ticket atendido y cerrado con éxito. Informe PDF generado y enviado por correo.');
+        alert('Ticket cerrado con éxito. Informe PDF enviado por correo.');
         this.renderTicketsTable();
     },
     renderTicketsTable() {
         const tbody = document.getElementById('tickets-tbody');
-        if(!tbody) return;
         if(dataState.tickets.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#999;">No hay tickets registrados.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted);">No hay tickets registrados.</td></tr>`;
             return;
         }
         tbody.innerHTML = '';
         dataState.tickets.forEach(t => {
-            const badgeBg = t.estado === 'Cumplido' ? '#8AC926' : (t.estado === 'En Proceso' ? '#FFC107' : '#FF6B35');
+            const bg = t.estado === 'Cumplido' ? 'var(--success)' : 'var(--accent)';
             tbody.innerHTML += `<tr>
                 <td><strong>${t.id}</strong></td>
                 <td>${t.cliente}</td>
@@ -177,79 +259,151 @@ const app = {
                 <td>${t.falla}</td>
                 <td>${t.tecnico}</td>
                 <td>${t.sla} Días</td>
-                <td><span class="badge" style="background:${badgeBg};color:white;padding:3px 10px;border-radius:12px;">${t.estado}</span></td>
+                <td><span class="badge" style="background:${bg}">${t.estado}</span></td>
                 <td><button class="btn btn-primary" style="padding:0.3rem 0.8rem; font-size:0.8rem;" onclick="app.abrirCierre('${t.id}')">Atender / Cerrar</button></td>
             </tr>`;
         });
     },
-    renderAll() {
-        // Render Clientes
-        const listC = document.getElementById('list-clientes');
-        const selectC = document.getElementById('sede-client-select');
-        if(listC && selectC) {
-            listC.innerHTML = '';
-            selectC.innerHTML = '<option value="">Seleccione Cliente...</option>';
-            dataState.clientes.forEach(c => {
-                listC.innerHTML += `<li><span style="display:inline-block;width:12px;height:12px;background:${c.color};border-radius:50%;margin-right:5px;"></span><strong>${c.name}</strong></li>`;
-                selectC.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-            });
-        }
-        // Render Sedes
-        const listS = document.getElementById('list-sedes');
-        if(listS) {
-            listS.innerHTML = '';
-            dataState.sedes.forEach(s => listS.innerHTML += `<li>${s.sede} <em style="color:#666;">(${s.client})</em></li>`);
-        }
-        // Render Usuarios
-        const listU = document.getElementById('list-usuarios');
-        if(listU) {
-            listU.innerHTML = '';
-            dataState.usuarios.forEach(u => listU.innerHTML += `<li><strong>${u.name}</strong> - <span style="background:#FF6B35;color:white;padding:2px 8px;border-radius:10px;font-size:0.75rem;">${u.role}</span> [Permisos: ${u.perms.join(', ')}]</li>`);
-        }
-        // Render Sistemas y Fallas
-        const listSys = document.getElementById('list-sistemas');
-        if(listSys) {
-            listSys.innerHTML = '';
-            dataState.sistemas.forEach(sis => listSys.innerHTML += `<li>${sis}</li>`);
-        }
-        const listF = document.getElementById('list-fallas');
-        if(listF) {
-            listF.innerHTML = '';
-            dataState.fallas.forEach(f => listF.innerHTML += `<li>${f}</li>`);
-        }
-    },
+
+    // --- DASHBOARD & INSIGHTS ---
     renderDashboard() {
-        const total = dataState.tickets.length;
-        document.getElementById('kpi-creados').innerText = total;
-        document.getElementById('kpi-asignados').innerText = dataState.tickets.filter(t => t.estado==='Asignado').length;
-        document.getElementById('kpi-proceso').innerText = dataState.tickets.filter(t => t.estado==='En Proceso').length;
-        document.getElementById('kpi-retrasados').innerText = dataState.tickets.filter(t => t.estado==='Retrasado').length;
-        document.getElementById('kpi-cumplidos').innerText = dataState.tickets.filter(t => t.estado==='Cumplido').length;
-        
+        const fMes = document.getElementById('filt-mes').value;
+        const fCli = document.getElementById('filt-client').value;
+        const fSed = document.getElementById('filt-sede').value;
+        const fTec = document.getElementById('filt-tecnico').value;
+        const fFal = document.getElementById('filt-falla').value;
+
+        let filtered = dataState.tickets.filter(t => {
+            if(fMes && t.fecha !== fMes) return false;
+            if(fCli && t.cliente !== fCli) return false;
+            if(fSed && t.sede !== fSed) return false;
+            if(fTec && t.tecnico !== fTec) return false;
+            if(fFal && t.falla !== fFal) return false;
+            return true;
+        });
+
+        const creados = filtered.length;
+        const asignados = filtered.filter(t => t.estado === 'Asignado').length;
+        const proceso = filtered.filter(t => t.estado === 'En Proceso').length;
+        const retrasados = filtered.filter(t => t.estado === 'Retrasado').length;
+        const cumplidos = filtered.filter(t => t.estado === 'Cumplido').length;
+
+        document.getElementById('kpi-creados').innerText = creados;
+        document.getElementById('kpi-asignados').innerText = asignados;
+        document.getElementById('kpi-proceso').innerText = proceso;
+        document.getElementById('kpi-retrasados').innerText = retrasados;
+        document.getElementById('kpi-cumplidos').innerText = cumplidos;
+        document.getElementById('kpi-tiempo').innerText = cumplidos > 0 ? "18.4h" : "0h";
+
+        // Recomendaciones por indicador
         const insight = document.getElementById('ai-insight-text');
-        if(total === 0) {
-            insight.innerHTML = "<strong>Estado Óptimo:</strong> Plataforma sincronizada. Comience creando clientes, sedes y generando tickets en el menú lateral.";
+        if(creados === 0) {
+            insight.innerHTML = "<strong>Diagnóstico Operativo:</strong> Sistema sin volumen de carga actual. Se recomienda habilitar nuevas órdenes de servicio desde el módulo de creación de tickets.";
+        } else if(retrasados > 0) {
+            insight.innerHTML = `<strong><span style="color:var(--danger)">Alerta Crítica:</span></strong> Existen ${retrasados} tickets fuera de SLA. Se aconseja reasignar personal técnico inmediato para mitigar penalizaciones operativas.`;
         } else {
-            insight.innerHTML = "<strong>Análisis Activo:</strong> Los tiempos de respuesta se mantienen dentro del SLA establecido por la gerencia.";
+            insight.innerHTML = "<strong><span style="color:var(--success)">Rendimiento Óptimo:</span></strong> Los tiempos de respuesta y cierre cumplen con los estándares gerenciales establecidos. Operación estable.";
         }
+
+        this.buildCharts(filtered);
+    },
+    buildCharts(filtered) {
+        const ctxTend = document.getElementById('chart-tendencia').getContext('2d');
+        if(this.charts.tend) this.charts.tend.destroy();
+        this.charts.tend = new Chart(ctxTend, {
+            type: 'line',
+            data: {
+                labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
+                datasets: [{ label: 'Tickets Atendidos', data: [2, 5, 3, filtered.length], borderColor: '#FF6B35', backgroundColor: 'rgba(255,107,53,0.1)', fill: true, tension: 0.4 }]
+            },
+            options: { responsive: true, plugins: { title: { display: true, text: 'Tendencia Mensual de Atención' } } }
+        });
+
+        const ctxSist = document.getElementById('chart-sistemas').getContext('2d');
+        if(this.charts.sist) this.charts.sist.destroy();
+        this.charts.sist = new Chart(ctxSist, {
+            type: 'doughnut',
+            data: {
+                labels: dataState.sistemas,
+                datasets: [{ data: [12, 8, 5], backgroundColor: ['#1E3A8A', '#FF6B35', '#10B981'] }]
+            },
+            options: { responsive: true, plugins: { title: { display: true, text: 'Distribución por Tipo de Sistema' } } }
+        });
+    },
+
+    // --- RENDERIZADO GENERAL Y AJUSTES ---
+    renderAll() {
+        // Clientes
+        const tCli = document.getElementById('table-clientes');
+        const sCli = document.getElementById('sede-client-select');
+        const fCli = document.getElementById('filt-cliente');
+        tCli.innerHTML = ''; sCli.innerHTML = '<option value="">Seleccione Cliente...</option>'; fCli.innerHTML = '<option value="">Cliente (Todos)</option>';
+        dataState.clientes.forEach((c, i) => {
+            tCli.innerHTML += `<tr><td><strong>${c.name}</strong></td><td><span style="display:inline-block;width:15px;height:15px;background:${c.color};border-radius:4px;"></span></td><td><button class="btn btn-danger" onclick="app.deleteClient(${i})">Eliminar</button></td></tr>`;
+            sCli.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+            fCli.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+        });
+
+        // Sedes
+        const tSed = document.getElementById('table-sedes');
+        const fSed = document.getElementById('filt-sede');
+        tSed.innerHTML = ''; fSed.innerHTML = '<option value="">Sede (Todas)</option>';
+        dataState.sedes.forEach((s, i) => {
+            tSed.innerHTML += `<tr><td><strong>${s.sede}</strong></td><td>${s.client}</td><td><button class="btn btn-danger" onclick="app.deleteSede(${i})">Eliminar</button></td></tr>`;
+            fSed.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
+        });
+
+        // Usuarios
+        const tUsu = document.getElementById('table-usuarios');
+        const fTec = document.getElementById('filt-tecnico');
+        tUsu.innerHTML = ''; fTec.innerHTML = '<option value="">Técnico (Todos)</option>';
+        dataState.usuarios.forEach((u, i) => {
+            tUsu.innerHTML += `<tr><td><strong>${u.name}</strong></td><td>${u.role}</td><td><span style="font-size:0.8rem;color:var(--text-muted);">${u.perms.join(', ')}</span></td><td><button class="btn btn-danger" onclick="app.deleteUser(${i})">Eliminar</button></td></tr>`;
+            fTec.innerHTML += `<option value="${u.name}">${u.name}</option>`;
+        });
+
+        // Sistemas
+        const tSys = document.getElementById('table-sistemas');
+        tSys.innerHTML = '';
+        dataState.sistemas.forEach((s, i) => {
+            tSys.innerHTML += `<tr><td>${s}</td><td><button class="btn btn-danger" onclick="app.deleteSistema(${i})">Eliminar</button></td></tr>`;
+        });
+
+        // Fallas
+        const tFal = document.getElementById('table-fallas');
+        const fFal = document.getElementById('filt-falla');
+        tFal.innerHTML = ''; fFal.innerHTML = '<option value="">Tipo Falla (Todas)</option>';
+        dataState.fallas.forEach((f, i) => {
+            tFal.innerHTML += `<tr><td>${f}</td><td><button class="btn btn-danger" onclick="app.deleteFalla(${i})">Eliminar</button></td></tr>`;
+            fFal.innerHTML += `<option value="${f}">${f}</option>`;
+        });
+
+        // SLA
+        const tSla = document.getElementById('table-sla');
+        tSla.innerHTML = '';
+        dataState.slaList.forEach((sla, i) => {
+            tSla.innerHTML += `<tr><td>${sla.desc}</td><td><strong>${sla.days} Días</strong></td><td><button class="btn btn-danger" onclick="app.deleteSla(${i})">Eliminar</button></td></tr>`;
+        });
+
+        this.renderDashboard();
     },
     initMap() {
         if(!this.map) {
             this.map = L.map('tech-map').setView([4.6097, -74.0817], 12);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
-            L.marker([4.6097, -74.0817]).addTo(this.map).bindPopup("<b>Técnico en Campo:</b> Activo (GPS)");
+            L.marker([4.6097, -74.0817]).addTo(this.map).bindPopup("<b>Técnico:</b> Carlos Pérez (En ruta)");
         }
         setTimeout(() => this.map.invalidateSize(), 200);
     },
     generatePDF() {
-        alert("Generando informe analítico PDF con métricas del dashboard...");
+        alert("Generando informe gerencial PDF con analítica ejecutiva...");
     },
     saveStorage() {
-        localStorage.setItem('servitrack_db_v4', JSON.stringify(dataState));
+        localStorage.setItem('servitrack_db_v5', JSON.stringify(dataState));
     },
     loadStorage() {
-        const saved = localStorage.getItem('servitrack_db_v4');
-        if(saved) { dataState = JSON.parse(saved); }
+        const saved = localStorage.getItem('servitrack_db_v5');
+        if(saved) dataState = JSON.parse(saved);
     }
 };
 
