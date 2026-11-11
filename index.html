@@ -7,25 +7,27 @@
     <!-- Fuentes y Estilos -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
 
-    <!-- Pantalla de Login -->
+    <!-- Pantalla de Login con Usuario y Contraseña -->
     <div id="login-view" class="view active">
         <div class="login-card">
             <h2>Bienvenido a ServiTrack</h2>
             <p>Ingresa tus credenciales para acceder</p>
-            <div class="form-group">
-                <label>Usuario / Rol</label>
-                <select id="login-role" class="form-control">
-                    <option value="admin">Administrador</option>
-                    <option value="operador">Operador</option>
-                    <option value="tecnico">Técnico</option>
-                </select>
-            </div>
-            <button onclick="app.login()" class="btn btn-primary btn-block">Ingresar al Sistema</button>
+            <form onsubmit="app.login(event)">
+                <div class="form-group" style="text-align: left;">
+                    <label>Usuario</label>
+                    <input type="text" id="login-user" class="form-control" placeholder="Ej. admin" required>
+                </div>
+                <div class="form-group" style="text-align: left;">
+                    <label>Contraseña</label>
+                    <input type="password" id="login-pass" class="form-control" placeholder="********" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block mt-1">Ingresar al Sistema</button>
+            </form>
+            <p class="mt-1" style="font-size: 0.8rem; color: #909CC2;">(Credenciales por defecto: admin / admin)</p>
         </div>
     </div>
 
@@ -35,13 +37,10 @@
         <nav class="sidebar">
             <div class="sidebar-header">
                 <h2>ServiTrack</h2>
-                <span id="user-role-display" class="badge badge-admin">Admin</span>
+                <span id="user-role-display" class="badge badge-admin">ADMIN</span>
             </div>
             <ul class="nav-links">
                 <li id="nav-dashboard" onclick="app.navigateTo('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</li>
-                <li id="nav-tickets" onclick="app.navigateTo('tickets')"><i class="fas fa-ticket-alt"></i> Gestión de Tickets</li>
-                <li id="nav-create-ticket" onclick="app.navigateTo('create-ticket')"><i class="fas fa-plus-circle"></i> Nuevo Ticket</li>
-                <li id="nav-map" onclick="app.navigateTo('map')"><i class="fas fa-map-marker-alt"></i> Mapa Técnicos</li>
                 <li id="nav-settings" onclick="app.navigateTo('settings')"><i class="fas fa-cog"></i> Ajustes</li>
             </ul>
             <div class="sidebar-footer">
@@ -54,38 +53,16 @@
             
             <!-- Dashboard View -->
             <section id="view-dashboard" class="content-section">
-                <div class="header-action">
-                    <h1>Panel de Control & Analítica</h1>
-                    <button class="btn btn-secondary" onclick="app.generatePDF('view-dashboard', 'Dashboard_Reporte')"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-                </div>
-
-                <!-- KPIs -->
+                <h1>Panel de Control & Analítica</h1>
                 <div class="kpi-grid">
-                    <div class="kpi-card"><h3>Creados</h3><p id="kpi-creados" class="kpi-value">0</p></div>
-                    <div class="kpi-card"><h3>Asignados</h3><p id="kpi-asignados" class="kpi-value text-blue">0</p></div>
-                    <div class="kpi-card"><h3>En Proceso</h3><p id="kpi-proceso" class="kpi-value text-orange">0</p></div>
-                    <div class="kpi-card"><h3>Retrasados</h3><p id="kpi-retrasados" class="kpi-value text-red">0</p></div>
-                    <div class="kpi-card"><h3>Cumplidos</h3><p id="kpi-cumplidos" class="kpi-value text-green">0</p></div>
-                    <div class="kpi-card"><h3>Tiempo Cierre</h3><p id="kpi-tiempo" class="kpi-value">0h</p></div>
+                    <div class="kpi-card"><h3>Clientes</h3><p id="kpi-clientes" class="kpi-value">0</p></div>
+                    <div class="kpi-card"><h3>Sedes</h3><p id="kpi-sedes" class="kpi-value text-blue">0</p></div>
+                    <div class="kpi-card"><h3>Usuarios</h3><p id="kpi-usuarios" class="kpi-value text-orange">0</p></div>
+                    <div class="kpi-card"><h3>Fallas Reg.</h3><p id="kpi-fallas" class="kpi-value text-green">0</p></div>
                 </div>
-
-                <!-- AI Recommendations -->
                 <div class="card insight-card">
                     <h3><i class="fas fa-brain"></i> Análisis en Tiempo Real & Recomendaciones</h3>
-                    <p id="ai-insight-text">Cargando analítica operativa...</p>
-                </div>
-            </section>
-
-            <!-- Tickets List View -->
-            <section id="view-tickets" class="content-section" style="display: none;">
-                <h1>Tickets Activos</h1>
-                <div class="card">
-                    <table class="table">
-                        <thead>
-                            <tr><th>ID</th><th>Cliente</th><th>Sede</th><th>Sistema</th><th>Falla</th><th>Estado</th></tr>
-                        </thead>
-                        <tbody id="tickets-tbody"></tbody>
-                    </table>
+                    <p id="ai-insight-text">Sistema sincronizado. Ingrese a Ajustes para configurar su operación.</p>
                 </div>
             </section>
 
@@ -94,66 +71,72 @@
                 <h1>Ajustes de la Plataforma</h1>
                 
                 <div class="settings-tabs">
-                    <button class="btn btn-outline" onclick="app.toggleSettings('clientes')">Clientes & Sedes</button>
-                    <button class="btn btn-outline" onclick="app.toggleSettings('usuarios')">Usuarios & Roles</button>
-                    <button class="btn btn-outline" onclick="app.toggleSettings('diccionarios')">Fallas & Sistemas</button>
+                    <button class="btn btn-outline" onclick="app.toggleTab('clientes')">Clientes & Sedes</button>
+                    <button class="btn btn-outline" onclick="app.toggleTab('usuarios')">Usuarios</button>
+                    <button class="btn btn-outline" onclick="app.toggleTab('fallas')">Tipos de Fallas</button>
                 </div>
 
-                <!-- Clientes y Sedes -->
-                <div id="settings-clientes" class="card mt-2 settings-panel">
-                    <h3>Crear Clientes (Logo y Color Corporativo)</h3>
+                <!-- Pestaña Clientes y Sedes -->
+                <div id="tab-clientes" class="card mt-2 settings-panel">
+                    <h3>Crear Cliente</h3>
                     <form onsubmit="app.addClient(event)">
                         <div class="grid-3">
                             <input type="text" id="new-client-name" placeholder="Nombre de Cliente" class="form-control" required>
                             <input type="color" id="new-client-color" class="form-control" required>
-                            <button type="submit" class="btn btn-secondary">Agregar Cliente</button>
+                            <button type="submit" class="btn btn-secondary">Guardar Cliente</button>
                         </div>
                     </form>
-                    <hr class="mt-1">
-                    <h3 class="mt-1">Crear Sedes por Cliente</h3>
+                    <h4 class="mt-1">Clientes Registrados:</h4>
+                    <ul id="list-clientes" style="margin-top: 0.5rem; padding-left: 1.2rem;"></ul>
+
+                    <hr class="mt-2">
+                    <h3>Crear Sede para Cliente</h3>
                     <form onsubmit="app.addSede(event)">
                         <div class="grid-3">
                             <select id="sede-client-select" class="form-control" required></select>
                             <input type="text" id="new-sede-name" placeholder="Nombre / Dirección Sede" class="form-control" required>
-                            <button type="submit" class="btn btn-secondary">Agregar Sede</button>
+                            <button type="submit" class="btn btn-secondary">Guardar Sede</button>
                         </div>
                     </form>
+                    <h4 class="mt-1">Sedes Registradas:</h4>
+                    <ul id="list-sedes" style="margin-top: 0.5rem; padding-left: 1.2rem;"></ul>
                 </div>
 
-                <!-- Usuarios -->
-                <div id="settings-usuarios" class="card mt-2 settings-panel" style="display:none;">
-                    <h3>Gestión de Usuarios y Roles Personalizados</h3>
+                <!-- Pestaña Usuarios -->
+                <div id="tab-usuarios" class="card mt-2 settings-panel" style="display:none;">
+                    <h3>Crear Usuario</h3>
                     <form onsubmit="app.addUser(event)">
-                        <div class="grid-2">
-                            <input type="text" id="new-user-name" placeholder="Nombre del Usuario" class="form-control" required>
+                        <div class="grid-3">
+                            <input type="text" id="new-user-name" placeholder="Nombre de Usuario" class="form-control" required>
                             <select id="new-user-role" class="form-control">
-                                <option value="tecnico">Técnico</option>
-                                <option value="operador">Operador</option>
-                                <option value="admin">Administrador</option>
+                                <option value="Técnico">Técnico</option>
+                                <option value="Operador">Operador</option>
+                                <option value="Administrador">Administrador</option>
                             </select>
+                            <button type="submit" class="btn btn-secondary">Guardar Usuario</button>
                         </div>
-                        <button type="submit" class="btn btn-secondary mt-1">Registrar Usuario</button>
                     </form>
+                    <h4 class="mt-1">Usuarios Registrados:</h4>
+                    <ul id="list-usuarios" style="margin-top: 0.5rem; padding-left: 1.2rem;"></ul>
                 </div>
 
-                <!-- Fallas y Sistemas -->
-                <div id="settings-diccionarios" class="card mt-2 settings-panel" style="display:none;">
-                    <h3>Crear y Eliminar Tipos de Fallas</h3>
+                <!-- Pestaña Fallas -->
+                <div id="tab-fallas" class="card mt-2 settings-panel" style="display:none;">
+                    <h3>Crear Tipo de Falla / Sistema</h3>
                     <form onsubmit="app.addFalla(event)">
                         <div class="grid-2">
-                            <input type="text" id="new-falla-name" placeholder="Nuevo Tipo de Falla" class="form-control" required>
-                            <button type="submit" class="btn btn-secondary">Agregar Falla</button>
+                            <input type="text" id="new-falla-name" placeholder="Descripción de la Falla" class="form-control" required>
+                            <button type="submit" class="btn btn-secondary">Guardar Falla</button>
                         </div>
                     </form>
+                    <h4 class="mt-1">Tipos de Fallas Registradas:</h4>
+                    <ul id="list-fallas" style="margin-top: 0.5rem; padding-left: 1.2rem;"></ul>
                 </div>
             </section>
         </main>
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="./js/app.js"></script>
 </body>
 </html>
