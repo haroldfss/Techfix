@@ -1,0 +1,97 @@
+/* Variables Neurolingüísticas (NLP): Colores Emocionales y Cálidos */
+:root {
+    --primary-blue: #0B2545; /* Trust, structure, authority */
+    --accent-orange: #FF6B35; /* Action, warmth, emotional engagement */
+    --alert-yellow: #FFC107; /* Attention, delay */
+    --success-green: #8AC926; /* Resolution, fulfillment */
+    --bg-light: #F4F7F6;
+    --card-bg: #FFFFFF;
+    --text-main: #2D3142;
+    --text-muted: #909CC2;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+body { background-color: var(--bg-light); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+/* Vistas */
+.view { display: none; width: 100%; height: 100%; }
+.view.active { display: flex; }
+
+/* Login */
+#login-view { justify-content: center; align-items: center; background: linear-gradient(135deg, var(--primary-blue), #133c70); }
+.login-card { background: var(--card-bg); padding: 3rem; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
+.login-card h2 { color: var(--primary-blue); margin-bottom: 0.5rem; }
+.login-card p { color: var(--text-muted); margin-bottom: 2rem; }
+
+/* Layout App */
+.sidebar { width: 260px; background: var(--primary-blue); color: white; display: flex; flex-direction: column; }
+.sidebar-header { padding: 2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sidebar-header h2 { font-weight: 700; color: var(--accent-orange); }
+.badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-top: 0.5rem; }
+.badge-admin { background: var(--accent-orange); color: white; }
+
+.nav-links { list-style: none; padding: 1rem 0; flex: 1; }
+.nav-links li { padding: 1rem 1.5rem; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 10px; opacity: 0.8; }
+.nav-links li:hover, .nav-links li.active { opacity: 1; background: rgba(255,255,255,0.05); border-left: 4px solid var(--accent-orange); }
+.sidebar-footer { padding: 1.5rem; }
+
+.main-content { flex: 1; overflow-y: auto; padding: 2rem; background: var(--bg-light); }
+.content-section { display: none; animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Utils */
+.card { background: var(--card-bg); border-radius: 10px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 1.5rem; border-top: 4px solid var(--primary-blue); }
+.header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.header-action h1 { color: var(--primary-blue); }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+.grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; }
+.mt-1 { margin-top: 1rem; } .mt-2 { margin-top: 2rem; }
+
+/* Formularios */
+.form-group { margin-bottom: 1rem; text-align: left; }
+.form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--primary-blue); }
+.form-control { width: 100%; padding: 0.75rem; border: 1px solid #DDE2E5; border-radius: 6px; outline: none; transition: 0.3s; font-family: 'Inter'; }
+.form-control:focus { border-color: var(--accent-orange); box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1); }
+.checkbox-group label { display: inline-flex; align-items: center; margin-right: 1rem; font-weight: normal; font-size: 0.9rem; }
+.checkbox-group input { margin-right: 0.5rem; }
+
+/* Botones */
+.btn { padding: 0.75rem 1.5rem; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; font-family: 'Inter'; }
+.btn-block { width: 100%; justify-content: center; }
+.btn-primary { background: var(--accent-orange); color: white; }
+.btn-primary:hover { background: #e85923; }
+.btn-secondary { background: var(--primary-blue); color: white; }
+.btn-outline { background: transparent; border: 1px solid var(--text-muted); color: var(--text-main); }
+.btn-green { background: var(--success-green); color: white; }
+
+/* Tablas */
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
+.table th { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* KPI Dashboard */
+.kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.kpi-card { background: var(--card-bg); padding: 1.5rem; border-radius: 8px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-bottom: 4px solid var(--primary-blue); }
+.kpi-card h3 { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; }
+.kpi-value { font-size: 2rem; font-weight: 700; margin-top: 0.5rem; color: var(--primary-blue); }
+.text-orange { color: var(--accent-orange) !important; }
+.text-blue { color: #3A86FF !important; }
+.text-red { color: #EF476F !important; }
+.text-green { color: var(--success-green) !important; }
+
+/* Insights Card */
+.insight-card { background: linear-gradient(to right, rgba(255, 107, 53, 0.05), rgba(11, 37, 69, 0.05)); border: 1px solid rgba(255, 107, 53, 0.2); border-left: 5px solid var(--accent-orange); }
+.insight-card h3 { color: var(--accent-orange); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px; }
+
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.charts-grid .card:first-child { grid-column: span 2; }
+
+/* Modal */
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11,37,69,0.8); align-items: center; justify-content: center; z-index: 1000; }
+.modal-content { background: white; padding: 2rem; border-radius: 10px; width: 100%; max-width: 500px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
+
+/* Custom Settings Tabs */
+.settings-tabs { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
