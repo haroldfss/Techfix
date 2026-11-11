@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ServiTrack - Gestión de Servicios Técnicos</title>
+    <!-- Fuentes y Estilos -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- Pantalla de Login -->
+    <div id="login-view" class="view active">
+        <div class="login-card">
+            <h2>Bienvenido a ServiTrack</h2>
+            <p>Ingresa tus credenciales para acceder</p>
+            <div class="form-group">
+                <label>Usuario (Rol)</label>
+                <select id="login-role" class="form-control">
+                    <option value="admin">Administrador</option>
+                    <option value="operador">Operador</option>
+                    <option value="tecnico">Técnico</option>
+                </select>
+            </div>
+            <button onclick="app.login()" class="btn btn-primary btn-block">Ingresar al Sistema</button>
+        </div>
+    </div>
+
+    <!-- Aplicación Principal -->
+    <div id="app-view" class="view">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>ServiTrack</h2>
+                <span id="user-role-display" class="badge badge-admin">Admin</span>
+            </div>
+            <ul class="nav-links">
+                <li id="nav-dashboard" onclick="app.navigateTo('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</li>
+                <li id="nav-tickets" onclick="app.navigateTo('tickets')"><i class="fas fa-ticket-alt"></i> Gestión de Tickets</li>
+                <li id="nav-create-ticket" onclick="app.navigateTo('create-ticket')"><i class="fas fa-plus-circle"></i> Nuevo Ticket</li>
+                <li id="nav-map" onclick="app.navigateTo('map')"><i class="fas fa-map-marker-alt"></i> Mapa Técnicos</li>
+                <li id="nav-settings" onclick="app.navigateTo('settings')"><i class="fas fa-cog"></i> Ajustes</li>
+            </ul>
+            <div class="sidebar-footer">
+                <button onclick="app.logout()" class="btn btn-outline btn-block"><i class="fas fa-sign-out-alt"></i> Salir</button>
+            </div>
+        </nav>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            
+            <!-- Dashboard View -->
+            <section id="view-dashboard" class="content-section">
+                <div class="header-action">
+                    <h1 id="label-dashboard-title">Panel de Control & Analítica</h1>
+                    <button class="btn btn-secondary" onclick="app.generatePDF('view-dashboard', 'Dashboard_Reporte')"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                </div>
+                
+                <!-- Filtros del Dashboard -->
+                <div class="card filters-card">
+                    <div class="grid-6">
+                        <select id="filter-mes" class="form-control"><option value="">Mes (Todos)</option></select>
+                        <select id="filter-cliente" class="form-control"><option value="">Cliente (Todos)</option></select>
+                        <select id="filter-sede" class="form-control"><option value="">Sede (Todas)</option></select>
+                        <select id="filter-tecnico" class="form-control"><option value="">Técnico (Todos)</option></select>
+                        <select id="filter-falla" class="form-control"><option value="">Tipo Falla</option></select>
+                        <select id="filter-sistema" class="form-control"><option value="">Tipo Sistema</option></select>
+                    </div>
+                </div>
+
+                <!-- KPIs -->
+                <div class="kpi-grid">
+                    <div class="kpi-card"><h3>Creados</h3><p id="kpi-creados" class="kpi-value">0</p></div>
+                    <div class="kpi-card"><h3>Asignados</h3><p id="kpi-asignados" class="kpi-value text-blue">0</p></div>
+                    <div class="kpi-card"><h3>En Proceso</h3><p id="kpi-proceso" class="kpi-value text-orange">0</p></div>
+                    <div class="kpi-card"><h3>Retrasados</h3><p id="kpi-retrasados" class="kpi-value text-red">0</p></div>
+                    <div class="kpi-card"><h3>Cumplidos</h3><p id="kpi-cumplidos" class="kpi-value text-green">0</p></div>
+                    <div class="kpi-card"><h3>Tiempo Medio Cierre</h3><p id="kpi-tiempo" class="kpi-value">0h</p></div>
+                </div>
+
+                <!-- AI Recommendations / Insights -->
+                <div class="card insight-card">
+                    <h3><i class="fas fa-brain"></i> Análisis en Tiempo Real & Recomendaciones</h3>
+                    <p id="ai-insight-text">Recopilando datos para generar insights analíticos de la operación...</p>
+                </div>
+
+                <!-- Gráficos -->
+                <div class="charts-grid">
+                    <div class="card"><canvas id="chart-tendencia"></canvas></div>
+                    <div class="card"><canvas id="chart-sistemas"></canvas></div>
+                    <div class="card"><canvas id="chart-operadores"></canvas></div>
+                </div>
+            </section>
+
+            <!-- Tickets List View -->
+            <section id="view-tickets" class="content-section" style="display: none;">
+                <h1>Tickets Activos</h1>
+                <div class="card">
+                    <table class="table" id="tickets-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Cliente</th>
+                                <th>Sede</th>
+                                <th>Sistema</th>
+                                <th>Falla</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tickets-tbody">
+                            <!-- Empty State -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Create/Edit Ticket View -->
+            <section id="view-create-ticket" class="content-section" style="display: none;">
+                <h1 id="label-create-ticket">Generación de Novedad / Ticket</h1>
+                <div class="card">
+                    <form id="form-ticket" onsubmit="app.saveTicket(event)">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label id="label-ticket-client">Cliente</label>
+                                <select id="ticket-cliente" class="form-control" onchange="app.loadSedesForClient()" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label id="label-ticket-sede">Sede (Buscar Sede)</label>
+                                <select id="ticket-sede" class="form-control" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label id="label-ticket-system">Tipo de Sistema</label>
+                                <select id="ticket-sistema" class="form-control" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label id="label-ticket-falla">Tipo de Falla</label>
+                                <select id="ticket-falla" class="form-control" required></select>
+                            </div>
+                            <div class="form-group" id="group-tecnico">
+                                <label>Asignar Técnico</label>
+                                <select id="ticket-tecnico" class="form-control"></select>
+                            </div>
+                            <div class="form-group">
+                                <label id="label-ticket-tiempo">Tiempo Meta de Cierre (Días)</label>
+                                <input type="number" id="ticket-meta" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción de la Falla</label>
+                            <textarea id="ticket-desc" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Generar Ticket</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Settings View -->
+            <section id="view-settings" class="content-section" style="display: none;">
+                <h1>Ajustes de la Plataforma</h1>
+                
+                <!-- Sub-nav Ajustes -->
+                <div class="settings-tabs">
+                    <button class="btn btn-outline" onclick="app.toggleSettings('clientes')">Clientes & Sedes</button>
+                    <button class="btn btn-outline" onclick="app.toggleSettings('usuarios')">Usuarios & Permisos</button>
+                    <button class="btn btn-outline" onclick="app.toggleSettings('diccionarios')">Tipos de Fallas/Sistemas</button>
+                    <button class="btn btn-outline" onclick="app.toggleSettings('campos')">Edición de Campos</button>
+                </div>
+
+                <div id="settings-clientes" class="card mt-2 settings-panel">
+                    <h3>Crear Clientes (Personalización de Logo y Color)</h3>
+                    <form onsubmit="app.addClient(event)">
+                        <div class="grid-3">
+                            <input type="text" id="new-client-name" placeholder="Nombre de Cliente" class="form-control" required>
+                            <input type="color" id="new-client-color" class="form-control" title="Color Corporativo" required>
+                            <button type="submit" class="btn btn-secondary">Agregar Cliente</button>
+                        </div>
+                    </form>
+                    <hr>
+                    <h3>Sedes por Cliente</h3>
+                    <form onsubmit="app.addSede(event)">
+                        <div class="grid-3">
+                            <select id="sede-client-select" class="form-control"></select>
+                            <input type="text" id="new-sede-name" placeholder="Nombre/Dirección Sede" class="form-control" required>
+                            <button type="submit" class="btn btn-secondary">Agregar Sede</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="settings-usuarios" class="card mt-2 settings-panel" style="display:none;">
+                    <h3>Gestión de Usuarios y Roles Personalizados</h3>
+                    <form onsubmit="app.addUser(event)">
+                        <div class="grid-2">
+                            <input type="text" id="new-user-name" placeholder="Nombre del Usuario" class="form-control" required>
+                            <select id="new-user-client" class="form-control">
+                                <option value="ALL">Acceso a Todos (Interno)</option>
+                            </select>
+                            <input type="text" id="new-role-name" placeholder="Nombre del Nuevo Rol (Ej. Supervisor)" class="form-control" required>
+                        </div>
+                        <div class="form-group mt-1">
+                            <label>Permisos (Selección Múltiple):</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" class="perm-cb" value="crear_ticket"> Crear Tickets</label>
+                                <label><input type="checkbox" class="perm-cb" value="ver_dashboard"> Ver Dashboard</label>
+                                <label><input type="checkbox" class="perm-cb" value="atender_ticket"> Atender Tickets</label>
+                                <label><input type="checkbox" class="perm-cb" value="ver_mapa"> Ver Mapa de Georreferenciación</label>
+                                <label><input type="checkbox" class="perm-cb" value="configurar"> Configuración Total</label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-secondary mt-1">Crear Usuario/Rol</button>
+                    </form>
+                </div>
+                
+                <div id="settings-diccionarios" class="card mt-2 settings-panel" style="display:none;">
+                    <h3>Administrar Tipos de Fallas, Sistemas y Tiempos Meta</h3>
+                    <!-- Formularios dinamicos omitidos en mockup para brevedad pero soportados en logica -->
+                    <p>Módulo para crear y eliminar paramétricas.</p>
+                    <div class="grid-2">
+                        <input type="text" id="new-falla" placeholder="Nuevo Tipo de Falla" class="form-control">
+                        <button class="btn btn-outline" onclick="app.addFalla()">Agregar Falla</button>
+                    </div>
+                </div>
+
+                <div id="settings-campos" class="card mt-2 settings-panel" style="display:none;">
+                    <h3>Customizar Nombres de Campos (Formularios)</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Etiqueta 'Cliente'</label>
+                            <input type="text" id="edit-lbl-cliente" class="form-control" value="Cliente">
+                        </div>
+                        <div class="form-group">
+                            <label>Etiqueta 'Sede'</label>
+                            <input type="text" id="edit-lbl-sede" class="form-control" value="Sede">
+                        </div>
+                        <div class="form-group">
+                            <label>Etiqueta 'Tipo de Falla'</label>
+                            <input type="text" id="edit-lbl-falla" class="form-control" value="Tipo de Falla">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.saveLabels()">Guardar Etiquetas</button>
+                </div>
+            </section>
+
+            <!-- Map View -->
+            <section id="view-map" class="content-section" style="display: none;">
+                <h1>Geolocalización de Personal Técnico</h1>
+                <div class="card">
+                    <div id="tech-map" style="height: 500px; width: 100%; border-radius: 8px;"></div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Modal Cierre de Ticket (Técnico) -->
+    <div id="modal-cierre" class="modal">
+        <div class="modal-content">
+            <h2>Cierre de Ticket <span id="modal-ticket-id"></span></h2>
+            <form id="form-cierre" onsubmit="app.submitCierre(event)">
+                <div class="form-group">
+                    <label>Actividades Realizadas</label>
+                    <textarea class="form-control" required rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Materiales Utilizados</label>
+                    <textarea class="form-control" required rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Observaciones / Recomendaciones</label>
+                    <textarea class="form-control" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Registro Fotográfico (Simulado)</label>
+                    <input type="file" class="form-control" multiple accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Enviar copia de informe a (Correo):</label>
+                    <input type="email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <p><i class="fas fa-map-marker-alt"></i> Georreferenciación obtenida automáticamente.</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="document.getElementById('modal-cierre').style.display='none'">Cancelar</button>
+                    <button type="submit" class="btn btn-green">Confirmar Cierre</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
