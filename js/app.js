@@ -3,45 +3,32 @@ let dataState = {
     clientes: [],
     sedes: [],
     usuarios: [],
-    fallas: ["CCTV - Pérdida de Video", "Control de Acceso Bloqueado", "Alarma - Falsa Activación", "Red - Sin Conexión", "Hardware - Daño Físico"],
-    sistemas: ["CCTV (Dahua/Hikvision)", "Intrusión (AX PRO/DSC)", "Automatización (Sonoff)", "Control de Acceso"],
-    currentUser: null,
-    labels: { cliente: "Cliente", sede: "Sede", falla: "Tipo de Falla" }
+    fallas: ["CCTV - Pérdida de Video", "Control de Acceso Bloqueado", "Alarma - Falsa Activación"],
+    sistemas: ["CCTV (Dahua/Hikvision)", "Intrusión (AX PRO/DSC)", "Automatización (Sonoff)"],
+    currentUser: null
 };
 
 const app = {
-    charts: {},
-    map: null,
     init() {
-        this.loadLocalStorage();
+        this.loadStorage();
         this.updateSelectors();
     },
     login() {
         const role = document.getElementById('login-role').value;
-        dataState.currentUser = { role: role, name: "Usuario " + role };
+        dataState.currentUser = { role: role };
         document.getElementById('login-view').classList.remove('active');
         document.getElementById('app-view').classList.add('active');
         document.getElementById('user-role-display').innerText = role.toUpperCase();
-        this.applyPermissions(role);
-        this.navigateTo(role === 'tecnico' ? 'tickets' : 'dashboard');
+        this.navigateTo('dashboard');
     },
     logout() {
         document.getElementById('app-view').classList.remove('active');
         document.getElementById('login-view').classList.add('active');
-        dataState.currentUser = null;
-    },
-    applyPermissions(role) {
-        document.getElementById('nav-dashboard').style.display = role === 'tecnico' ? 'none' : 'flex';
-        document.getElementById('nav-create-ticket').style.display = role === 'tecnico' ? 'none' : 'flex';
-        document.getElementById('nav-settings').style.display = role === 'tecnico' || role === 'operador' ? 'none' : 'flex';
-        document.getElementById('nav-map').style.display = role === 'tecnico' ? 'none' : 'flex';
     },
     navigateTo(section) {
         document.querySelectorAll('.content-section').forEach(el => el.style.display = 'none');
         document.getElementById(`view-${section}`).style.display = 'block';
-        if (section === 'dashboard') this.renderDashboard();
-        if (section === 'tickets') this.renderTickets();
-        if (section === 'map') this.initMap();
+        if(section === 'dashboard') this.renderDashboard();
     },
     toggleSettings(panel) {
         document.querySelectorAll('.settings-panel').forEach(el => el.style.display = 'none');
@@ -52,8 +39,8 @@ const app = {
         const name = document.getElementById('new-client-name').value;
         const color = document.getElementById('new-client-color').value;
         dataState.clientes.push({ name, color });
-        this.saveLocalStorage();
-        alert(`Cliente ${name} agregado correctamente.`);
+        this.saveStorage();
+        alert(`Cliente "${name}" creado exitosamente.`);
         e.target.reset();
         this.updateSelectors();
     },
@@ -61,41 +48,51 @@ const app = {
         e.preventDefault();
         const client = document.getElementById('sede-client-select').value;
         const sede = document.getElementById('new-sede-name').value;
-        if(!client) { alert("Seleccione un cliente primero."); return; }
+        if(!client) { alert("Seleccione un cliente válido."); return; }
         dataState.sedes.push({ client, sede });
-        this.saveLocalStorage();
-        alert(`Sede agregada a ${client}.`);
+        this.saveStorage();
+        alert(`Sede "${sede}" agregada al cliente ${client}.`);
         e.target.reset();
-        this.updateSelectors();
+    },
+    addUser(e) {
+        e.preventDefault();
+        const name = document.getElementById('new-user-name').value;
+        const role = document.getElementById('new-user-role').value;
+        dataState.usuarios.push({ name, role });
+        this.saveStorage();
+        alert(`Usuario "${name}" registrado con rol ${role.toUpperCase()}.`);
+        e.target.reset();
+    },
+    addFalla(e) {
+        e.preventDefault();
+        const falla = document.getElementById('new-falla-name').value;
+        dataState.fallas.push(falla);
+        this.saveStorage();
+        alert(`Tipo de falla "${falla}" agregada.`);
+        e.target.reset();
     },
     updateSelectors() {
-        const fill = (id, arr, prop) => {
-            const el = document.getElementById(id);
-            if(!el) return;
-            el.innerHTML = '<option value="">Seleccione...</option>';
-            arr.forEach(i => {
-                const val = prop ? i[prop] : i;
-                el.innerHTML += `<option value="${val}">${val}</option>`;
+        const clientSelect = document.getElementById('sede-client-select');
+        if(clientSelect) {
+            clientSelect.innerHTML = '<option value="">Seleccione Cliente...</option>';
+            dataState.clientes.forEach(c => {
+                clientSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`;
             });
-        };
-        fill('ticket-cliente', dataState.clientes, 'name');
-        fill('sede-client-select', dataState.clientes, 'name');
-        fill('ticket-falla', dataState.fallas);
-        fill('ticket-sistema', dataState.sistemas);
+        }
     },
-    saveLocalStorage() {
-        localStorage.setItem('servitrack_data', JSON.stringify(dataState));
+    saveStorage() {
+        localStorage.setItem('servitrack_db', JSON.stringify(dataState));
     },
-    loadLocalStorage() {
-        const saved = localStorage.getItem('servitrack_data');
+    loadStorage() {
+        const saved = localStorage.getItem('servitrack_db');
         if(saved) { dataState = JSON.parse(saved); }
     },
     renderDashboard() {
         document.getElementById('kpi-creados').innerText = dataState.tickets.length;
-        document.getElementById('ai-insight-text').innerText = dataState.tickets.length === 0 ? 
-            "Plataforma lista. Comience a registrar tickets y clientes en ajustes." : "Analizando operaciones en tiempo real...";
-    },
-    renderTickets() { },
-    initMap() { }
+        document.getElementById('ai-insight-text').innerText = dataState.clientes.length === 0 ? 
+            "Recomendación: Vaya a Ajustes y cree su primer cliente y sedes para iniciar operaciones." : 
+            "Operación sincronizada con éxito. Monitoreando SLAs en tiempo real.";
+    }
 };
+
 window.onload = () => app.init();
