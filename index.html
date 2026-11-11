@@ -7,11 +7,12 @@
     <!-- Fuentes y Estilos -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
 
-    <!-- Pantalla de Login con Usuario y Contraseña -->
+    <!-- Pantalla de Login -->
     <div id="login-view" class="view active">
         <div class="login-card">
             <h2>Bienvenido a ServiTrack</h2>
@@ -27,13 +28,13 @@
                 </div>
                 <button type="submit" class="btn btn-primary btn-block mt-1">Ingresar al Sistema</button>
             </form>
-            <p class="mt-1" style="font-size: 0.8rem; color: #909CC2;">(Credenciales por defecto: admin / admin)</p>
+            <p class="mt-1" style="font-size: 0.8rem; color: #909CC2;">(Acceso: admin / admin)</p>
         </div>
     </div>
 
     <!-- Aplicación Principal -->
     <div id="app-view" class="view">
-        <!-- Sidebar -->
+        <!-- Sidebar con todas las opciones -->
         <nav class="sidebar">
             <div class="sidebar-header">
                 <h2>ServiTrack</h2>
@@ -41,6 +42,9 @@
             </div>
             <ul class="nav-links">
                 <li id="nav-dashboard" onclick="app.navigateTo('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</li>
+                <li id="nav-tickets" onclick="app.navigateTo('tickets')"><i class="fas fa-ticket-alt"></i> Gestión de Tickets</li>
+                <li id="nav-create-ticket" onclick="app.navigateTo('create-ticket')"><i class="fas fa-plus-circle"></i> Nuevo Ticket</li>
+                <li id="nav-map" onclick="app.navigateTo('map')"><i class="fas fa-map-marker-alt"></i> Mapa Técnicos</li>
                 <li id="nav-settings" onclick="app.navigateTo('settings')"><i class="fas fa-cog"></i> Ajustes</li>
             </ul>
             <div class="sidebar-footer">
@@ -55,14 +59,69 @@
             <section id="view-dashboard" class="content-section">
                 <h1>Panel de Control & Analítica</h1>
                 <div class="kpi-grid">
-                    <div class="kpi-card"><h3>Clientes</h3><p id="kpi-clientes" class="kpi-value">0</p></div>
-                    <div class="kpi-card"><h3>Sedes</h3><p id="kpi-sedes" class="kpi-value text-blue">0</p></div>
-                    <div class="kpi-card"><h3>Usuarios</h3><p id="kpi-usuarios" class="kpi-value text-orange">0</p></div>
-                    <div class="kpi-card"><h3>Fallas Reg.</h3><p id="kpi-fallas" class="kpi-value text-green">0</p></div>
+                    <div class="kpi-card"><h3>Tickets</h3><p id="kpi-tickets" class="kpi-value">0</p></div>
+                    <div class="kpi-card"><h3>Clientes</h3><p id="kpi-clientes" class="kpi-value text-blue">0</p></div>
+                    <div class="kpi-card"><h3>Sedes</h3><p id="kpi-sedes" class="kpi-value text-orange">0</p></div>
+                    <div class="kpi-card"><h3>Usuarios</h3><p id="kpi-usuarios" class="kpi-value text-green">0</p></div>
                 </div>
-                <div class="card insight-card">
+                <div class="card insight-card mt-2">
                     <h3><i class="fas fa-brain"></i> Análisis en Tiempo Real & Recomendaciones</h3>
-                    <p id="ai-insight-text">Sistema sincronizado. Ingrese a Ajustes para configurar su operación.</p>
+                    <p id="ai-insight-text">Sistema sincronizado. Monitoreo de operaciones activo.</p>
+                </div>
+            </section>
+
+            <!-- Tickets View -->
+            <section id="view-tickets" class="content-section" style="display: none;">
+                <h1>Gestión de Tickets</h1>
+                <div class="card">
+                    <table class="table">
+                        <thead>
+                            <tr><th>ID</th><th>Cliente</th><th>Sede</th><th>Sistema</th><th>Falla</th><th>Estado</th></tr>
+                        </thead>
+                        <tbody id="tickets-tbody">
+                            <tr><td colspan="6" style="text-align:center; color:#999;">No hay tickets registrados.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Create Ticket View -->
+            <section id="view-create-ticket" class="content-section" style="display: none;">
+                <h1>Generación de Novedad / Ticket</h1>
+                <div class="card">
+                    <form onsubmit="app.saveTicket(event)">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Cliente</label>
+                                <select id="ticket-cliente" class="form-control" onchange="app.loadSedesForClient()" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Sede</label>
+                                <select id="ticket-sede" class="form-control" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Tipo de Sistema</label>
+                                <select id="ticket-sistema" class="form-control" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Tipo de Falla</label>
+                                <select id="ticket-falla" class="form-control" required></select>
+                            </div>
+                        </div>
+                        <div class="form-group mt-1">
+                            <label>Descripción de la Falla</label>
+                            <textarea id="ticket-desc" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-1">Crear Ticket</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Map View -->
+            <section id="view-map" class="content-section" style="display: none;">
+                <h1>Geolocalización de Personal Técnico</h1>
+                <div class="card">
+                    <div id="tech-map" style="height: 450px; width: 100%; border-radius: 8px;"></div>
                 </div>
             </section>
 
@@ -76,7 +135,6 @@
                     <button class="btn btn-outline" onclick="app.toggleTab('fallas')">Tipos de Fallas</button>
                 </div>
 
-                <!-- Pestaña Clientes y Sedes -->
                 <div id="tab-clientes" class="card mt-2 settings-panel">
                     <h3>Crear Cliente</h3>
                     <form onsubmit="app.addClient(event)">
@@ -102,7 +160,6 @@
                     <ul id="list-sedes" style="margin-top: 0.5rem; padding-left: 1.2rem;"></ul>
                 </div>
 
-                <!-- Pestaña Usuarios -->
                 <div id="tab-usuarios" class="card mt-2 settings-panel" style="display:none;">
                     <h3>Crear Usuario</h3>
                     <form onsubmit="app.addUser(event)">
@@ -120,9 +177,8 @@
                     <ul id="list-usuarios" style="margin-top: 0.5rem; padding-left: 1.2rem;"></ul>
                 </div>
 
-                <!-- Pestaña Fallas -->
                 <div id="tab-fallas" class="card mt-2 settings-panel" style="display:none;">
-                    <h3>Crear Tipo de Falla / Sistema</h3>
+                    <h3>Crear Tipo de Falla</h3>
                     <form onsubmit="app.addFalla(event)">
                         <div class="grid-2">
                             <input type="text" id="new-falla-name" placeholder="Descripción de la Falla" class="form-control" required>
@@ -137,6 +193,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="./js/app.js"></script>
 </body>
 </html>
