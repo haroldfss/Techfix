@@ -110,7 +110,7 @@ const app = {
             if(gClientSel) {
                 gClientSel.value = currentUser.assignedClient;
                 if(currentUser.role !== "Administrador") {
-                    gClientSel.disabled = true; // Bloquear selección global para no admin
+                    gClientSel.disabled = true;
                 }
             }
         } else {
@@ -146,13 +146,13 @@ const app = {
         activeClientContext = val;
         const clientObj = dataState.clientes.find(c => c.name === val);
         this.applyClientBranding(clientObj);
-        this.updateSedeDropdowns();
+        this.updateSedeCheckboxes();
         this.renderDashboard();
     },
-    updateSedeDropdowns() {
-        const sedeSelect = document.getElementById('filt-sede');
-        if(!sedeSelect) return;
-        sedeSelect.innerHTML = '';
+    updateSedeCheckboxes() {
+        const container = document.getElementById('filt-sedes-container');
+        if(!container) return;
+        container.innerHTML = '';
         
         let targetSedes = dataState.sedes;
         let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
@@ -161,8 +161,17 @@ const app = {
             targetSedes = dataState.sedes.filter(s => s.client === activeClient);
         }
         
+        if(targetSedes.length === 0) {
+            container.innerHTML = '<span style="font-size:0.85rem; color:var(--text-muted); padding:4px;">No hay sedes disponibles</span>';
+            return;
+        }
+
         targetSedes.forEach(s => {
-            sedeSelect.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
+            container.innerHTML += `
+                <label>
+                    <input type="checkbox" value="${s.sede}" class="sede-chk" checked onchange="app.renderDashboard()"> ${s.sede}
+                </label>
+            `;
         });
     },
     toggleAnalysis(boxId, btn) {
@@ -249,7 +258,7 @@ const app = {
         this.saveStorage();
         e.target.reset();
         this.renderAll();
-        this.updateSedeDropdowns();
+        this.updateSedeCheckboxes();
         alert("Sede agregada.");
     },
     deleteSede(idx) {
@@ -257,7 +266,7 @@ const app = {
             dataState.sedes.splice(idx, 1);
             this.saveStorage();
             this.renderAll();
-            this.updateSedeDropdowns();
+            this.updateSedeCheckboxes();
         }
     },
     addUser(e) {
@@ -419,14 +428,14 @@ const app = {
         fallaEl.innerHTML = '';
         dataState.fallas.forEach(f => fallaEl.innerHTML += `<option value="${f}">${f}</option>`);
 
-        // AISLAMIENTO: Los técnicos del formulario solo deben mostrarse si pertenecen al cliente del usuario actual
+        // AISLAMIENTO: Técnicos del formulario restringidos al cliente asignado
         const tecEl = document.getElementById('ticket-tecnico');
         tecEl.innerHTML = '';
         let targetTecs = dataState.usuarios.filter(u => u.role.toLowerCase().includes('técnico') || u.role.toLowerCase().includes('tecnico'));
         if(currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") {
             targetTecs = targetTecs.filter(u => u.assignedClient === currentUser.assignedClient || u.assignedClient === "TODOS");
         }
-        if(targetTecs.length === 0) targetTecs = dataState.usuarios; // fallback
+        if(targetTecs.length === 0) targetTecs = dataState.usuarios;
         targetTecs.forEach(u => tecEl.innerHTML += `<option value="${u.name}">${u.name} (${u.role})</option>`);
 
         const slaEl = document.getElementById('ticket-sla');
@@ -508,7 +517,7 @@ const app = {
         });
     },
 
-    // --- DASHBOARD & INDICADORES CON SOPORTE MULTI-SEDE ---
+    // --- DASHBOARD & INDICADORES CON SELECCIÓN MÚLTIPLE DE SEDES ---
     renderDashboard() {
         let filtered = dataState.tickets;
         
@@ -518,10 +527,250 @@ const app = {
             filtered = filtered.filter(t => t.cliente === activeClient);
         }
 
-        // Obtener sedes seleccionadas en multiselect
-        const sedeSelect = document.getElementById('filt-sede');
-        const selectedSedes = Array.from(sedeSelect.selectedOptions).map(opt => opt.value);
+        // Obtener sedes seleccionadas mediante casillas de verificación
+        const selectedSedes = Array.from(document.querySelectorAll('.sede-chk:checked')).map(cb => cb.value);
         const fTec = document.getElementById('filt-tecnico').value;
 
         if(selectedSedes.length > 0) {
-            filtered = filtered.filter(t => selectedSedes.
+            filtered = filtered.filter(t => selectedSedes.includes(t.sede));
+        } else {
+            filtered = []; // Si ninguna sede está marcada, no muestra datos
+        }
+        if(fTec) filtered = filtered.filter(t => t.tecnico === fTec);
+
+        const creados = filtered.length;
+        const asignados = filtered.filter(t => t.estado === 'Asignado').length;
+        const proceso = filtered.filter(t => t.estado === 'En Proceso').length;
+        const retrasados = filtered.filter(t => t.estado === 'Retrasado').length;
+        const cumplidos = filtered.filter(t => t.estado === 'Cumplido').length;
+
+        document.getElementById('kpi-creados').innerText = creados;
+        document.getElementById('kpi-asignados').innerText = asignados;
+        document.getElementById('kpi-proceso').innerText = proceso;
+        document.getElementById('kpi-retrasados').innerText = retrasados;
+        document.getElementById('kpi-cumplidos').innerText = cumplidos;
+        document.getElementById('kpi-tiempo').innerText = cumplidos > 0 ? "14.2h" : "0h";
+
+        this.buildIndicators(filtered, selectedSedes);
+    },
+    buildIndicators(filtered, selectedSedes) {
+        let clientSedes = dataState.sedes;
+        let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
+        
+        if(activeClient) {
+            clientSedes = dataState.sedes.filter(s => s.client === activeClient);
+        }
+        
+        const sedesList = (selectedSedes && selectedSedes.length > 0) ? selectedSedes : clientSedes.map(s => s.sede);
+        const sistemasList = dataState.sistemas;
+        
+        // AISLAMIENTO: Técnicos del dashboard restringidos al cliente actual
+        let tecnicosList = dataState.usuarios.filter(u => u.role.toLowerCase().includes('técnico') || u.role.toLowerCase().includes('tecnico')).map(u => u.name);
+        if(activeClient) {
+            const clientTecs = dataState.usuarios.filter(u => (u.role.toLowerCase().includes('técnico') || u.role.toLowerCase().includes('tecnico')) && (u.assignedClient === activeClient || u.assignedClient === "TODOS"));
+            tecnicosList = clientTecs.map(u => u.name);
+        }
+        if(tecnicosList.length === 0) tecnicosList = dataState.usuarios.map(u => u.name);
+
+        const ticketSedeCounts = sedesList.map(sede => filtered.filter(t => t.sede === sede).length);
+        if(this.charts.ticketSede) this.charts.ticketSede.destroy();
+        this.charts.ticketSede = new Chart(document.getElementById('chart-ticket-sede').getContext('2d'), {
+            type: 'bar',
+            data: { labels: sedesList, datasets: [{ label: 'Tickets vs Sede', data: ticketSedeCounts, backgroundColor: '#1E3A8A' }] },
+            options: { responsive: true, plugins: { title: { display: false } } }
+        });
+        document.getElementById('analysis-text-1').innerText = `Análisis: Concentración de ${filtered.length} tickets en sedes seleccionadas. Recomendación: Evaluar mantenimiento preventivo en las sedes con mayor volumen.`;
+
+        const fallasSedesCounts = sedesList.map(sede => filtered.filter(t => t.sede === sede && t.falla).length);
+        if(this.charts.fallasSedes) this.charts.fallasSedes.destroy();
+        this.charts.fallasSedes = new Chart(document.getElementById('chart-fallas-sedes').getContext('2d'), {
+            type: 'bar',
+            data: { labels: sedesList, datasets: [{ label: 'Fallas Reportadas', data: fallasSedesCounts, backgroundColor: '#EF4444' }] },
+            options: { responsive: true, plugins: { title: { display: false } } }
+        });
+        document.getElementById('analysis-text-2').innerText = `Análisis: Correlación entre fallas e infraestructura de sedes. Recomendación: Revisar estabilidad de energía y redes en sitios críticos.`;
+
+        const sistemasCounts = sistemasList.map(sis => filtered.filter(t => t.sistema === sis).length);
+        if(this.charts.ticketSistemas) this.charts.ticketSistemas.destroy();
+        this.charts.ticketSistemas = new Chart(document.getElementById('chart-ticket-sistemas').getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: sistemasList, datasets: [{ data: sistemasCounts, backgroundColor: ['#1E3A8A', '#FF6B35', '#10B981', '#F59E0B'] }] },
+            options: { responsive: true, plugins: { title: { display: false } } }
+        });
+        document.getElementById('analysis-text-3').innerText = `Análisis: Distribución por tecnologías afectadas. Recomendación: Priorizar auditorías sobre sistemas con mayor índice de fallas.`;
+
+        const ticketTecCounts = tecnicosList.map(tec => filtered.filter(t => t.tecnico === tec).length);
+        if(this.charts.ticketTecnico) this.charts.ticketTecnico.destroy();
+        this.charts.ticketTecnico = new Chart(document.getElementById('chart-ticket-tecnico').getContext('2d'), {
+            type: 'bar',
+            data: { labels: tecnicosList, datasets: [{ label: 'Tickets Asignados', data: ticketTecCounts, backgroundColor: '#FF6B35' }] },
+            options: { responsive: true, plugins: { title: { display: false } } }
+        });
+        document.getElementById('analysis-text-4').innerText = `Análisis: Carga laboral asignada al personal técnico. Recomendación: Balancear órdenes para evitar saturación en campo.`;
+
+        const slaTecProm = tecnicosList.map(tec => {
+            const tecTickets = filtered.filter(t => t.tecnico === tec);
+            if(tecTickets.length === 0) return 0;
+            const suma = tecTickets.reduce((acc, curr) => acc + parseFloat(curr.sla || 0), 0);
+            return (suma / tecTickets.length).toFixed(1);
+        });
+        if(this.charts.ticketTecSla) this.charts.ticketTecSla.destroy();
+        this.charts.ticketTecSla = new Chart(document.getElementById('chart-ticket-tec-sla').getContext('2d'), {
+            type: 'bar',
+            data: { labels: tecnicosList, datasets: [{ label: 'Promedio SLA (Días)', data: slaTecProm, backgroundColor: '#10B981' }] },
+            options: { responsive: true, plugins: { title: { display: false } } }
+        });
+        document.getElementById('analysis-text-5').innerText = `Análisis: Cumplimiento de tiempos meta por técnico. Recomendación: Capacitar al personal para reducir el SLA promedio.`;
+
+        if(this.charts.tendenciaSedes) this.charts.tendenciaSedes.destroy();
+        this.charts.tendenciaSedes = new Chart(document.getElementById('chart-tendencia-sedes').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+                datasets: [{ label: 'Sedes con Novedades', data: [1, 2, 2, filtered.length], borderColor: '#0A192F', backgroundColor: 'rgba(10,25,47,0.1)', fill: true, tension: 0.3 }]
+            },
+            options: { responsive: true, plugins: { title: { display: false } } }
+        });
+        document.getElementById('analysis-text-6').innerText = `Análisis: Evolución temporal de sedes impactadas. Recomendación: Establecer alertas tempranas ante picos de fallas.`;
+    },
+
+    // --- RENDERIZADO GENERAL CON AISLAMIENTO DE USUARIOS Y TÉCNICOS ---
+    renderAll() {
+        const gClientSel = document.getElementById('global-client-filter');
+        const sCli = document.getElementById('sede-client-select');
+        const uClientSel = document.getElementById('new-user-client');
+
+        if(gClientSel) {
+            gClientSel.innerHTML = '<option value="">Todos los Clientes (Vista Master)</option>';
+            dataState.clientes.forEach(c => gClientSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+            gClientSel.value = activeClientContext;
+        }
+        if(sCli) {
+            sCli.innerHTML = '<option value="">Seleccione Cliente...</option>';
+            dataState.clientes.forEach(c => sCli.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+        }
+        if(uClientSel) {
+            uClientSel.innerHTML = '<option value="TODOS">Asignar Todos los Clientes (Master)</option>';
+            dataState.clientes.forEach(c => uClientSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+        }
+
+        const tCli = document.getElementById('table-clientes');
+        if(tCli) {
+            tCli.innerHTML = '';
+            dataState.clientes.forEach((c, i) => {
+                tCli.innerHTML += `<tr><td><strong>${c.name}</strong></td><td><span style="display:inline-block;width:15px;height:15px;background:${c.color};border-radius:4px;"></span></td><td><img src="${c.logo}" style="height:25px; object-fit:contain;"></td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('client', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteClient(${i})">Del</button></td></tr>`;
+            });
+        }
+
+        const tSed = document.getElementById('table-sedes');
+        if(tSed) {
+            tSed.innerHTML = '';
+            dataState.sedes.forEach((s, i) => {
+                tSed.innerHTML += `<tr><td><strong>${s.sede}</strong></td><td>${s.client}</td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('sede', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteSede(${i})">Del</button></td></tr>`;
+            });
+        }
+
+        this.updateSedeCheckboxes();
+
+        // AISLAMIENTO ABSOLUTO DE USUARIOS/TÉCNICOS POR CLIENTE
+        const tUsu = document.getElementById('table-usuarios');
+        const fTec = document.getElementById('filt-tecnico');
+        if(tUsu && fTec) {
+            tUsu.innerHTML = ''; 
+            fTec.innerHTML = '<option value="">Técnico (Todos)</option>';
+            
+            let visibleUsers = dataState.usuarios;
+            let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : "";
+            
+            if(currentUser && currentUser.role !== "Administrador" && activeClient) {
+                visibleUsers = dataState.usuarios.filter(u => u.assignedClient === activeClient || u.assignedClient === "TODOS");
+            }
+
+            visibleUsers.forEach((u, i) => {
+                const realIndex = dataState.usuarios.indexOf(u);
+                tUsu.innerHTML += `<tr><td><strong>${u.name}</strong></td><td>${u.role}</td><td>${u.assignedClient}</td><td><span style="font-size:0.85rem;color:var(--text-muted);">${(u.perms || []).join(', ')}</span></td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('user', ${realIndex})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteUser(${realIndex})">Del</button></td></tr>`;
+            });
+
+            let techListForFilter = dataState.usuarios.filter(u => u.role.toLowerCase().includes('técnico') || u.role.toLowerCase().includes('tecnico'));
+            if(activeClient) {
+                techListForFilter = techListForFilter.filter(u => u.assignedClient === activeClient || u.assignedClient === "TODOS");
+            }
+            techListForFilter.forEach(u => fTec.innerHTML += `<option value="${u.name}">${u.name}</option>`);
+        }
+
+        const tSys = document.getElementById('table-sistemas');
+        if(tSys) {
+            tSys.innerHTML = '';
+            dataState.sistemas.forEach((s, i) => {
+                tSys.innerHTML += `<tr><td>${s}</td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('sistema', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteSistema(${i})">Del</button></td></tr>`;
+            });
+        }
+
+        const tFal = document.getElementById('table-fallas');
+        if(tFal) {
+            tFal.innerHTML = '';
+            dataState.fallas.forEach((f, i) => {
+                tFal.innerHTML += `<tr><td>${f}</td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('falla', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteFalla(${i})">Del</button></td></tr>`;
+            });
+        }
+
+        const tSla = document.getElementById('table-sla');
+        if(tSla) {
+            tSla.innerHTML = '';
+            dataState.slaList.forEach((sla, i) => {
+                tSla.innerHTML += `<tr><td>${sla.desc}</td><td><strong>${sla.days} Días</strong></td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('sla', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteSla(${i})">Del</button></td></tr>`;
+            });
+        }
+
+        this.renderDashboard();
+        this.renderConnectedTechsTable();
+    },
+    renderConnectedTechsTable() {
+        const tbody = document.getElementById('table-connected-techs');
+        if(!tbody) return;
+        
+        let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : "";
+        let techs = dataState.usuarios.filter(u => u.role.toLowerCase().includes('técnico') || u.role.toLowerCase().includes('tecnico') || u.role.toLowerCase().includes('operador'));
+        
+        if(activeClient && currentUser.role !== "Administrador") {
+            techs = techs.filter(u => u.assignedClient === activeClient || u.assignedClient === "TODOS");
+        }
+
+        if(techs.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No hay técnicos conectados en este momento.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        techs.forEach(t => {
+            tbody.innerHTML += `<tr>
+                <td><strong><i class="fas fa-user-circle" style="color:var(--secondary);"></i> ${t.name}</strong></td>
+                <td>${t.role}</td>
+                <td>${t.assignedClient}</td>
+                <td><span class="badge" style="background:var(--success);">GPS Activo</span></td>
+                <td>${t.lastLogin || 'Reciente'}</td>
+            </tr>`;
+        });
+    },
+    initMap() {
+        if(!this.map) {
+            this.map = L.map('tech-map').setView([4.6097, -74.0817], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
+            L.marker([4.6097, -74.0817]).addTo(this.map).bindPopup("<b>Técnico:</b> Carlos Pérez (GPS Activo)");
+        }
+        setTimeout(() => this.map.invalidateSize(), 200);
+        this.renderConnectedTechsTable();
+    },
+    generatePDF() {
+        alert("Generando informe PDF gerencial...");
+    },
+    saveStorage() {
+        localStorage.setItem('servitrack_db_v18', JSON.stringify(dataState));
+    },
+    loadStorage() {
+        const saved = localStorage.getItem('servitrack_db_v18');
+        if(saved) dataState = JSON.parse(saved);
+    }
+};
+
+window.onload = () => app.init();
