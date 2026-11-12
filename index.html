@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ServiTrack - Gestión y Trazabilidad Técnica Móvil</title>
+    <title>ServiTrack - Dashboard Gerencial & Analítica Avanzada</title>
     <!-- Fuentes y Estilos Tecnológicos (Neurolingüística: Azul Confianza #0A192F, Naranja Acción #FF6B35, Verde Éxito #10B981) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -44,7 +44,7 @@
         .nav-links li:hover, .nav-links li.active { opacity: 1; background: rgba(255,255,255,0.08); border-left: 4px solid var(--accent); font-weight: 500; }
         .sidebar-footer { padding: 1.2rem; border-top: 1px solid rgba(255,255,255,0.1); }
 
-        /* Mobile Top Bar Toggle */
+        /* Mobile Top Bar */
         .mobile-topbar { display: none; background: var(--primary); color: white; padding: 1rem; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; width: 100%; z-index: 99; }
         .mobile-topbar h2 { color: var(--accent); font-size: 1.2rem; }
         .menu-toggle-btn { background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer; }
@@ -54,16 +54,16 @@
         .content-section { display: none; }
 
         /* Cards & Layouts */
-        .card { background: var(--card-bg); border-radius: 16px; padding: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.03); margin-bottom: 1.2rem; border: 1px solid var(--border); }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.03); margin-bottom: 1.5rem; border: 1px solid var(--border); }
         .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem; }
         .header-action h1 { color: var(--primary); font-size: 1.5rem; font-weight: 700; }
         
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
         .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.8rem; }
         .mt-1 { margin-top: 1rem; } .mt-2 { margin-top: 1.5rem; }
 
-        /* Forms */
+        /* Forms & Buttons */
         .form-group { margin-bottom: 1rem; text-align: left; }
         .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--primary); }
         .form-control { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; transition: 0.2s; font-size: 0.9rem; background: #fff; }
@@ -72,7 +72,6 @@
         .checkbox-group label { display: inline-flex; align-items: center; font-weight: normal; font-size: 0.9rem; cursor: pointer; }
         .checkbox-group input { margin-right: 0.5rem; width: 16px; height: 16px; accent-color: var(--accent); }
 
-        /* Buttons */
         .btn { padding: 0.7rem 1.2rem; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; }
         .btn-block { width: 100%; }
         .btn-primary { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(255,107,53,0.3); }
@@ -84,13 +83,13 @@
         .btn-danger { background: var(--danger); color: white; padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius: 6px; }
         .btn-warning { background: var(--warning); color: white; padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius: 6px; }
 
-        /* Tables Responsive */
+        /* Tables */
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; min-width: 600px; }
         .table th, .table td { padding: 0.9rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
         .table th { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; background: #F8FAFC; }
 
-        /* Dashboard & KPIs con Neuromarketing */
+        /* KPIs */
         .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
         .kpi-card { background: var(--card-bg); padding: 1.2rem; border-radius: 16px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); border-top: 5px solid var(--secondary); cursor: pointer; transition: 0.3s; }
         .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px -3px rgba(0,0,0,0.08); }
@@ -111,7 +110,7 @@
         .modal-content { background: white; padding: 2rem; border-radius: 20px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
 
-        /* Media Queries para Teléfonos Celulares */
+        /* Media Queries */
         @media (max-width: 900px) {
             body { display: block; overflow: auto; height: auto; }
             .sidebar { position: fixed; left: -260px; top: 0; height: 100vh; transition: left 0.3s ease; }
@@ -125,7 +124,7 @@
 </head>
 <body>
 
-    <!-- Barra Superior Móvil -->
+    <!-- Topbar Móvil -->
     <div class="mobile-topbar">
         <h2>ServiTrack Mobile</h2>
         <button class="menu-toggle-btn" onclick="app.toggleMobileMenu()"><i class="fas fa-bars"></i></button>
@@ -176,14 +175,15 @@
             <!-- Dashboard Section -->
             <section id="view-dashboard" class="content-section" style="display: block;">
                 <div class="header-action">
-                    <h1>Dashboard Gerencial & Analítica</h1>
+                    <h1>Dashboard Gerencial & Analítica Avanzada</h1>
                     <button class="btn btn-secondary" onclick="app.generatePDF()"><i class="fas fa-file-pdf"></i> Exportar Reporte</button>
                 </div>
 
+                <!-- Filtros Interactivos -->
                 <div class="card filters-card">
-                    <h3 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.6rem;"><i class="fas fa-filter"></i> Filtros Interactivos</h3>
+                    <h3 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.6rem;"><i class="fas fa-filter"></i> Filtros Interactivos de Rendimiento</h3>
                     <div class="grid-5">
-                        <select id="filt-mes" class="form-control" onchange="app.renderDashboard()"><option value="">Mes (Todos)</option><option value="2026-11">Noviembre 2026</option></select>
+                        <select id="filt-mes" class="form-control" onchange="app.renderDashboard()"><option value="">Mes (Todos)</option><option value="2026-11">Noviembre 2026</option><option value="2026-12">Diciembre 2026</option></select>
                         <select id="filt-cliente" class="form-control" onchange="app.renderDashboard()"><option value="">Cliente (Todos)</option></select>
                         <select id="filt-sede" class="form-control" onchange="app.renderDashboard()"><option value="">Sede (Todas)</option></select>
                         <select id="filt-tecnico" class="form-control" onchange="app.renderDashboard()"><option value="">Técnico (Todos)</option></select>
@@ -191,6 +191,7 @@
                     </div>
                 </div>
 
+                <!-- KPIs -->
                 <div class="kpi-grid">
                     <div class="kpi-card" onclick="app.navigateTo('tickets')"><h3>Creados</h3><p id="kpi-creados" class="kpi-value">0</p></div>
                     <div class="kpi-card" onclick="app.navigateTo('tickets')"><h3>Asignados</h3><p id="kpi-asignados" class="kpi-value" style="color:var(--secondary)">0</p></div>
@@ -200,19 +201,35 @@
                     <div class="kpi-card"><h3>SLA Prom.</h3><p id="kpi-tiempo" class="kpi-value">0h</p></div>
                 </div>
 
+                <!-- Diagnóstico y Recomendaciones -->
                 <div class="card">
                     <h3 style="color: var(--primary); margin-bottom: 0.8rem; font-size: 1rem;"><i class="fas fa-brain"></i> Diagnóstico Inteligente & Recomendaciones</h3>
-                    <div id="kpi-recommendations-container">
-                        <div class="recommendation-box">
-                            <h4><i class="fas fa-check-circle" style="color: var(--success);"></i> Estado Operacional</h4>
-                            <p id="ai-insight-text">Cargando métricas de rendimiento en tiempo real...</p>
-                        </div>
+                    <div class="recommendation-box">
+                        <h4><i class="fas fa-check-circle" style="color: var(--success);"></i> Estado Operacional Analítico</h4>
+                        <p id="ai-insight-text">Cargando análisis de rendimiento en tiempo real...</p>
                     </div>
                 </div>
 
-                <div class="grid-2 mt-2">
-                    <div class="card"><canvas id="chart-tendencia" height="150"></canvas></div>
-                    <div class="card"><canvas id="chart-sistemas" height="150"></canvas></div>
+                <!-- 6 Indicadores Clave Solicitados (Gráficos Interactivos) -->
+                <div class="grid-2">
+                    <!-- Indicador 1: Ticket vs Sede -->
+                    <div class="card"><canvas id="chart-ticket-sede" height="150"></canvas></div>
+                    <!-- Indicador 2: Fallas de Sistema vs Sedes -->
+                    <div class="card"><canvas id="chart-fallas-sedes" height="150"></canvas></div>
+                </div>
+
+                <div class="grid-2 mt-1">
+                    <!-- Indicador 3: Cantidad de Ticket Generados por Tipo de Sistemas -->
+                    <div class="card"><canvas id="chart-ticket-sistemas" height="150"></canvas></div>
+                    <!-- Indicador 4: Ticket vs Técnico -->
+                    <div class="card"><canvas id="chart-ticket-tecnico" height="150"></canvas></div>
+                </div>
+
+                <div class="grid-2 mt-1">
+                    <!-- Indicador 5: Ticket vs Técnico vs SLA -->
+                    <div class="card"><canvas id="chart-ticket-tec-sla" height="150"></canvas></div>
+                    <!-- Indicador 6: Tendencia de Sedes con Falla vs Tiempo -->
+                    <div class="card"><canvas id="chart-tendencia-sedes" height="150"></canvas></div>
                 </div>
             </section>
 
@@ -444,7 +461,7 @@
         <div class="modal-content" style="text-align: center;">
             <i class="fas fa-mobile-alt" style="font-size: 3.5rem; color: var(--accent); margin-bottom: 1rem;"></i>
             <h2>App Móvil PWA</h2>
-            <p style="margin: 1rem 0; color: var(--text-muted);">Instala la aplicación en la pantalla de inicio de tu celular (Android / iOS): abre el menú de tu navegador y selecciona <strong>"Agregar a la pantalla principal"</strong>.</p>
+            <p style="margin: 1rem 0; color: var(--text-muted);">Instala la aplicación en la pantalla de inicio de tu celular.</p>
             <div style="background: #F1F5F9; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
                 <strong>Enlace Directo:</strong><br><span style="font-size: 0.9rem; color: var(--secondary);">https://techfixapp.netlify.app</span>
             </div>
