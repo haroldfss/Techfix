@@ -19,9 +19,9 @@ let dataState = {
     ],
     usuarios: [
         { name: "admin", pass: "admin", role: "Administrador", assignedClient: "TODOS", perms: ["Dashboard Gerencial", "Gestión de Tickets", "Nuevo Ticket", "Mapa Geolocalizado", "Ajustes & Parámetros"], lastLogin: "Nunca" },
-        { name: "juan", pass: "123456", role: "Técnico", assignedClient: "Banco de Bogotá", perms: ["Gestión de Tickets"], lastLogin: "Nunca" },
-        { name: "Carlos Pérez", pass: "1234", role: "Técnico", assignedClient: "Banco de Bogotá", perms: ["Gestión de Tickets"], lastLogin: "Nunca" },
-        { name: "Oscar Muñoz", pass: "1234", role: "Operador", assignedClient: "Centro Comercial Andino", perms: ["Dashboard Gerencial", "Gestión de Tickets", "Nuevo Ticket"], lastLogin: "Nunca" }
+        { name: "Meicon", pass: "123456", role: "Técnico", assignedClient: "Texmoda", perms: ["Gestión de Tickets"], lastLogin: "Nunca" },
+        { name: "Fortox", pass: "123456", role: "Técnico", assignedClient: "Texmoda", perms: ["Gestión de Tickets"], lastLogin: "Nunca" },
+        { name: "oscar.munoz", pass: "123456", role: "Operador", assignedClient: "Centro Comercial Andino", perms: ["Dashboard Gerencial", "Gestión de Tickets", "Nuevo Ticket", "Mapa Geolocalizado"], lastLogin: "Nunca" }
     ],
     sistemas: ["CCTV IP Dahua", "Intrusión AX PRO", "Control de Acceso Biométrico"],
     fallas: ["Pérdida de Enlace Video", "Batería Baja Panel", "Falla Lector Biométrico"],
