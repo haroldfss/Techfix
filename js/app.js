@@ -44,7 +44,7 @@ const app = {
         const found = dataState.usuarios.find(u => u.name.toLowerCase() === userIn.toLowerCase() && u.pass === passIn);
         if(found) {
             currentUser = found;
-            // SI EL USUARIO TIENE UN CLIENTE ASIGNADO ESPECÍFICO, BLOQUEAR EL CONTEXTO ESTRICTAMENTE
+            // Bloquear contexto de cliente si el usuario tiene asignado uno exclusivo
             activeClientContext = (found.assignedClient && found.assignedClient !== "TODOS") ? found.assignedClient : "";
             
             document.getElementById('login-view').classList.remove('active');
@@ -101,16 +101,18 @@ const app = {
 
         document.getElementById('sidebar-user-role-badge').innerText = `${currentUser.role} (${currentUser.assignedClient})`;
         
-        // RESTRICCIÓN VISUAL DE CLIENTE
+        // RESTRICCIÓN ESTRICTA DE INTERFAZ PARA USUARIOS NO ADMINISTRADORES
         if(currentUser.assignedClient && currentUser.assignedClient !== "TODOS") {
             const clientObj = dataState.clientes.find(c => c.name === currentUser.assignedClient);
             if(clientObj) this.applyClientBranding(clientObj);
             
-            // Bloquear el selector global si el usuario solo tiene acceso a su cliente
             const gClientSel = document.getElementById('global-client-filter');
-            if(gClientSel && currentUser.role !== "Administrador") {
+            if(gClientSel) {
                 gClientSel.value = currentUser.assignedClient;
-                gClientSel.disabled = true;
+                // Si no es admin, deshabilitar el selector global para que no pueda cambiar de cliente
+                if(currentUser.role !== "Administrador") {
+                    gClientSel.disabled = true;
+                }
             }
         } else {
             const gClientSel = document.getElementById('global-client-filter');
@@ -139,7 +141,6 @@ const app = {
     },
     changeActiveClientContext() {
         const val = document.getElementById('global-client-filter').value;
-        // Si el usuario tiene cliente asignado fijo, impedir cambiarlo
         if(currentUser && currentUser.assignedClient !== "TODOS" && currentUser.role !== "Administrador") {
             activeClientContext = currentUser.assignedClient;
             return;
@@ -156,7 +157,7 @@ const app = {
         sedeSelect.innerHTML = '<option value="">Sede (Todas)</option>';
         
         let targetSedes = dataState.sedes;
-        let activeClient = activeClientContext || (currentUser && currentUser.assignedClient !== "TODOS" ? currentUser.assignedClient : "");
+        let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
         
         if(activeClient) {
             targetSedes = dataState.sedes.filter(s => s.client === activeClient);
@@ -476,8 +477,6 @@ const app = {
         if(!tbody) return;
         
         let filteredTickets = dataState.tickets;
-        
-        // RESTRICCIÓN ESTRICTA: SI EL USUARIO TIENE CLIENTE ASIGNADO, FORZAR FILTRADO
         let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
         
         if(activeClient) {
@@ -505,11 +504,11 @@ const app = {
         });
     },
 
-    // --- DASHBOARD & INDICADORES ---
+    // --- DASHBOARD & INDICADORES CON RESTRICCIÓN ESTRICTA DE SEDES ---
     renderDashboard() {
         let filtered = dataState.tickets;
         
-        // RESTRICCIÓN ESTRICTA DE CLIENTE EN DASHBOARD
+        // FORZAR FILTRADO ESTRICTO DE TICKETS POR CLIENTE ASIGNADO
         let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
         
         if(activeClient) {
@@ -541,6 +540,7 @@ const app = {
         let clientSedes = dataState.sedes;
         let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
         
+        // RESTRICCIÓN ABSOLUTA: Las sedes mostradas en los gráficos del dashboard deben pertenecer ÚNICAMENTE al cliente activo
         if(activeClient) {
             clientSedes = dataState.sedes.filter(s => s.client === activeClient);
         }
@@ -697,10 +697,10 @@ const app = {
         alert("Generando informe PDF gerencial...");
     },
     saveStorage() {
-        localStorage.setItem('servitrack_db_v15', JSON.stringify(dataState));
+        localStorage.setItem('servitrack_db_v16', JSON.stringify(dataState));
     },
     loadStorage() {
-        const saved = localStorage.getItem('servitrack_db_v15');
+        const saved = localStorage.getItem('servitrack_db_v16');
         if(saved) dataState = JSON.parse(saved);
     }
 };
