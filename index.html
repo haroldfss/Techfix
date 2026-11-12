@@ -76,10 +76,10 @@
         .form-control { width: 100%; padding: 0.85rem; border: 1px solid var(--border); border-radius: 10px; outline: none; transition: 0.2s; font-size: 1rem; background: #fff; }
         .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(255,107,53,0.15); }
         
-        /* Estilo Multiselect mejorado para sedes */
-        select[multiple] { height: 110px; padding: 0.5rem; }
-        select[multiple] option { padding: 6px 10px; border-bottom: 1px solid #f1f5f9; border-radius: 4px; }
-        select[multiple] option:checked { background: var(--secondary) linear-gradient(0deg, var(--secondary), var(--secondary)); color: white; }
+        /* Contenedor Multiselección por Casillas para Sedes */
+        .multiselect-container { border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.8rem; max-height: 120px; overflow-y: auto; background: #fff; display: flex; flex-direction: column; gap: 6px; }
+        .multiselect-container label { font-weight: normal; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 0; }
+        .multiselect-container input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
 
         .checkbox-group { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem; }
         .checkbox-group label { display: inline-flex; align-items: center; font-weight: normal; font-size: 0.95rem; cursor: pointer; }
@@ -216,8 +216,10 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Filtrar por Sede <span style="font-size:0.75rem; color:var(--text-muted);">(Ctrl+Click para multiselección)</span></label>
-                            <select id="filt-sede" class="form-control" multiple onchange="app.renderDashboard()"></select>
+                            <label>Filtrar por Sedes <span style="font-size:0.75rem; color:var(--text-muted);">(Selección Múltiple)</span></label>
+                            <div id="filt-sedes-container" class="multiselect-container">
+                                <!-- Casillas generadas dinámicamente -->
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Filtrar por Técnico</label>
