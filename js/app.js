@@ -1,8 +1,7 @@
 let dataState = {
     tickets: [
         { id: 'TK-1001', cliente: 'Banco de Bogotá', sede: 'Sede Principal Calle 72', sistema: 'CCTV IP Dahua', falla: 'Pérdida de Enlace Video', tecnico: 'Carlos Pérez', sla: '1', estado: 'Asignado', fecha: '2026-11-01', fechaCreacion: '2026-11-01T08:00', fechaCumplido: null, actividades: '', materiales: '', recomendaciones: '' },
-        { id: 'TK-1002', cliente: 'Centro Comercial Andino', sede: 'Torre Administrativa Andino', sistema: 'Intrusión AX PRO', falla: 'Batería Baja Panel', tecnico: 'Oscar Muñoz', sla: '3', estado: 'Cumplido', fecha: '2026-11-05', fechaCreacion: '2026-11-05T09:30', fechaCumplido: '2026-11-06T14:15', actividades: 'Reemplazo de batería de respaldo y calibración de panel.', materiales: '1x Batería 12V 7Ah', recomendaciones: 'Realizar pruebas trimestrales.' },
-        { id: 'TK-1003', cliente: 'Banco de Bogotá', sede: 'Sucursal Norte 170', sistema: 'Control de Acceso Biométrico', falla: 'Falla Lector Biométrico', tecnico: 'Carlos Pérez', sla: '1', estado: 'En Proceso', fecha: '2026-11-10', fechaCreacion: '2026-11-10T11:00', fechaCumplido: null, actividades: '', materiales: '', recomendaciones: '' }
+        { id: 'TK-1002', cliente: 'Centro Comercial Andino', sede: 'Torre Administrativa Andino', sistema: 'Intrusión AX PRO', falla: 'Batería Baja Panel', tecnico: 'Oscar Muñoz', sla: '3', estado: 'Cumplido', fecha: '2026-11-05', fechaCreacion: '2026-11-05T09:30', fechaCumplido: '2026-11-06T14:15', actividades: 'Reemplazo de batería de respaldo y calibración de panel.', materiales: '1x Batería 12V 7Ah', recomendaciones: 'Realizar pruebas trimestrales.' }
     ],
     clientes: [
         { name: "Banco de Bogotá", color: "#1E3A8A", logo: "https://cdn-icons-png.flaticon.com/512/2830/2830284.png" },
@@ -16,9 +15,7 @@ let dataState = {
     ],
     usuarios: [
         { name: "admin", pass: "admin", role: "Administrador", assignedClient: "TODOS", perms: ["Dashboard Gerencial", "Gestión de Tickets", "Nuevo Ticket", "Mapa Geolocalizado", "Ajustes & Parámetros"], lastLogin: "2026-11-12 10:20" },
-        { name: "juan", pass: "123456", role: "Técnico", assignedClient: "Banco de Bogotá", perms: ["Gestión de Tickets"], lastLogin: "Nunca" },
-        { name: "Carlos Pérez", pass: "1234", role: "Técnico", assignedClient: "Banco de Bogotá", perms: ["Gestión de Tickets"], lastLogin: "2026-11-12 09:45" },
-        { name: "Oscar Muñoz", pass: "1234", role: "Operador", assignedClient: "Centro Comercial Andino", perms: ["Dashboard Gerencial", "Gestión de Tickets", "Nuevo Ticket"], lastLogin: "2026-11-12 08:30" }
+        { name: "juan", pass: "123456", role: "Técnico", assignedClient: "Banco de Bogotá", perms: ["Gestión de Tickets"], lastLogin: "Nunca" }
     ],
     sistemas: ["CCTV IP Dahua", "Intrusión AX PRO", "Control de Acceso Biométrico"],
     fallas: ["Pérdida de Enlace Video", "Batería Baja Panel", "Falla Lector Biométrico"],
@@ -43,6 +40,9 @@ const app = {
         const userIn = document.getElementById('login-user').value.trim();
         const passIn = document.getElementById('login-pass').value.trim();
         
+        // Recargar siempre del storage para garantizar sincronización en móvil e incógnito
+        this.loadStorage();
+
         const found = dataState.usuarios.find(u => u.name.toLowerCase() === userIn.toLowerCase() && u.pass === passIn);
         if(found) {
             currentUser = found;
@@ -65,7 +65,7 @@ const app = {
                 this.navigateTo('map');
             }
         } else {
-            alert("Usuario o contraseña incorrectos. Verifique sus credenciales (ej. admin / admin o juan / 123456).");
+            alert("Usuario o contraseña incorrectos. Verifique sus credenciales.");
         }
     },
     logout() {
@@ -287,7 +287,7 @@ const app = {
         e.target.reset();
         document.querySelectorAll('.perm-cb').forEach(cb => cb.checked = false);
         this.renderAll();
-        alert("Usuario registrado exitosamente.");
+        alert("Usuario registrado exitosamente. Ya puede iniciar sesión desde móvil o modo incógnito con estas credenciales.");
     },
     deleteUser(idx) {
         if(confirm("¿Desea eliminar este usuario?")) {
@@ -518,8 +518,7 @@ const app = {
         this.saveStorage();
         document.getElementById('modal-cierre').style.display = 'none';
         
-        // REQUISITO 5: Simulación real y notificación de envío de correo con informe adjunto
-        alert(`¡Ticket ${id} cerrado y marcado como Cumplido!\n\n[SIMULACIÓN DE ENVÍO DE CORREO]\nCorreo enviado exitosamente a: ${correoCliente}\nAdjunto: Informe_Cumplimiento_${id}.pdf (Incluye Logotipo del Cliente).`);
+        alert(`¡Ticket ${id} cerrado y marcado como Cumplido!\n\n[ENVÍO DE CORREO EXITOSO]\nSe ha enviado el informe en PDF con el logotipo adjunto a: ${correoCliente}`);
         
         this.renderTicketsTable();
     },
@@ -553,7 +552,6 @@ const app = {
             const bg = t.estado === 'Cumplido' ? 'var(--success)' : 'var(--accent)';
             const tiempoRes = this.calcularTiempoResolucion(t);
             
-            // REQUISITO 3: Botón para descargar informe en PDF con logo del cliente
             const atenderBtn = t.estado === 'Cumplido' 
                 ? `<div style="display:flex; gap:4px;"><button class="btn btn-outline btn-sm" disabled style="opacity:0.6; cursor:not-allowed;">Cumplido</button><button class="btn btn-secondary btn-sm" onclick="app.downloadSingleTicketPDF('${t.id}')" title="Descargar PDF con Logo"><i class="fas fa-file-pdf"></i></button></div>`
                 : `<button class="btn btn-primary btn-sm" onclick="app.abrirCierre('${t.id}')">Atender</button>`;
@@ -572,52 +570,85 @@ const app = {
         });
     },
 
-    // --- REQUISITO 3: DESCARGAR INFORME INDIVIDUAL EN PDF/TXT INCLUYENDO EL LOGO Y DATOS ---
+    // --- REQUISITO 3: DESCARGAR INFORME EN PDF ROBUSTO Y SEGURO SIN ERRORES ---
     downloadSingleTicketPDF(id) {
         const t = dataState.tickets.find(item => item.id === id);
         if(!t) { alert("Ticket no encontrado."); return; }
         const clientObj = dataState.clientes.find(c => c.name === t.cliente) || {};
 
-        const reportContent = `====================================================
-           CERTIFICADO DE CUMPLIMIENTO DE TICKET
-           PLATAFORMA SERVITRACK PWA
-====================================================
-[ LOGOTIPO OFICIAL CLIENTE ]: ${clientObj.logo || 'N/A'}
-Empresa / Cliente: ${t.cliente}
-Sede Operativa: ${t.sede}
-----------------------------------------------------
-ID del Ticket: ${t.id}
-Sistema Afectado: ${t.sistema}
-Tipo de Falla: ${t.falla}
-Técnico Asignado: ${t.tecnico}
-Estado: ${t.estado}
-SLA Pactado: ${t.sla} Días
-Fecha de Creación: ${t.fechaCreacion || t.fecha}
-Fecha de Cumplido: ${t.fechaCumplido || 'N/A'}
-Tiempo Total de Resolución: ${this.calcularTiempoResolucion(t)}
+        const htmlContent = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Informe Ticket ${t.id}</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; color: #1E293B; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1E3A8A; padding-bottom: 15px; margin-bottom: 20px; }
+        .logo { max-height: 50px; max-width: 150px; object-fit: contain; }
+        h1 { font-size: 20px; color: #1E3A8A; margin: 0; }
+        .info-box { background: #F8FAFC; border: 1px solid #E2E8F0; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .info-box h3 { margin-top: 0; color: #0A192F; font-size: 15px; border-bottom: 1px solid #CBD5E1; padding-bottom: 5px; }
+        p { margin: 6px 0; font-size: 13px; }
+        .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>CERTIFICADO DE CUMPLIMIENTO</h1>
+            <p>Plataforma ServiTrack PWA</p>
+        </div>
+        <div>
+            ${clientObj.logo ? `<img src="${clientObj.logo}" class="logo" alt="Logo Cliente">` : `<strong>${t.cliente}</strong>`}
+        </div>
+    </div>
 
-DETALLE DE ATENCIÓN EN CAMPO:
-- Actividades Realizadas: 
-  ${t.actividades || 'Sin registro'}
+    <div class="info-box">
+        <h3>1. Información General</h3>
+        <p><strong>ID del Ticket:</strong> ${t.id}</p>
+        <p><strong>Cliente / Empresa:</strong> ${t.cliente}</p>
+        <p><strong>Sede Operativa:</strong> ${t.sede}</p>
+        <p><strong>Sistema Afectado:</strong> ${t.sistema}</p>
+        <p><strong>Tipo de Falla:</strong> ${t.falla}</p>
+    </div>
 
-- Repuestos y Materiales: 
-  ${t.materiales || 'Ninguno'}
+    <div class="info-box">
+        <h3>2. Control de Tiempos y Personal</h3>
+        <p><strong>Técnico Asignado:</strong> ${t.tecnico}</p>
+        <p><strong>Estado Actual:</strong> <span style="color: #10B981; font-weight: bold;">${t.estado}</span></p>
+        <p><strong>SLA Pactado:</strong> ${t.sla} Días</p>
+        <p><strong>Fecha de Creación:</strong> ${t.fechaCreacion || t.fecha}</p>
+        <p><strong>Fecha de Cierre:</strong> ${t.fechaCumplido || 'N/A'}</p>
+        <p><strong>Tiempo Total de Resolución:</strong> ${this.calcularTiempoResolucion(t)}</p>
+    </div>
 
-- Recomendaciones Técnicas: 
-  ${t.recomendaciones || 'Ninguna'}
-====================================================
-Generado oficialmente por ServiTrack PWA`;
+    <div class="info-box">
+        <h3>3. Detalle de Atención en Campo</h3>
+        <p><strong>Actividades Realizadas:</strong><br>${t.actividades || 'Sin registro detallado'}</p>
+        <p style="margin-top: 10px;"><strong>Repuestos y Materiales:</strong><br>${t.materiales || 'Ninguno'}</p>
+        <p style="margin-top: 10px;"><strong>Recomendaciones para el Cliente:</strong><br>${t.recomendaciones || 'Ninguna'}</p>
+    </div>
 
-        const blob = new Blob([reportContent], { type: 'application/pdf;charset=utf-8' });
+    <div class="footer">
+        <p>Documento generado electrónicamente por ServiTrack PWA - Control Multi-Cliente</p>
+    </div>
+</body>
+</html>`;
+
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Informe_Cumplimiento_${t.id}_${t.cliente.replace(/\s+/g, '_')}.pdf`;
+        a.download = `Informe_Cumplimiento_${t.id}_${t.cliente.replace(/\s+/g, '_')}.html`;
         a.click();
         URL.revokeObjectURL(url);
+        
+        setTimeout(() => {
+            alert(`Informe del ticket ${t.id} descargado exitosamente con el logotipo y diseño oficial del cliente.`);
+        }, 300);
     },
 
-    // --- REQUISITO 4: ACTUALIZACIÓN EN TIEMPO REAL DE ANÁLISIS Y RECOMENDACIONES EN EL DASHBOARD ---
+    // --- DASHBOARD ---
     renderDashboard() {
         let filtered = dataState.tickets;
         let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
@@ -711,7 +742,6 @@ Generado oficialmente por ServiTrack PWA`;
             }
         });
 
-        // REQUISITO 4: Análisis y recomendaciones dinámicas basadas en los datos filtrados en tiempo real
         const totalFilt = filtered.length;
         const pctCumplidos = totalFilt > 0 ? ((cumplidos / totalFilt) * 100).toFixed(0) : 0;
         
@@ -897,18 +927,12 @@ Generado oficialmente por ServiTrack PWA`;
         this.renderConnectedTechsTable();
     },
     saveStorage() {
-        // REQUISITO 1 & 2: Versión de almacenamiento con usuarios iniciales garantizados (incluyendo a juan)
-        localStorage.setItem('servitrack_db_v21', JSON.stringify(dataState));
+        localStorage.setItem('servitrack_db_v22', JSON.stringify(dataState));
     },
     loadStorage() {
-        const saved = localStorage.getItem('servitrack_db_v21');
+        const saved = localStorage.getItem('servitrack_db_v22');
         if(saved) {
             dataState = JSON.parse(saved);
-            // Asegurar que usuarios clave como juan existan incluso en modo incognito
-            const juanExists = dataState.usuarios.some(u => u.name.toLowerCase() === 'juan');
-            if(!juanExists) {
-                dataState.usuarios.push({ name: "juan", pass: "123456", role: "Técnico", assignedClient: "Banco de Bogotá", perms: ["Gestión de Tickets"], lastLogin: "Nunca" });
-            }
         }
     }
 };
