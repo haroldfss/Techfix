@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ServiTrack - Dashboard Gerencial & Analítica Avanzada</title>
-    <!-- Fuentes y Estilos Tecnológicos (Neurolingüística: Azul Confianza #0A192F, Naranja Acción #FF6B35, Verde Éxito #10B981) -->
+    <title>ServiTrack - Multi-Cliente & Trazabilidad Dinámica</title>
+    <!-- Fuentes y Estilos Tecnológicos Avanzados -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -34,17 +34,18 @@
         .login-card h2 { color: var(--primary); margin-bottom: 0.5rem; font-weight: 700; font-size: 1.7rem; }
         .login-card p { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem; }
 
-        /* Sidebar Responsive */
+        /* Sidebar Responsive con Logo Dinámico de Cliente */
         .sidebar { width: 260px; background: var(--primary); color: white; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 100; transition: transform 0.3s ease; }
-        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
-        .sidebar-header h2 { font-weight: 700; color: var(--accent); font-size: 1.4rem; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+        .sidebar-header img.client-logo { max-height: 40px; max-width: 140px; object-fit: contain; background: white; padding: 4px; border-radius: 6px; }
+        .sidebar-header h2 { font-weight: 700; color: var(--accent); font-size: 1.3rem; }
         .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; background: var(--accent); color: white; }
         .nav-links { list-style: none; padding: 1rem 0; flex: 1; overflow-y: auto; }
         .nav-links li { padding: 0.9rem 1.4rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; opacity: 0.85; font-size: 0.92rem; }
         .nav-links li:hover, .nav-links li.active { opacity: 1; background: rgba(255,255,255,0.08); border-left: 4px solid var(--accent); font-weight: 500; }
         .sidebar-footer { padding: 1.2rem; border-top: 1px solid rgba(255,255,255,0.1); }
 
-        /* Mobile Top Bar */
+        /* Topbar Móvil */
         .mobile-topbar { display: none; background: var(--primary); color: white; padding: 1rem; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; width: 100%; z-index: 99; }
         .mobile-topbar h2 { color: var(--accent); font-size: 1.2rem; }
         .menu-toggle-btn { background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer; }
@@ -89,16 +90,16 @@
         .table th, .table td { padding: 0.9rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
         .table th { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; background: #F8FAFC; }
 
-        /* KPIs */
+        /* KPIs & Análisis Independiente */
         .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
         .kpi-card { background: var(--card-bg); padding: 1.2rem; border-radius: 16px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); border-top: 5px solid var(--secondary); cursor: pointer; transition: 0.3s; }
         .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px -3px rgba(0,0,0,0.08); }
         .kpi-card h3 { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         .kpi-value { font-size: 1.6rem; font-weight: 700; margin-top: 0.3rem; color: var(--primary); }
 
-        .recommendation-box { background: linear-gradient(135deg, #EFF6FF, #F0FDF4); border: 1px solid #BFDBFE; border-left: 6px solid var(--success); padding: 1.2rem; border-radius: 12px; margin-top: 1rem; }
-        .recommendation-box h4 { color: var(--secondary); margin-bottom: 0.3rem; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
-        .recommendation-box p { font-size: 0.88rem; color: #334155; line-height: 1.4; }
+        .indicator-analysis-card { background: linear-gradient(135deg, #EFF6FF, #F0FDF4); border: 1px solid #BFDBFE; border-left: 6px solid var(--success); padding: 1.2rem; border-radius: 12px; margin-top: 1rem; }
+        .indicator-analysis-card h4 { color: var(--secondary); margin-bottom: 0.3rem; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+        .indicator-analysis-card p { font-size: 0.88rem; color: #334155; line-height: 1.4; margin-bottom: 0.4rem; }
 
         /* Tabs Ajustes */
         .settings-tabs { display: flex; gap: 0.6rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5px; }
@@ -110,7 +111,6 @@
         .modal-content { background: white; padding: 2rem; border-radius: 20px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
 
-        /* Media Queries */
         @media (max-width: 900px) {
             body { display: block; overflow: auto; height: auto; }
             .sidebar { position: fixed; left: -260px; top: 0; height: 100vh; transition: left 0.3s ease; }
@@ -134,7 +134,7 @@
     <div id="login-view" class="view active">
         <div class="login-card">
             <h2>ServiTrack Inteligente</h2>
-            <p>Control y Trazabilidad Operativa</p>
+            <p>Control y Trazabilidad Multi-Cliente</p>
             <form onsubmit="app.login(event)">
                 <div class="form-group">
                     <label>Usuario</label>
@@ -146,16 +146,17 @@
                 </div>
                 <button type="submit" class="btn btn-primary btn-block mt-1">Ingresar al Sistema</button>
             </form>
-            <p class="mt-1" style="font-size: 0.8rem; color: var(--text-muted);">(Acceso: admin / admin)</p>
+            <p class="mt-1" style="font-size: 0.8rem; color: var(--text-muted);">(Admin: admin / admin)</p>
         </div>
     </div>
 
     <!-- Main App View -->
     <div id="app-view" class="view">
         <nav id="sidebar" class="sidebar">
-            <div class="sidebar-header">
-                <h2>ServiTrack</h2>
-                <span class="badge">PRO PWA</span>
+            <div class="sidebar-header" id="sidebar-header-box">
+                <img id="sidebar-client-logo" class="client-logo" src="" alt="Logo Cliente" style="display:none;">
+                <h2 id="sidebar-title-brand">ServiTrack</h2>
+                <span class="badge" id="sidebar-user-role-badge">ADMIN MASTER</span>
             </div>
             <ul class="nav-links">
                 <li id="menu-dashboard" class="active" onclick="app.navigateTo('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard Gerencial</li>
@@ -175,19 +176,28 @@
             <!-- Dashboard Section -->
             <section id="view-dashboard" class="content-section" style="display: block;">
                 <div class="header-action">
-                    <h1>Dashboard Gerencial & Analítica Avanzada</h1>
+                    <h1>Dashboard Gerencial & Analítica Multi-Cliente</h1>
                     <button class="btn btn-secondary" onclick="app.generatePDF()"><i class="fas fa-file-pdf"></i> Exportar Reporte</button>
                 </div>
 
-                <!-- Filtros Interactivos -->
+                <!-- Selector Global de Cliente y Filtros -->
                 <div class="card filters-card">
-                    <h3 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.6rem;"><i class="fas fa-filter"></i> Filtros Interactivos de Rendimiento</h3>
-                    <div class="grid-5">
-                        <select id="filt-mes" class="form-control" onchange="app.renderDashboard()"><option value="">Mes (Todos)</option><option value="2026-11">Noviembre 2026</option><option value="2026-12">Diciembre 2026</option></select>
-                        <select id="filt-cliente" class="form-control" onchange="app.renderDashboard()"><option value="">Cliente (Todos)</option></select>
-                        <select id="filt-sede" class="form-control" onchange="app.renderDashboard()"><option value="">Sede (Todas)</option></select>
-                        <select id="filt-tecnico" class="form-control" onchange="app.renderDashboard()"><option value="">Técnico (Todos)</option></select>
-                        <select id="filt-falla" class="form-control" onchange="app.renderDashboard()"><option value="">Tipo Falla (Todas)</option></select>
+                    <h3 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.6rem;"><i class="fas fa-filter"></i> Filtros Interactivos & Contexto de Cliente</h3>
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label>Filtrar por Cliente (Cambio Dinámico de Interfaz)</label>
+                            <select id="global-client-filter" class="form-control" onchange="app.changeActiveClientContext()">
+                                <option value="">Todos los Clientes (Vista Master)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Filtrar por Sede</label>
+                            <select id="filt-sede" class="form-control" onchange="app.renderDashboard()"><option value="">Sede (Todas)</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Filtrar por Técnico</label>
+                            <select id="filt-tecnico" class="form-control" onchange="app.renderDashboard()"><option value="">Técnico (Todos)</option></select>
+                        </div>
                     </div>
                 </div>
 
@@ -201,34 +211,25 @@
                     <div class="kpi-card"><h3>SLA Prom.</h3><p id="kpi-tiempo" class="kpi-value">0h</p></div>
                 </div>
 
-                <!-- Diagnóstico y Recomendaciones -->
+                <!-- Análisis y Recomendaciones Independientes por Indicador -->
                 <div class="card">
-                    <h3 style="color: var(--primary); margin-bottom: 0.8rem; font-size: 1rem;"><i class="fas fa-brain"></i> Diagnóstico Inteligente & Recomendaciones</h3>
-                    <div class="recommendation-box">
-                        <h4><i class="fas fa-check-circle" style="color: var(--success);"></i> Estado Operacional Analítico</h4>
-                        <p id="ai-insight-text">Cargando análisis de rendimiento en tiempo real...</p>
+                    <h3 style="color: var(--primary); margin-bottom: 0.8rem; font-size: 1rem;"><i class="fas fa-brain"></i> Análisis Independiente & Recomendaciones por Indicador</h3>
+                    <div id="independent-analysis-container">
+                        <!-- Generado dinámicamente -->
                     </div>
                 </div>
 
-                <!-- 6 Indicadores Clave Solicitados (Gráficos Interactivos) -->
+                <!-- 6 Gráficos de Indicadores -->
                 <div class="grid-2">
-                    <!-- Indicador 1: Ticket vs Sede -->
                     <div class="card"><canvas id="chart-ticket-sede" height="150"></canvas></div>
-                    <!-- Indicador 2: Fallas de Sistema vs Sedes -->
                     <div class="card"><canvas id="chart-fallas-sedes" height="150"></canvas></div>
                 </div>
-
                 <div class="grid-2 mt-1">
-                    <!-- Indicador 3: Cantidad de Ticket Generados por Tipo de Sistemas -->
                     <div class="card"><canvas id="chart-ticket-sistemas" height="150"></canvas></div>
-                    <!-- Indicador 4: Ticket vs Técnico -->
                     <div class="card"><canvas id="chart-ticket-tecnico" height="150"></canvas></div>
                 </div>
-
                 <div class="grid-2 mt-1">
-                    <!-- Indicador 5: Ticket vs Técnico vs SLA -->
                     <div class="card"><canvas id="chart-ticket-tec-sla" height="150"></canvas></div>
-                    <!-- Indicador 6: Tendencia de Sedes con Falla vs Tiempo -->
                     <div class="card"><canvas id="chart-tendencia-sedes" height="150"></canvas></div>
                 </div>
             </section>
@@ -258,14 +259,12 @@
                     <form onsubmit="app.saveTicket(event)">
                         <div class="grid-3">
                             <div class="form-group">
-                                <label>Filtrar Cliente</label>
-                                <input type="text" id="search-client" class="form-control" placeholder="Buscar..." oninput="app.filterClientDropdown()">
-                                <select id="ticket-cliente" class="form-control mt-1" onchange="app.loadSedesForClient()" required></select>
+                                <label>Cliente (Asignado / Restringido)</label>
+                                <select id="ticket-cliente" class="form-control" onchange="app.loadSedesForClient()" required></select>
                             </div>
                             <div class="form-group">
-                                <label>Filtrar Sede</label>
-                                <input type="text" id="search-sede" class="form-control" placeholder="Buscar..." oninput="app.filterSedeDropdown()">
-                                <select id="ticket-sede" class="form-control mt-1" required></select>
+                                <label>Sede (Exclusiva del Cliente)</label>
+                                <select id="ticket-sede" class="form-control" required></select>
                             </div>
                             <div class="form-group">
                                 <label>Tipo de Sistema</label>
@@ -306,71 +305,82 @@
                 <h1>Ajustes & Parámetros</h1>
                 
                 <div class="settings-tabs">
-                    <button class="btn btn-outline active-tab" onclick="app.switchTab('clientes', this)">Clientes & Sedes</button>
-                    <button class="btn btn-outline" onclick="app.switchTab('usuarios', this)">Usuarios & Roles</button>
+                    <button class="btn btn-outline active-tab" onclick="app.switchTab('clientes', this)">Clientes & Logotipo</button>
+                    <button class="btn btn-outline" onclick="app.switchTab('usuarios', this)">Usuarios, Roles & Privilegios</button>
                     <button class="btn btn-outline" onclick="app.switchTab('sistemas', this)">Sistemas & Fallas</button>
                     <button class="btn btn-outline" onclick="app.switchTab('sla', this)">Gestión SLA</button>
                 </div>
 
+                <!-- Clientes y Logos -->
                 <div id="tab-clientes" class="card settings-tab-content">
-                    <h3>Administrar Clientes</h3>
+                    <h3>Crear y Administrar Clientes & Logo Corporativo</h3>
                     <form onsubmit="app.addClient(event)" class="mt-1">
                         <div class="grid-3">
-                            <input type="text" id="new-client-name" placeholder="Nombre" class="form-control" required>
-                            <input type="color" id="new-client-color" class="form-control" value="#1E3A8A">
-                            <button type="submit" class="btn btn-secondary btn-block">Guardar</button>
+                            <input type="text" id="new-client-name" placeholder="Nombre de Cliente" class="form-control" required>
+                            <input type="color" id="new-client-color" class="form-control" value="#1E3A8A" title="Color Corporativo Neurolingüístico">
+                            <input type="text" id="new-client-logo" placeholder="URL del Logotipo (Imagen)" class="form-control" required>
+                            <button type="submit" class="btn btn-secondary btn-block" style="grid-column: span 3;">Guardar Cliente y Logo</button>
                         </div>
                     </form>
                     <div class="table-responsive mt-2">
                         <table class="table">
-                            <thead><tr><th>Cliente</th><th>Color</th><th>Acciones</th></tr></thead>
+                            <thead><tr><th>Cliente</th><th>Color</th><th>Logotipo</th><th>Acciones</th></tr></thead>
                             <tbody id="table-clientes"></tbody>
                         </table>
                     </div>
 
                     <hr class="mt-2" style="margin-bottom:1.5rem;">
-                    <h3>Administrar Sedes</h3>
+                    <h3>Administrar Sedes Exclusivas por Cliente</h3>
                     <form onsubmit="app.addSede(event)">
                         <div class="grid-3">
                             <select id="sede-client-select" class="form-control" required></select>
                             <input type="text" id="new-sede-name" placeholder="Nombre Sede" class="form-control" required>
-                            <button type="submit" class="btn btn-secondary btn-block">Guardar</button>
+                            <button type="submit" class="btn btn-secondary btn-block">Guardar Sede</button>
                         </div>
                     </form>
                     <div class="table-responsive mt-2">
                         <table class="table">
-                            <thead><tr><th>Sede</th><th>Cliente</th><th>Acciones</th></tr></thead>
+                            <thead><tr><th>Sede</th><th>Cliente Asociado</th><th>Acciones</th></tr></thead>
                             <tbody id="table-sedes"></tbody>
                         </table>
                     </div>
                 </div>
 
+                <!-- Usuarios, Roles y Privilegios -->
                 <div id="tab-usuarios" class="card settings-tab-content" style="display:none;">
-                    <h3>Usuarios, Roles y Privilegios</h3>
+                    <h3>Creación de Usuarios, Asignación de Cliente y Privilegios</h3>
                     <form onsubmit="app.addUser(event)" class="mt-1">
                         <div class="grid-3">
-                            <input type="text" id="new-user-name" placeholder="Usuario" class="form-control" required>
-                            <input type="text" id="new-role-name" placeholder="Rol" class="form-control" required>
-                            <button type="submit" class="btn btn-secondary btn-block">Registrar</button>
+                            <input type="text" id="new-user-name" placeholder="Nombre Usuario" class="form-control" required>
+                            <input type="text" id="new-user-pass" placeholder="Contraseña de Acceso" class="form-control" required>
+                            <select id="new-user-client" class="form-control" required>
+                                <option value="TODOS">Asignar Todos los Clientes (Master)</option>
+                            </select>
+                        </div>
+                        <div class="grid-3 mt-1">
+                            <input type="text" id="new-role-name" placeholder="Rol (Ej. Operador, Técnico)" class="form-control" required>
                         </div>
                         <div class="form-group mt-1">
-                            <label><strong>Privilegios:</strong></label>
+                            <label><strong>Privilegios de Acceso a Módulos:</strong></label>
                             <div class="checkbox-group">
-                                <label><input type="checkbox" class="perm-cb" value="Crear Tickets"> Crear Tickets</label>
-                                <label><input type="checkbox" class="perm-cb" value="Ver Dashboard"> Ver Dashboard</label>
-                                <label><input type="checkbox" class="perm-cb" value="Atender/Cerrar Tickets"> Atender/Cerrar</label>
-                                <label><input type="checkbox" class="perm-cb" value="Ver Geolocalización"> Ver GPS</label>
+                                <label><input type="checkbox" class="perm-cb" value="Dashboard Gerencial" checked> Dashboard Gerencial</label>
+                                <label><input type="checkbox" class="perm-cb" value="Gestión de Tickets" checked> Gestión de Tickets</label>
+                                <label><input type="checkbox" class="perm-cb" value="Nuevo Ticket" checked> Nuevo Ticket</label>
+                                <label><input type="checkbox" class="perm-cb" value="Mapa Geolocalizado" checked> Mapa Geolocalizado</label>
+                                <label><input type="checkbox" class="perm-cb" value="Ajustes & Parámetros"> Ajustes & Parámetros (Administrador)</label>
                             </div>
                         </div>
+                        <button type="submit" class="btn btn-secondary btn-block mt-1">Registrar Usuario con Privilegios</button>
                     </form>
                     <div class="table-responsive mt-2">
                         <table class="table">
-                            <thead><tr><th>Usuario</th><th>Rol</th><th>Privilegios</th><th>Acciones</th></tr></thead>
+                            <thead><tr><th>Usuario</th><th>Rol</th><th>Cliente Asignado</th><th>Privilegios</th><th>Acciones</th></tr></thead>
                             <tbody id="table-usuarios"></tbody>
                         </table>
                     </div>
                 </div>
 
+                <!-- Sistemas & Fallas -->
                 <div id="tab-sistemas" class="card settings-tab-content" style="display:none;">
                     <div class="grid-2">
                         <div>
@@ -402,6 +412,7 @@
                     </div>
                 </div>
 
+                <!-- SLA -->
                 <div id="tab-sla" class="card settings-tab-content" style="display:none;">
                     <h3>Gestión SLA</h3>
                     <form onsubmit="app.addSla(event)" class="mt-1">
@@ -461,7 +472,7 @@
         <div class="modal-content" style="text-align: center;">
             <i class="fas fa-mobile-alt" style="font-size: 3.5rem; color: var(--accent); margin-bottom: 1rem;"></i>
             <h2>App Móvil PWA</h2>
-            <p style="margin: 1rem 0; color: var(--text-muted);">Instala la aplicación en la pantalla de inicio de tu celular.</p>
+            <p style="margin: 1rem 0; color: var(--text-muted);">Instala la aplicación en tu celular.</p>
             <div style="background: #F1F5F9; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
                 <strong>Enlace Directo:</strong><br><span style="font-size: 0.9rem; color: var(--secondary);">https://techfixapp.netlify.app</span>
             </div>
