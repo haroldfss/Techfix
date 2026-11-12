@@ -2,9 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ServiTrack - Gestión y Trazabilidad Técnica</title>
-    <!-- Fuentes y Estilos Avanzados (Neurolingüística) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ServiTrack - Gestión y Trazabilidad Técnica Móvil</title>
+    <!-- Fuentes y Estilos Tecnológicos (Neurolingüística: Azul Confianza #0A192F, Naranja Acción #FF6B35, Verde Éxito #10B981) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -17,59 +17,64 @@
             --success: #10B981;
             --warning: #F59E0B;
             --danger: #EF4444;
-            --bg: #F1F5F9;
+            --bg: #F8FAFC;
             --card-bg: #FFFFFF;
             --text: #1E293B;
             --text-muted: #64748B;
             --border: #E2E8F0;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
         .view { display: none; width: 100%; height: 100%; }
         .view.active { display: flex; }
 
         /* Login */
-        #login-view { justify-content: center; align-items: center; background: linear-gradient(135deg, var(--primary), var(--secondary)); }
-        .login-card { background: var(--card-bg); padding: 3rem; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35); width: 100%; max-width: 420px; text-align: center; }
-        .login-card h2 { color: var(--primary); margin-bottom: 0.5rem; font-weight: 700; font-size: 1.8rem; }
+        #login-view { justify-content: center; align-items: center; background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 1.5rem; }
+        .login-card { background: var(--card-bg); padding: 2.5rem 2rem; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4); width: 100%; max-width: 400px; text-align: center; }
+        .login-card h2 { color: var(--primary); margin-bottom: 0.5rem; font-weight: 700; font-size: 1.7rem; }
         .login-card p { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem; }
 
-        /* Sidebar */
-        .sidebar { width: 270px; background: var(--primary); color: white; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.1); }
-        .sidebar-header { padding: 1.8rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-header h2 { font-weight: 700; color: var(--accent); letter-spacing: 0.5px; }
-        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin-top: 0.4rem; background: var(--accent); color: white; }
+        /* Sidebar Responsive */
+        .sidebar { width: 260px; background: var(--primary); color: white; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 100; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-weight: 700; color: var(--accent); font-size: 1.4rem; }
+        .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; background: var(--accent); color: white; }
         .nav-links { list-style: none; padding: 1rem 0; flex: 1; overflow-y: auto; }
-        .nav-links li { padding: 1rem 1.5rem; cursor: pointer; transition: 0.25s; display: flex; align-items: center; gap: 12px; opacity: 0.8; font-size: 0.95rem; }
-        .nav-links li:hover, .nav-links li.active { opacity: 1; background: rgba(255,255,255,0.08); border-left: 4px solid var(--accent); }
-        .sidebar-footer { padding: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); }
+        .nav-links li { padding: 0.9rem 1.4rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; opacity: 0.85; font-size: 0.92rem; }
+        .nav-links li:hover, .nav-links li.active { opacity: 1; background: rgba(255,255,255,0.08); border-left: 4px solid var(--accent); font-weight: 500; }
+        .sidebar-footer { padding: 1.2rem; border-top: 1px solid rgba(255,255,255,0.1); }
+
+        /* Mobile Top Bar Toggle */
+        .mobile-topbar { display: none; background: var(--primary); color: white; padding: 1rem; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; width: 100%; z-index: 99; }
+        .mobile-topbar h2 { color: var(--accent); font-size: 1.2rem; }
+        .menu-toggle-btn { background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer; }
 
         /* Main Content */
-        .main-content { flex: 1; overflow-y: auto; padding: 2rem; background: var(--bg); }
+        .main-content { flex: 1; overflow-y: auto; padding: 2rem; background: var(--bg); transition: 0.3s; }
         .content-section { display: none; }
 
-        /* Cards & Grids */
-        .card { background: var(--card-bg); border-radius: 16px; padding: 1.8rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04); margin-bottom: 1.5rem; border: 1px solid var(--border); }
-        .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .header-action h1 { color: var(--primary); font-size: 1.8rem; font-weight: 700; }
+        /* Cards & Layouts */
+        .card { background: var(--card-bg); border-radius: 16px; padding: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.03); margin-bottom: 1.2rem; border: 1px solid var(--border); }
+        .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem; }
+        .header-action h1 { color: var(--primary); font-size: 1.5rem; font-weight: 700; }
         
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
         .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.8rem; }
         .mt-1 { margin-top: 1rem; } .mt-2 { margin-top: 1.5rem; }
 
         /* Forms */
-        .form-group { margin-bottom: 1.2rem; text-align: left; }
+        .form-group { margin-bottom: 1rem; text-align: left; }
         .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--primary); }
-        .form-control { width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: 10px; outline: none; transition: 0.2s; font-size: 0.9rem; background: #fff; }
+        .form-control { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; transition: 0.2s; font-size: 0.9rem; background: #fff; }
         .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(255,107,53,0.15); }
         .checkbox-group { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem; }
         .checkbox-group label { display: inline-flex; align-items: center; font-weight: normal; font-size: 0.9rem; cursor: pointer; }
         .checkbox-group input { margin-right: 0.5rem; width: 16px; height: 16px; accent-color: var(--accent); }
 
         /* Buttons */
-        .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.25s; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; }
-        .btn-block { width: 100%; justify-content: center; }
+        .btn { padding: 0.7rem 1.2rem; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; }
+        .btn-block { width: 100%; }
         .btn-primary { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(255,107,53,0.3); }
         .btn-primary:hover { background: #e05a2b; transform: translateY(-1px); }
         .btn-secondary { background: var(--secondary); color: white; }
@@ -79,39 +84,58 @@
         .btn-danger { background: var(--danger); color: white; padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius: 6px; }
         .btn-warning { background: var(--warning); color: white; padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius: 6px; }
 
-        /* Tables */
-        .table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
-        .table th, .table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        /* Tables Responsive */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; min-width: 600px; }
+        .table th, .table td { padding: 0.9rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
         .table th { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; background: #F8FAFC; }
 
-        /* Dashboard & KPIs */
+        /* Dashboard & KPIs con Neuromarketing */
         .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
         .kpi-card { background: var(--card-bg); padding: 1.2rem; border-radius: 16px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); border-top: 5px solid var(--secondary); cursor: pointer; transition: 0.3s; }
-        .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -3px rgba(0,0,0,0.1); }
-        .kpi-card h3 { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .kpi-value { font-size: 1.8rem; font-weight: 700; margin-top: 0.4rem; color: var(--primary); }
+        .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px -3px rgba(0,0,0,0.08); }
+        .kpi-card h3 { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 1.6rem; font-weight: 700; margin-top: 0.3rem; color: var(--primary); }
 
         .recommendation-box { background: linear-gradient(135deg, #EFF6FF, #F0FDF4); border: 1px solid #BFDBFE; border-left: 6px solid var(--success); padding: 1.2rem; border-radius: 12px; margin-top: 1rem; }
         .recommendation-box h4 { color: var(--secondary); margin-bottom: 0.3rem; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
         .recommendation-box p { font-size: 0.88rem; color: #334155; line-height: 1.4; }
 
         /* Tabs Ajustes */
-        .settings-tabs { display: flex; gap: 0.8rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .settings-tabs { display: flex; gap: 0.6rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5px; }
+        .settings-tabs button { white-space: nowrap; }
         .settings-tabs button.active-tab { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(10,25,47,0.2); }
 
         /* Modals */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,25,47,0.7); backdrop-filter: blur(5px); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: white; padding: 2.2rem; border-radius: 20px; width: 100%; max-width: 520px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,25,47,0.7); backdrop-filter: blur(5px); align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+        .modal-content { background: white; padding: 2rem; border-radius: 20px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
+
+        /* Media Queries para Teléfonos Celulares */
+        @media (max-width: 900px) {
+            body { display: block; overflow: auto; height: auto; }
+            .sidebar { position: fixed; left: -260px; top: 0; height: 100vh; transition: left 0.3s ease; }
+            .sidebar.mobile-open { left: 0; }
+            .mobile-topbar { display: flex; }
+            .main-content { padding: 5rem 1rem 2rem 1rem; height: auto; overflow: visible; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; }
+            .grid-2, .grid-3, .grid-5 { grid-template-columns: 1fr; gap: 0.8rem; }
+        }
     </style>
 </head>
 <body>
+
+    <!-- Barra Superior Móvil -->
+    <div class="mobile-topbar">
+        <h2>ServiTrack Mobile</h2>
+        <button class="menu-toggle-btn" onclick="app.toggleMobileMenu()"><i class="fas fa-bars"></i></button>
+    </div>
 
     <!-- Login View -->
     <div id="login-view" class="view active">
         <div class="login-card">
             <h2>ServiTrack Inteligente</h2>
-            <p>Plataforma de Control, Trazabilidad y SLA Técnico</p>
+            <p>Control y Trazabilidad Operativa</p>
             <form onsubmit="app.login(event)">
                 <div class="form-group">
                     <label>Usuario</label>
@@ -123,16 +147,16 @@
                 </div>
                 <button type="submit" class="btn btn-primary btn-block mt-1">Ingresar al Sistema</button>
             </form>
-            <p class="mt-1" style="font-size: 0.8rem; color: var(--text-muted);">(Acceso por defecto: admin / admin)</p>
+            <p class="mt-1" style="font-size: 0.8rem; color: var(--text-muted);">(Acceso: admin / admin)</p>
         </div>
     </div>
 
     <!-- Main App View -->
     <div id="app-view" class="view">
-        <nav class="sidebar">
+        <nav id="sidebar" class="sidebar">
             <div class="sidebar-header">
                 <h2>ServiTrack</h2>
-                <span class="badge">ADMIN MASTER</span>
+                <span class="badge">PRO PWA</span>
             </div>
             <ul class="nav-links">
                 <li id="menu-dashboard" class="active" onclick="app.navigateTo('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard Gerencial</li>
@@ -140,26 +164,26 @@
                 <li id="menu-create-ticket" onclick="app.navigateTo('create-ticket')"><i class="fas fa-plus-circle"></i> Nuevo Ticket</li>
                 <li id="menu-map" onclick="app.navigateTo('map')"><i class="fas fa-map-marked-alt"></i> Mapa Geolocalizado</li>
                 <li id="menu-settings" onclick="app.navigateTo('settings')"><i class="fas fa-sliders-h"></i> Ajustes & Parámetros</li>
-                <li onclick="app.openMobileModal()"><i class="fas fa-mobile-alt"></i> App Móvil PWA</li>
+                <li onclick="app.openMobileModal()"><i class="fas fa-mobile-alt"></i> Instalar App PWA</li>
             </ul>
             <div class="sidebar-footer">
                 <button onclick="app.logout()" class="btn btn-outline btn-block" style="color:white; border-color:rgba(255,255,255,0.2);"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
             </div>
         </nav>
 
-        <main class="main-content">
+        <main class="main-content" onclick="app.closeMobileMenuOnClick()">
             
             <!-- Dashboard Section -->
             <section id="view-dashboard" class="content-section" style="display: block;">
                 <div class="header-action">
-                    <h1>Dashboard Gerencial & Analítica Avanzada</h1>
-                    <button class="btn btn-secondary" onclick="app.generatePDF()"><i class="fas fa-file-pdf"></i> Exportar Reporte Ejecutivo</button>
+                    <h1>Dashboard Gerencial & Analítica</h1>
+                    <button class="btn btn-secondary" onclick="app.generatePDF()"><i class="fas fa-file-pdf"></i> Exportar Reporte</button>
                 </div>
 
                 <div class="card filters-card">
-                    <h3 style="font-size: 0.9rem; color: var(--primary); margin-bottom: 0.8rem;"><i class="fas fa-filter"></i> Filtros Interactivos de Rendimiento</h3>
+                    <h3 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.6rem;"><i class="fas fa-filter"></i> Filtros Interactivos</h3>
                     <div class="grid-5">
-                        <select id="filt-mes" class="form-control" onchange="app.renderDashboard()"><option value="">Mes (Todos)</option><option value="2026-11">Noviembre 2026</option><option value="2026-12">Diciembre 2026</option></select>
+                        <select id="filt-mes" class="form-control" onchange="app.renderDashboard()"><option value="">Mes (Todos)</option><option value="2026-11">Noviembre 2026</option></select>
                         <select id="filt-cliente" class="form-control" onchange="app.renderDashboard()"><option value="">Cliente (Todos)</option></select>
                         <select id="filt-sede" class="form-control" onchange="app.renderDashboard()"><option value="">Sede (Todas)</option></select>
                         <select id="filt-tecnico" class="form-control" onchange="app.renderDashboard()"><option value="">Técnico (Todos)</option></select>
@@ -173,55 +197,57 @@
                     <div class="kpi-card" onclick="app.navigateTo('tickets')"><h3>En Proceso</h3><p id="kpi-proceso" class="kpi-value" style="color:var(--warning)">0</p></div>
                     <div class="kpi-card" onclick="app.navigateTo('tickets')"><h3>Retrasados</h3><p id="kpi-retrasados" class="kpi-value" style="color:var(--danger)">0</p></div>
                     <div class="kpi-card" onclick="app.navigateTo('tickets')"><h3>Cumplidos</h3><p id="kpi-cumplidos" class="kpi-value" style="color:var(--success)">0</p></div>
-                    <div class="kpi-card"><h3>SLA Promedio</h3><p id="kpi-tiempo" class="kpi-value">0h</p></div>
+                    <div class="kpi-card"><h3>SLA Prom.</h3><p id="kpi-tiempo" class="kpi-value">0h</p></div>
                 </div>
 
                 <div class="card">
-                    <h3 style="color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-brain"></i> Diagnóstico Inteligente & Recomendaciones por Indicador</h3>
+                    <h3 style="color: var(--primary); margin-bottom: 0.8rem; font-size: 1rem;"><i class="fas fa-brain"></i> Diagnóstico Inteligente & Recomendaciones</h3>
                     <div id="kpi-recommendations-container">
                         <div class="recommendation-box">
-                            <h4><i class="fas fa-check-circle" style="color: var(--success);"></i> Estado General del Sistema</h4>
-                            <p id="ai-insight-text">Cargando análisis de rendimiento operacional en tiempo real...</p>
+                            <h4><i class="fas fa-check-circle" style="color: var(--success);"></i> Estado Operacional</h4>
+                            <p id="ai-insight-text">Cargando métricas de rendimiento en tiempo real...</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="grid-2 mt-2">
-                    <div class="card"><canvas id="chart-tendencia" height="140"></canvas></div>
-                    <div class="card"><canvas id="chart-sistemas" height="140"></canvas></div>
+                    <div class="card"><canvas id="chart-tendencia" height="150"></canvas></div>
+                    <div class="card"><canvas id="chart-sistemas" height="150"></canvas></div>
                 </div>
             </section>
 
             <!-- Tickets View -->
             <section id="view-tickets" class="content-section" style="display: none;">
                 <div class="header-action">
-                    <h1>Gestión y Trazabilidad de Tickets</h1>
-                    <button class="btn btn-primary" onclick="app.navigateTo('create-ticket')"><i class="fas fa-plus"></i> Nuevo Ticket</button>
+                    <h1>Gestión de Tickets</h1>
+                    <button class="btn btn-primary" onclick="app.navigateTo('create-ticket')"><i class="fas fa-plus"></i> Nuevo</button>
                 </div>
                 <div class="card">
-                    <table class="table">
-                        <thead>
-                            <tr><th>ID</th><th>Cliente</th><th>Sede</th><th>Sistema</th><th>Falla</th><th>Técnico</th><th>SLA</th><th>Estado</th><th>Acciones</th></tr>
-                        </thead>
-                        <tbody id="tickets-tbody"></tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr><th>ID</th><th>Cliente</th><th>Sede</th><th>Sistema</th><th>Falla</th><th>Técnico</th><th>SLA</th><th>Estado</th><th>Acciones</th></tr>
+                            </thead>
+                            <tbody id="tickets-tbody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
             <!-- Create Ticket View -->
             <section id="view-create-ticket" class="content-section" style="display: none;">
-                <h1>Generación de Novedad / Ticket</h1>
+                <h1>Generación de Ticket</h1>
                 <div class="card">
                     <form onsubmit="app.saveTicket(event)">
                         <div class="grid-3">
                             <div class="form-group">
-                                <label>Búsqueda de Cliente</label>
-                                <input type="text" id="search-client" class="form-control" placeholder="Filtrar cliente..." oninput="app.filterClientDropdown()">
+                                <label>Filtrar Cliente</label>
+                                <input type="text" id="search-client" class="form-control" placeholder="Buscar..." oninput="app.filterClientDropdown()">
                                 <select id="ticket-cliente" class="form-control mt-1" onchange="app.loadSedesForClient()" required></select>
                             </div>
                             <div class="form-group">
-                                <label>Búsqueda de Sede</label>
-                                <input type="text" id="search-sede" class="form-control" placeholder="Filtrar sede..." oninput="app.filterSedeDropdown()">
+                                <label>Filtrar Sede</label>
+                                <input type="text" id="search-sede" class="form-control" placeholder="Buscar..." oninput="app.filterSedeDropdown()">
                                 <select id="ticket-sede" class="form-control mt-1" required></select>
                             </div>
                             <div class="form-group">
@@ -242,25 +268,25 @@
                             </div>
                         </div>
                         <div class="form-group mt-1">
-                            <label>Descripción Detallada de la Falla</label>
-                            <textarea id="ticket-desc" class="form-control" rows="3" placeholder="Describa el reporte inicial..." required></textarea>
+                            <label>Descripción de la Falla</label>
+                            <textarea id="ticket-desc" class="form-control" rows="3" placeholder="Detalle técnico..." required></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-1">Crear y Asignar Ticket</button>
+                        <button type="submit" class="btn btn-primary btn-block mt-1">Crear y Asignar Ticket</button>
                     </form>
                 </div>
             </section>
 
             <!-- Map View -->
             <section id="view-map" class="content-section" style="display: none;">
-                <h1>Geolocalización en Tiempo Real de Técnicos</h1>
+                <h1>Geolocalización GPS</h1>
                 <div class="card">
-                    <div id="tech-map" style="height: 500px; width: 100%; border-radius: 12px;"></div>
+                    <div id="tech-map" style="height: 400px; width: 100%; border-radius: 12px;"></div>
                 </div>
             </section>
 
             <!-- Settings View -->
             <section id="view-settings" class="content-section" style="display: none;">
-                <h1>Ajustes y Parametrización Avanzada</h1>
+                <h1>Ajustes & Parámetros</h1>
                 
                 <div class="settings-tabs">
                     <button class="btn btn-outline active-tab" onclick="app.switchTab('clientes', this)">Clientes & Sedes</button>
@@ -270,57 +296,62 @@
                 </div>
 
                 <div id="tab-clientes" class="card settings-tab-content">
-                    <h3>Crear y Administrar Clientes</h3>
+                    <h3>Administrar Clientes</h3>
                     <form onsubmit="app.addClient(event)" class="mt-1">
                         <div class="grid-3">
-                            <input type="text" id="new-client-name" placeholder="Nombre de Cliente" class="form-control" required>
+                            <input type="text" id="new-client-name" placeholder="Nombre" class="form-control" required>
                             <input type="color" id="new-client-color" class="form-control" value="#1E3A8A">
-                            <button type="submit" class="btn btn-secondary">Guardar Cliente</button>
+                            <button type="submit" class="btn btn-secondary btn-block">Guardar</button>
                         </div>
                     </form>
-                    <table class="table mt-2">
-                        <thead><tr><th>Cliente</th><th>Color</th><th>Acciones</th></tr></thead>
-                        <tbody id="table-clientes"></tbody>
-                    </table>
+                    <div class="table-responsive mt-2">
+                        <table class="table">
+                            <thead><tr><th>Cliente</th><th>Color</th><th>Acciones</th></tr></thead>
+                            <tbody id="table-clientes"></tbody>
+                        </table>
+                    </div>
 
                     <hr class="mt-2" style="margin-bottom:1.5rem;">
-                    <h3>Crear y Administrar Sedes</h3>
+                    <h3>Administrar Sedes</h3>
                     <form onsubmit="app.addSede(event)">
                         <div class="grid-3">
                             <select id="sede-client-select" class="form-control" required></select>
-                            <input type="text" id="new-sede-name" placeholder="Nombre / Dirección Sede" class="form-control" required>
-                            <button type="submit" class="btn btn-secondary">Guardar Sede</button>
+                            <input type="text" id="new-sede-name" placeholder="Nombre Sede" class="form-control" required>
+                            <button type="submit" class="btn btn-secondary btn-block">Guardar</button>
                         </div>
                     </form>
-                    <table class="table mt-2">
-                        <thead><tr><th>Sede</th><th>Cliente Asociado</th><th>Acciones</th></tr></thead>
-                        <tbody id="table-sedes"></tbody>
-                    </table>
+                    <div class="table-responsive mt-2">
+                        <table class="table">
+                            <thead><tr><th>Sede</th><th>Cliente</th><th>Acciones</th></tr></thead>
+                            <tbody id="table-sedes"></tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div id="tab-usuarios" class="card settings-tab-content" style="display:none;">
-                    <h3>Gestión de Usuarios, Roles y Privilegios</h3>
+                    <h3>Usuarios, Roles y Privilegios</h3>
                     <form onsubmit="app.addUser(event)" class="mt-1">
                         <div class="grid-3">
-                            <input type="text" id="new-user-name" placeholder="Nombre de Usuario" class="form-control" required>
-                            <input type="text" id="new-role-name" placeholder="Rol (Ej. Supervisor, Técnico)" class="form-control" required>
-                            <button type="submit" class="btn btn-secondary">Registrar Usuario</button>
+                            <input type="text" id="new-user-name" placeholder="Usuario" class="form-control" required>
+                            <input type="text" id="new-role-name" placeholder="Rol" class="form-control" required>
+                            <button type="submit" class="btn btn-secondary btn-block">Registrar</button>
                         </div>
                         <div class="form-group mt-1">
-                            <label><strong>Asignar Privilegios (Selección Múltiple):</strong></label>
+                            <label><strong>Privilegios:</strong></label>
                             <div class="checkbox-group">
                                 <label><input type="checkbox" class="perm-cb" value="Crear Tickets"> Crear Tickets</label>
                                 <label><input type="checkbox" class="perm-cb" value="Ver Dashboard"> Ver Dashboard</label>
-                                <label><input type="checkbox" class="perm-cb" value="Atender/Cerrar Tickets"> Atender/Cerrar Tickets</label>
-                                <label><input type="checkbox" class="perm-cb" value="Ver Geolocalización"> Ver Geolocalización</label>
-                                <label><input type="checkbox" class="perm-cb" value="Configuración Total"> Configuración Total</label>
+                                <label><input type="checkbox" class="perm-cb" value="Atender/Cerrar Tickets"> Atender/Cerrar</label>
+                                <label><input type="checkbox" class="perm-cb" value="Ver Geolocalización"> Ver GPS</label>
                             </div>
                         </div>
                     </form>
-                    <table class="table mt-2">
-                        <thead><tr><th>Usuario</th><th>Rol</th><th>Privilegios</th><th>Acciones</th></tr></thead>
-                        <tbody id="table-usuarios"></tbody>
-                    </table>
+                    <div class="table-responsive mt-2">
+                        <table class="table">
+                            <thead><tr><th>Usuario</th><th>Rol</th><th>Privilegios</th><th>Acciones</th></tr></thead>
+                            <tbody id="table-usuarios"></tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div id="tab-sistemas" class="card settings-tab-content" style="display:none;">
@@ -328,99 +359,79 @@
                         <div>
                             <h3>Tipos de Sistemas</h3>
                             <form onsubmit="app.addSistema(event)" class="mt-1">
-                                <div class="form-group">
-                                    <input type="text" id="new-sistema-name" placeholder="Ej. CCTV IP Dahua" class="form-control" required>
-                                    <button type="submit" class="btn btn-secondary mt-1">Guardar Sistema</button>
-                                </div>
+                                <input type="text" id="new-sistema-name" placeholder="Nuevo Sistema" class="form-control" required>
+                                <button type="submit" class="btn btn-secondary btn-block mt-1">Guardar</button>
                             </form>
-                            <table class="table mt-1">
-                                <thead><tr><th>Sistema</th><th>Acciones</th></tr></thead>
-                                <tbody id="table-sistemas"></tbody>
-                            </table>
+                            <div class="table-responsive mt-1">
+                                <table class="table">
+                                    <thead><tr><th>Sistema</th><th>Acciones</th></tr></thead>
+                                    <tbody id="table-sistemas"></tbody>
+                                </table>
+                            </div>
                         </div>
                         <div>
                             <h3>Tipos de Fallas</h3>
                             <form onsubmit="app.addFalla(event)" class="mt-1">
-                                <div class="form-group">
-                                    <input type="text" id="new-falla-name" placeholder="Ej. Pérdida de Conexión" class="form-control" required>
-                                    <button type="submit" class="btn btn-secondary mt-1">Guardar Falla</button>
-                                </div>
+                                <input type="text" id="new-falla-name" placeholder="Nueva Falla" class="form-control" required>
+                                <button type="submit" class="btn btn-secondary btn-block mt-1">Guardar</button>
                             </form>
-                            <table class="table mt-1">
-                                <thead><tr><th>Falla</th><th>Acciones</th></tr></thead>
-                                <tbody id="table-fallas"></tbody>
-                            </table>
+                            <div class="table-responsive mt-1">
+                                <table class="table">
+                                    <thead><tr><th>Falla</th><th>Acciones</th></tr></thead>
+                                    <tbody id="table-fallas"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div id="tab-sla" class="card settings-tab-content" style="display:none;">
-                    <h3>Parametrización de Tiempos Meta SLA</h3>
+                    <h3>Gestión SLA</h3>
                     <form onsubmit="app.addSla(event)" class="mt-1">
                         <div class="grid-3">
-                            <input type="text" id="new-sla-desc" placeholder="Descripción (Ej. Nivel 1 Crítico)" class="form-control" required>
+                            <input type="text" id="new-sla-desc" placeholder="Descripción" class="form-control" required>
                             <input type="number" id="new-sla-days" placeholder="Días Meta" class="form-control" required>
-                            <button type="submit" class="btn btn-secondary">Guardar SLA</button>
+                            <button type="submit" class="btn btn-secondary btn-block">Guardar</button>
                         </div>
                     </form>
-                    <table class="table mt-2">
-                        <thead><tr><th>Descripción</th><th>Tiempo Meta (Días)</th><th>Acciones</th></tr></thead>
-                        <tbody id="table-sla"></tbody>
-                    </table>
+                    <div class="table-responsive mt-2">
+                        <table class="table">
+                            <thead><tr><th>Descripción</th><th>Días Meta</th><th>Acciones</th></tr></thead>
+                            <tbody id="table-sla"></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- Modal Edición General -->
+    <!-- Modales -->
     <div id="modal-edit" class="modal">
         <div class="modal-content">
             <h2 id="modal-edit-title" style="color: var(--primary); margin-bottom: 1rem;">Editar Elemento</h2>
             <form onsubmit="app.saveEdit(event)">
                 <input type="hidden" id="edit-type">
                 <input type="hidden" id="edit-index">
-                <div class="form-group">
-                    <label>Nuevo Valor / Nombre</label>
-                    <input type="text" id="edit-value-1" class="form-control" required>
-                </div>
-                <div class="form-group" id="edit-group-2" style="display:none;">
-                    <label>Valor Secundario (Color / Días / Rol)</label>
-                    <input type="text" id="edit-value-2" class="form-control">
-                </div>
+                <div class="form-group"><label>Valor Principal</label><input type="text" id="edit-value-1" class="form-control" required></div>
+                <div class="form-group" id="edit-group-2" style="display:none;"><label>Valor Secundario</label><input type="text" id="edit-value-2" class="form-control"></div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-outline" onclick="document.getElementById('modal-edit').style.display='none'">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Cierre -->
     <div id="modal-cierre" class="modal">
         <div class="modal-content">
-            <h2>Atender y Cerrar Ticket <span id="modal-ticket-id"></span></h2>
+            <h2>Atender Ticket <span id="modal-ticket-id"></span></h2>
             <form onsubmit="app.submitCierre(event)">
-                <div class="form-group">
-                    <label>Actividades Realizadas</label>
-                    <textarea class="form-control" rows="3" required placeholder="Detalle técnico..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Materiales Utilizados</label>
-                    <textarea class="form-control" rows="2" placeholder="Repuestos..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Observaciones / Recomendaciones</label>
-                    <textarea class="form-control" rows="2" placeholder="Recomendaciones..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Evidencia Fotográfica</label>
-                    <input type="file" class="form-control" multiple accept="image/*">
-                </div>
-                <div class="form-group">
-                    <label>Correo del Cliente</label>
-                    <input type="email" class="form-control" placeholder="cliente@empresa.com" required>
-                </div>
-                <p style="font-size:0.85rem; color:var(--success); font-weight:600;"><i class="fas fa-map-marker-alt"></i> GPS capturado.</p>
+                <div class="form-group"><label>Actividades Realizadas</label><textarea class="form-control" rows="3" required placeholder="Solución..."></textarea></div>
+                <div class="form-group"><label>Materiales</label><textarea class="form-control" rows="2" placeholder="Repuestos..."></textarea></div>
+                <div class="form-group"><label>Recomendaciones</label><textarea class="form-control" rows="2" placeholder="Notas..."></textarea></div>
+                <div class="form-group"><label>Evidencia Fotográfica</label><input type="file" class="form-control" multiple accept="image/*"></div>
+                <div class="form-group"><label>Correo Cliente</label><input type="email" class="form-control" placeholder="correo@empresa.com" required></div>
+                <p style="font-size:0.85rem; color:var(--success); font-weight:600;"><i class="fas fa-map-marker-alt"></i> GPS Activo.</p>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-outline" onclick="document.getElementById('modal-cierre').style.display='none'">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Cerrar Ticket</button>
@@ -429,12 +440,11 @@
         </div>
     </div>
 
-    <!-- Modal PWA -->
     <div id="modal-mobile" class="modal">
         <div class="modal-content" style="text-align: center;">
             <i class="fas fa-mobile-alt" style="font-size: 3.5rem; color: var(--accent); margin-bottom: 1rem;"></i>
-            <h2>App Móvil ServiTrack PWA</h2>
-            <p style="margin: 1rem 0; color: var(--text-muted);">Instala la aplicación en tu smartphone.</p>
+            <h2>App Móvil PWA</h2>
+            <p style="margin: 1rem 0; color: var(--text-muted);">Instala la aplicación en la pantalla de inicio de tu celular (Android / iOS): abre el menú de tu navegador y selecciona <strong>"Agregar a la pantalla principal"</strong>.</p>
             <div style="background: #F1F5F9; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
                 <strong>Enlace Directo:</strong><br><span style="font-size: 0.9rem; color: var(--secondary);">https://techfixapp.netlify.app</span>
             </div>
