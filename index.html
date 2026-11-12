@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ServiTrack - Multi-Cliente & Trazabilidad Dinámica</title>
-    <!-- Fuentes y Estilos Tecnológicos Avanzados -->
+    <title>ServiTrack - Dashboard Analítico & Control de Usuarios</title>
+    <!-- Fuentes y Estilos Avanzados -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -34,7 +34,7 @@
         .login-card h2 { color: var(--primary); margin-bottom: 0.5rem; font-weight: 700; font-size: 1.7rem; }
         .login-card p { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem; }
 
-        /* Sidebar Responsive con Logo Dinámico de Cliente */
+        /* Sidebar */
         .sidebar { width: 260px; background: var(--primary); color: white; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 100; transition: transform 0.3s ease; }
         .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
         .sidebar-header img.client-logo { max-height: 40px; max-width: 140px; object-fit: contain; background: white; padding: 4px; border-radius: 6px; }
@@ -83,6 +83,7 @@
         .btn-outline:hover { background: #f1f5f9; }
         .btn-danger { background: var(--danger); color: white; padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius: 6px; }
         .btn-warning { background: var(--warning); color: white; padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius: 6px; }
+        .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
 
         /* Tables */
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -90,16 +91,16 @@
         .table th, .table td { padding: 0.9rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
         .table th { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; background: #F8FAFC; }
 
-        /* KPIs & Análisis Independiente */
+        /* KPIs & Análisis por Gráfico */
         .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
         .kpi-card { background: var(--card-bg); padding: 1.2rem; border-radius: 16px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); border-top: 5px solid var(--secondary); cursor: pointer; transition: 0.3s; }
         .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px -3px rgba(0,0,0,0.08); }
         .kpi-card h3 { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         .kpi-value { font-size: 1.6rem; font-weight: 700; margin-top: 0.3rem; color: var(--primary); }
 
-        .indicator-analysis-card { background: linear-gradient(135deg, #EFF6FF, #F0FDF4); border: 1px solid #BFDBFE; border-left: 6px solid var(--success); padding: 1.2rem; border-radius: 12px; margin-top: 1rem; }
-        .indicator-analysis-card h4 { color: var(--secondary); margin-bottom: 0.3rem; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
-        .indicator-analysis-card p { font-size: 0.88rem; color: #334155; line-height: 1.4; margin-bottom: 0.4rem; }
+        .chart-header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+        .chart-analysis-box { background: linear-gradient(135deg, #EFF6FF, #F0FDF4); border: 1px solid #BFDBFE; border-left: 6px solid var(--secondary); padding: 1rem; border-radius: 10px; margin-top: 0.8rem; font-size: 0.85rem; color: #334155; line-height: 1.4; }
+        .chart-analysis-box h5 { color: var(--secondary); margin-bottom: 0.2rem; display: flex; align-items: center; gap: 6px; }
 
         /* Tabs Ajustes */
         .settings-tabs { display: flex; gap: 0.6rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5px; }
@@ -138,7 +139,7 @@
             <form onsubmit="app.login(event)">
                 <div class="form-group">
                     <label>Usuario</label>
-                    <input type="text" id="login-user" class="form-control" placeholder="admin" required>
+                    <input type="text" id="login-user" class="form-control" placeholder="Ej. Carlos Pérez o admin" required>
                 </div>
                 <div class="form-group">
                     <label>Contraseña</label>
@@ -146,7 +147,7 @@
                 </div>
                 <button type="submit" class="btn btn-primary btn-block mt-1">Ingresar al Sistema</button>
             </form>
-            <p class="mt-1" style="font-size: 0.8rem; color: var(--text-muted);">(Admin: admin / admin)</p>
+            <p class="mt-1" style="font-size: 0.8rem; color: var(--text-muted);">(Admin por defecto: admin / admin)</p>
         </div>
     </div>
 
@@ -176,16 +177,16 @@
             <!-- Dashboard Section -->
             <section id="view-dashboard" class="content-section" style="display: block;">
                 <div class="header-action">
-                    <h1>Dashboard Gerencial & Analítica Multi-Cliente</h1>
+                    <h1>Dashboard Gerencial & Analítica por Indicador</h1>
                     <button class="btn btn-secondary" onclick="app.generatePDF()"><i class="fas fa-file-pdf"></i> Exportar Reporte</button>
                 </div>
 
-                <!-- Selector Global de Cliente y Filtros -->
+                <!-- Selector Global y Filtros -->
                 <div class="card filters-card">
-                    <h3 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.6rem;"><i class="fas fa-filter"></i> Filtros Interactivos & Contexto de Cliente</h3>
+                    <h3 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.6rem;"><i class="fas fa-filter"></i> Filtros Interactivos & Contexto</h3>
                     <div class="grid-3">
                         <div class="form-group">
-                            <label>Filtrar por Cliente (Cambio Dinámico de Interfaz)</label>
+                            <label>Filtrar por Cliente (Vista Master / Específica)</label>
                             <select id="global-client-filter" class="form-control" onchange="app.changeActiveClientContext()">
                                 <option value="">Todos los Clientes (Vista Master)</option>
                             </select>
@@ -211,26 +212,89 @@
                     <div class="kpi-card"><h3>SLA Prom.</h3><p id="kpi-tiempo" class="kpi-value">0h</p></div>
                 </div>
 
-                <!-- Análisis y Recomendaciones Independientes por Indicador -->
-                <div class="card">
-                    <h3 style="color: var(--primary); margin-bottom: 0.8rem; font-size: 1rem;"><i class="fas fa-brain"></i> Análisis Independiente & Recomendaciones por Indicador</h3>
-                    <div id="independent-analysis-container">
-                        <!-- Generado dinámicamente -->
+                <!-- 6 Gráficos con Análisis Independiente y Botón de Ocultar -->
+                <div class="grid-2">
+                    <!-- 1. Ticket vs Sede -->
+                    <div class="card">
+                        <div class="chart-header-action">
+                            <h4 style="font-size:0.95rem; color:var(--primary);">1. Tickets vs Sede</h4>
+                            <button class="btn btn-outline btn-sm" onclick="app.toggleAnalysis('box-analysis-1', this)"><i class="fas fa-eye-slash"></i> Ocultar Análisis</button>
+                        </div>
+                        <canvas id="chart-ticket-sede" height="140"></canvas>
+                        <div id="box-analysis-1" class="chart-analysis-box">
+                            <h5><i class="fas fa-brain"></i> Análisis & Recomendación</h5>
+                            <p id="analysis-text-1">Cargando...</p>
+                        </div>
+                    </div>
+
+                    <!-- 2. Fallas de Sistema vs Sedes -->
+                    <div class="card">
+                        <div class="chart-header-action">
+                            <h4 style="font-size:0.95rem; color:var(--primary);">2. Fallas de Sistema vs Sedes</h4>
+                            <button class="btn btn-outline btn-sm" onclick="app.toggleAnalysis('box-analysis-2', this)"><i class="fas fa-eye-slash"></i> Ocultar Análisis</button>
+                        </div>
+                        <canvas id="chart-fallas-sedes" height="140"></canvas>
+                        <div id="box-analysis-2" class="chart-analysis-box">
+                            <h5><i class="fas fa-brain"></i> Análisis & Recomendación</h5>
+                            <p id="analysis-text-2">Cargando...</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 6 Gráficos de Indicadores -->
-                <div class="grid-2">
-                    <div class="card"><canvas id="chart-ticket-sede" height="150"></canvas></div>
-                    <div class="card"><canvas id="chart-fallas-sedes" height="150"></canvas></div>
-                </div>
                 <div class="grid-2 mt-1">
-                    <div class="card"><canvas id="chart-ticket-sistemas" height="150"></canvas></div>
-                    <div class="card"><canvas id="chart-ticket-tecnico" height="150"></canvas></div>
+                    <!-- 3. Tickets por Tipo de Sistema -->
+                    <div class="card">
+                        <div class="chart-header-action">
+                            <h4 style="font-size:0.95rem; color:var(--primary);">3. Tickets por Tipo de Sistema</h4>
+                            <button class="btn btn-outline btn-sm" onclick="app.toggleAnalysis('box-analysis-3', this)"><i class="fas fa-eye-slash"></i> Ocultar Análisis</button>
+                        </div>
+                        <canvas id="chart-ticket-sistemas" height="140"></canvas>
+                        <div id="box-analysis-3" class="chart-analysis-box">
+                            <h5><i class="fas fa-brain"></i> Análisis & Recomendación</h5>
+                            <p id="analysis-text-3">Cargando...</p>
+                        </div>
+                    </div>
+
+                    <!-- 4. Tickets vs Técnico -->
+                    <div class="card">
+                        <div class="chart-header-action">
+                            <h4 style="font-size:0.95rem; color:var(--primary);">4. Tickets vs Técnico</h4>
+                            <button class="btn btn-outline btn-sm" onclick="app.toggleAnalysis('box-analysis-4', this)"><i class="fas fa-eye-slash"></i> Ocultar Análisis</button>
+                        </div>
+                        <canvas id="chart-ticket-tecnico" height="140"></canvas>
+                        <div id="box-analysis-4" class="chart-analysis-box">
+                            <h5><i class="fas fa-brain"></i> Análisis & Recomendación</h5>
+                            <p id="analysis-text-4">Cargando...</p>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="grid-2 mt-1">
-                    <div class="card"><canvas id="chart-ticket-tec-sla" height="150"></canvas></div>
-                    <div class="card"><canvas id="chart-tendencia-sedes" height="150"></canvas></div>
+                    <!-- 5. Ticket vs Técnico vs SLA -->
+                    <div class="card">
+                        <div class="chart-header-action">
+                            <h4 style="font-size:0.95rem; color:var(--primary);">5. Ticket vs Técnico vs SLA</h4>
+                            <button class="btn btn-outline btn-sm" onclick="app.toggleAnalysis('box-analysis-5', this)"><i class="fas fa-eye-slash"></i> Ocultar Análisis</button>
+                        </div>
+                        <canvas id="chart-ticket-tec-sla" height="140"></canvas>
+                        <div id="box-analysis-5" class="chart-analysis-box">
+                            <h5><i class="fas fa-brain"></i> Análisis & Recomendación</h5>
+                            <p id="analysis-text-5">Cargando...</p>
+                        </div>
+                    </div>
+
+                    <!-- 6. Tendencia de Sedes con Falla vs Tiempo -->
+                    <div class="card">
+                        <div class="chart-header-action">
+                            <h4 style="font-size:0.95rem; color:var(--primary);">6. Tendencia de Sedes con Falla vs Tiempo</h4>
+                            <button class="btn btn-outline btn-sm" onclick="app.toggleAnalysis('box-analysis-6', this)"><i class="fas fa-eye-slash"></i> Ocultar Análisis</button>
+                        </div>
+                        <canvas id="chart-tendencia-sedes" height="140"></canvas>
+                        <div id="box-analysis-6" class="chart-analysis-box">
+                            <h5><i class="fas fa-brain"></i> Análisis & Recomendación</h5>
+                            <p id="analysis-text-6">Cargando...</p>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -259,11 +323,11 @@
                     <form onsubmit="app.saveTicket(event)">
                         <div class="grid-3">
                             <div class="form-group">
-                                <label>Cliente (Asignado / Restringido)</label>
+                                <label>Cliente (Asignado)</label>
                                 <select id="ticket-cliente" class="form-control" onchange="app.loadSedesForClient()" required></select>
                             </div>
                             <div class="form-group">
-                                <label>Sede (Exclusiva del Cliente)</label>
+                                <label>Sede (Exclusiva)</label>
                                 <select id="ticket-sede" class="form-control" required></select>
                             </div>
                             <div class="form-group">
@@ -306,18 +370,17 @@
                 
                 <div class="settings-tabs">
                     <button class="btn btn-outline active-tab" onclick="app.switchTab('clientes', this)">Clientes & Logotipo</button>
-                    <button class="btn btn-outline" onclick="app.switchTab('usuarios', this)">Usuarios, Roles & Privilegios</button>
+                    <button class="btn btn-outline" onclick="app.switchTab('usuarios', this)">Usuarios & Contraseñas</button>
                     <button class="btn btn-outline" onclick="app.switchTab('sistemas', this)">Sistemas & Fallas</button>
                     <button class="btn btn-outline" onclick="app.switchTab('sla', this)">Gestión SLA</button>
                 </div>
 
-                <!-- Clientes y Logos -->
                 <div id="tab-clientes" class="card settings-tab-content">
-                    <h3>Crear y Administrar Clientes & Logo Corporativo</h3>
+                    <h3>Crear y Administrar Clientes & Logo</h3>
                     <form onsubmit="app.addClient(event)" class="mt-1">
                         <div class="grid-3">
                             <input type="text" id="new-client-name" placeholder="Nombre de Cliente" class="form-control" required>
-                            <input type="color" id="new-client-color" class="form-control" value="#1E3A8A" title="Color Corporativo Neurolingüístico">
+                            <input type="color" id="new-client-color" class="form-control" value="#1E3A8A">
                             <input type="text" id="new-client-logo" placeholder="URL del Logotipo (Imagen)" class="form-control" required>
                             <button type="submit" class="btn btn-secondary btn-block" style="grid-column: span 3;">Guardar Cliente y Logo</button>
                         </div>
@@ -346,13 +409,12 @@
                     </div>
                 </div>
 
-                <!-- Usuarios, Roles y Privilegios -->
                 <div id="tab-usuarios" class="card settings-tab-content" style="display:none;">
-                    <h3>Creación de Usuarios, Asignación de Cliente y Privilegios</h3>
+                    <h3>Gestión de Usuarios, Contraseñas y Privilegios</h3>
                     <form onsubmit="app.addUser(event)" class="mt-1">
                         <div class="grid-3">
                             <input type="text" id="new-user-name" placeholder="Nombre Usuario" class="form-control" required>
-                            <input type="text" id="new-user-pass" placeholder="Contraseña de Acceso" class="form-control" required>
+                            <input type="password" id="new-user-pass" placeholder="Contraseña de Acceso" class="form-control" required>
                             <select id="new-user-client" class="form-control" required>
                                 <option value="TODOS">Asignar Todos los Clientes (Master)</option>
                             </select>
@@ -367,20 +429,19 @@
                                 <label><input type="checkbox" class="perm-cb" value="Gestión de Tickets" checked> Gestión de Tickets</label>
                                 <label><input type="checkbox" class="perm-cb" value="Nuevo Ticket" checked> Nuevo Ticket</label>
                                 <label><input type="checkbox" class="perm-cb" value="Mapa Geolocalizado" checked> Mapa Geolocalizado</label>
-                                <label><input type="checkbox" class="perm-cb" value="Ajustes & Parámetros"> Ajustes & Parámetros (Administrador)</label>
+                                <label><input type="checkbox" class="perm-cb" value="Ajustes & Parámetros"> Ajustes & Parámetros (Admin)</label>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-secondary btn-block mt-1">Registrar Usuario con Privilegios</button>
+                        <button type="submit" class="btn btn-secondary btn-block mt-1">Registrar Usuario</button>
                     </form>
                     <div class="table-responsive mt-2">
                         <table class="table">
-                            <thead><tr><th>Usuario</th><th>Rol</th><th>Cliente Asignado</th><th>Privilegios</th><th>Acciones</th></tr></thead>
+                            <thead><tr><th>Usuario</th><th>Contraseña</th><th>Rol</th><th>Cliente</th><th>Privilegios</th><th>Acciones</th></tr></thead>
                             <tbody id="table-usuarios"></tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Sistemas & Fallas -->
                 <div id="tab-sistemas" class="card settings-tab-content" style="display:none;">
                     <div class="grid-2">
                         <div>
@@ -412,7 +473,6 @@
                     </div>
                 </div>
 
-                <!-- SLA -->
                 <div id="tab-sla" class="card settings-tab-content" style="display:none;">
                     <h3>Gestión SLA</h3>
                     <form onsubmit="app.addSla(event)" class="mt-1">
@@ -441,7 +501,7 @@
                 <input type="hidden" id="edit-type">
                 <input type="hidden" id="edit-index">
                 <div class="form-group"><label>Valor Principal</label><input type="text" id="edit-value-1" class="form-control" required></div>
-                <div class="form-group" id="edit-group-2" style="display:none;"><label>Valor Secundario</label><input type="text" id="edit-value-2" class="form-control"></div>
+                <div class="form-group" id="edit-group-2"><label>Valor Secundario (Contraseña / Logo / Rol)</label><input type="text" id="edit-value-2" class="form-control"></div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-outline" onclick="document.getElementById('modal-edit').style.display='none'">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Guardar</button>
