@@ -547,7 +547,7 @@ submitCierre(e) {
             return;
         }
 
-        tbody.innerHTML = '';
+       tbody.innerHTML = '';
         filteredTickets.forEach(t => {
             const bg = t.estado === 'Cumplido' ? 'var(--success)' : 'var(--accent)';
             const tiempoRes = this.calcularTiempoResolucion(t);
@@ -564,7 +564,7 @@ submitCierre(e) {
                 <td>${atenderBtn}</td>
             </tr>`;
         });
-    },  // <--- Esta coma es obligatoria para separar renderTicketsTable de la siguiente función
+    },
 
     downloadSingleTicketPDF(id) {
         const t = dataState.tickets.find(item => item.id === id);
