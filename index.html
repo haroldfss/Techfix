@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ServiTrack - Gestión y Trazabilidad Técnica</title>
-    <!-- Fuentes y Estilos Tecnológicos (Neurolingüística: Azul Confianza #0A192F, Naranja Acción #FF6B35, Verde Éxito #10B981) -->
+    <!-- Fuentes y Estilos Avanzados (Neurolingüística) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -46,12 +46,10 @@
 
         /* Main Content */
         .main-content { flex: 1; overflow-y: auto; padding: 2rem; background: var(--bg); }
-        .content-section { display: none; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .content-section { display: none; }
 
         /* Cards & Grids */
-        .card { background: var(--card-bg); border-radius: 16px; padding: 1.8rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04); margin-bottom: 1.5rem; border: 1px solid var(--border); transition: 0.3s; }
-        .card:hover { box-shadow: 0 20px 25px -5px rgba(0,0,0,0.08); }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 1.8rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04); margin-bottom: 1.5rem; border: 1px solid var(--border); }
         .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
         .header-action h1 { color: var(--primary); font-size: 1.8rem; font-weight: 700; }
         
@@ -86,9 +84,9 @@
         .table th, .table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
         .table th { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; background: #F8FAFC; }
 
-        /* Dashboard & KPIs con Neuromarketing */
+        /* Dashboard & KPIs */
         .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
-        .kpi-card { background: var(--card-bg); padding: 1.2rem; border-radius: 16px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); border-top: 5px solid var(--secondary); transition: 0.3s; cursor: pointer; }
+        .kpi-card { background: var(--card-bg); padding: 1.2rem; border-radius: 16px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); border-top: 5px solid var(--secondary); cursor: pointer; transition: 0.3s; }
         .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -3px rgba(0,0,0,0.1); }
         .kpi-card h3 { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         .kpi-value { font-size: 1.8rem; font-weight: 700; margin-top: 0.4rem; color: var(--primary); }
@@ -103,8 +101,7 @@
 
         /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,25,47,0.7); backdrop-filter: blur(5px); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: white; padding: 2.2rem; border-radius: 20px; width: 100%; max-width: 520px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: zoomIn 0.25s ease; }
-        @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-content { background: white; padding: 2.2rem; border-radius: 20px; width: 100%; max-width: 520px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
         .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
     </style>
 </head>
@@ -138,11 +135,11 @@
                 <span class="badge">ADMIN MASTER</span>
             </div>
             <ul class="nav-links">
-                <li id="nav-dashboard" class="active" onclick="app.navigateTo('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard Gerencial</li>
-                <li id="nav-tickets" onclick="app.navigateTo('tickets')"><i class="fas fa-ticket-alt"></i> Gestión de Tickets</li>
-                <li id="nav-create-ticket" onclick="app.navigateTo('create-ticket')"><i class="fas fa-plus-circle"></i> Nuevo Ticket</li>
-                <li id="nav-map" onclick="app.navigateTo('map')"><i class="fas fa-map-marked-alt"></i> Mapa Geolocalizado</li>
-                <li id="nav-settings" onclick="app.navigateTo('settings')"><i class="fas fa-sliders-h"></i> Ajustes & Parámetros</li>
+                <li id="menu-dashboard" class="active" onclick="app.navigateTo('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard Gerencial</li>
+                <li id="menu-tickets" onclick="app.navigateTo('tickets')"><i class="fas fa-ticket-alt"></i> Gestión de Tickets</li>
+                <li id="menu-create-ticket" onclick="app.navigateTo('create-ticket')"><i class="fas fa-plus-circle"></i> Nuevo Ticket</li>
+                <li id="menu-map" onclick="app.navigateTo('map')"><i class="fas fa-map-marked-alt"></i> Mapa Geolocalizado</li>
+                <li id="menu-settings" onclick="app.navigateTo('settings')"><i class="fas fa-sliders-h"></i> Ajustes & Parámetros</li>
                 <li onclick="app.openMobileModal()"><i class="fas fa-mobile-alt"></i> App Móvil PWA</li>
             </ul>
             <div class="sidebar-footer">
@@ -153,13 +150,12 @@
         <main class="main-content">
             
             <!-- Dashboard Section -->
-            <section id="view-dashboard" class="content-section active">
+            <section id="view-dashboard" class="content-section" style="display: block;">
                 <div class="header-action">
                     <h1>Dashboard Gerencial & Analítica Avanzada</h1>
                     <button class="btn btn-secondary" onclick="app.generatePDF()"><i class="fas fa-file-pdf"></i> Exportar Reporte Ejecutivo</button>
                 </div>
 
-                <!-- Filtros Interactivos Avanzados -->
                 <div class="card filters-card">
                     <h3 style="font-size: 0.9rem; color: var(--primary); margin-bottom: 0.8rem;"><i class="fas fa-filter"></i> Filtros Interactivos de Rendimiento</h3>
                     <div class="grid-5">
@@ -171,17 +167,15 @@
                     </div>
                 </div>
 
-                <!-- KPIs Interactivos -->
                 <div class="kpi-grid">
-                    <div class="kpi-card" onclick="app.filterDashboardStatus('Creado')"><h3>Creados</h3><p id="kpi-creados" class="kpi-value">0</p></div>
-                    <div class="kpi-card" onclick="app.filterDashboardStatus('Asignado')"><h3>Asignados</h3><p id="kpi-asignados" class="kpi-value" style="color:var(--secondary)">0</p></div>
-                    <div class="kpi-card" onclick="app.filterDashboardStatus('En Proceso')"><h3>En Proceso</h3><p id="kpi-proceso" class="kpi-value" style="color:var(--warning)">0</p></div>
-                    <div class="kpi-card" onclick="app.filterDashboardStatus('Retrasados')"><h3>Retrasados</h3><p id="kpi-retrasados" class="kpi-value" style="color:var(--danger)">0</p></div>
-                    <div class="kpi-card" onclick="app.filterDashboardStatus('Cumplido')"><h3>Cumplidos</h3><p id="kpi-cumplidos" class="kpi-value" style="color:var(--success)">0</p></div>
+                    <div class="kpi-card" onclick="app.navigateTo('tickets')"><h3>Creados</h3><p id="kpi-creados" class="kpi-value">0</p></div>
+                    <div class="kpi-card" onclick="app.navigateTo('tickets')"><h3>Asignados</h3><p id="kpi-asignados" class="kpi-value" style="color:var(--secondary)">0</p></div>
+                    <div class="kpi-card" onclick="app.navigateTo('tickets')"><h3>En Proceso</h3><p id="kpi-proceso" class="kpi-value" style="color:var(--warning)">0</p></div>
+                    <div class="kpi-card" onclick="app.navigateTo('tickets')"><h3>Retrasados</h3><p id="kpi-retrasados" class="kpi-value" style="color:var(--danger)">0</p></div>
+                    <div class="kpi-card" onclick="app.navigateTo('tickets')"><h3>Cumplidos</h3><p id="kpi-cumplidos" class="kpi-value" style="color:var(--success)">0</p></div>
                     <div class="kpi-card"><h3>SLA Promedio</h3><p id="kpi-tiempo" class="kpi-value">0h</p></div>
                 </div>
 
-                <!-- Observaciones y Recomendaciones por Indicador -->
                 <div class="card">
                     <h3 style="color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-brain"></i> Diagnóstico Inteligente & Recomendaciones por Indicador</h3>
                     <div id="kpi-recommendations-container">
@@ -192,7 +186,6 @@
                     </div>
                 </div>
 
-                <!-- Gráficos Interactivos de Impacto -->
                 <div class="grid-2 mt-2">
                     <div class="card"><canvas id="chart-tendencia" height="140"></canvas></div>
                     <div class="card"><canvas id="chart-sistemas" height="140"></canvas></div>
@@ -200,7 +193,7 @@
             </section>
 
             <!-- Tickets View -->
-            <section id="view-tickets" class="content-section">
+            <section id="view-tickets" class="content-section" style="display: none;">
                 <div class="header-action">
                     <h1>Gestión y Trazabilidad de Tickets</h1>
                     <button class="btn btn-primary" onclick="app.navigateTo('create-ticket')"><i class="fas fa-plus"></i> Nuevo Ticket</button>
@@ -216,19 +209,19 @@
             </section>
 
             <!-- Create Ticket View -->
-            <section id="view-create-ticket" class="content-section">
+            <section id="view-create-ticket" class="content-section" style="display: none;">
                 <h1>Generación de Novedad / Ticket</h1>
                 <div class="card">
                     <form onsubmit="app.saveTicket(event)">
                         <div class="grid-3">
                             <div class="form-group">
-                                <label>Búsqueda Interactiva de Cliente</label>
-                                <input type="text" id="search-client" class="form-control" placeholder="Escriba para filtrar cliente..." oninput="app.filterClientDropdown()">
+                                <label>Búsqueda de Cliente</label>
+                                <input type="text" id="search-client" class="form-control" placeholder="Filtrar cliente..." oninput="app.filterClientDropdown()">
                                 <select id="ticket-cliente" class="form-control mt-1" onchange="app.loadSedesForClient()" required></select>
                             </div>
                             <div class="form-group">
-                                <label>Búsqueda Interactiva de Sede</label>
-                                <input type="text" id="search-sede" class="form-control" placeholder="Escriba para filtrar sede..." oninput="app.filterSedeDropdown()">
+                                <label>Búsqueda de Sede</label>
+                                <input type="text" id="search-sede" class="form-control" placeholder="Filtrar sede..." oninput="app.filterSedeDropdown()">
                                 <select id="ticket-sede" class="form-control mt-1" required></select>
                             </div>
                             <div class="form-group">
@@ -258,15 +251,15 @@
             </section>
 
             <!-- Map View -->
-            <section id="view-map" class="content-section">
+            <section id="view-map" class="content-section" style="display: none;">
                 <h1>Geolocalización en Tiempo Real de Técnicos</h1>
                 <div class="card">
                     <div id="tech-map" style="height: 500px; width: 100%; border-radius: 12px;"></div>
                 </div>
             </section>
 
-            <!-- Settings & Parametrization View -->
-            <section id="view-settings" class="content-section">
+            <!-- Settings View -->
+            <section id="view-settings" class="content-section" style="display: none;">
                 <h1>Ajustes y Parametrización Avanzada</h1>
                 
                 <div class="settings-tabs">
@@ -276,13 +269,12 @@
                     <button class="btn btn-outline" onclick="app.switchTab('sla', this)">Gestión SLA</button>
                 </div>
 
-                <!-- Tab Clientes & Sedes -->
                 <div id="tab-clientes" class="card settings-tab-content">
                     <h3>Crear y Administrar Clientes</h3>
                     <form onsubmit="app.addClient(event)" class="mt-1">
                         <div class="grid-3">
                             <input type="text" id="new-client-name" placeholder="Nombre de Cliente" class="form-control" required>
-                            <input type="color" id="new-client-color" class="form-control" title="Color Corporativo" value="#1E3A8A">
+                            <input type="color" id="new-client-color" class="form-control" value="#1E3A8A">
                             <button type="submit" class="btn btn-secondary">Guardar Cliente</button>
                         </div>
                     </form>
@@ -306,7 +298,6 @@
                     </table>
                 </div>
 
-                <!-- Tab Usuarios & Roles -->
                 <div id="tab-usuarios" class="card settings-tab-content" style="display:none;">
                     <h3>Gestión de Usuarios, Roles y Privilegios</h3>
                     <form onsubmit="app.addUser(event)" class="mt-1">
@@ -332,7 +323,6 @@
                     </table>
                 </div>
 
-                <!-- Tab Sistemas & Fallas -->
                 <div id="tab-sistemas" class="card settings-tab-content" style="display:none;">
                     <div class="grid-2">
                         <div>
@@ -364,7 +354,6 @@
                     </div>
                 </div>
 
-                <!-- Tab SLA -->
                 <div id="tab-sla" class="card settings-tab-content" style="display:none;">
                     <h3>Parametrización de Tiempos Meta SLA</h3>
                     <form onsubmit="app.addSla(event)" class="mt-1">
@@ -406,55 +395,53 @@
         </div>
     </div>
 
-    <!-- Modal Cierre de Ticket -->
+    <!-- Modal Cierre -->
     <div id="modal-cierre" class="modal">
         <div class="modal-content">
             <h2>Atender y Cerrar Ticket <span id="modal-ticket-id"></span></h2>
             <form onsubmit="app.submitCierre(event)">
                 <div class="form-group">
                     <label>Actividades Realizadas</label>
-                    <textarea class="form-control" rows="3" required placeholder="Detalle técnico de la solución..."></textarea>
+                    <textarea class="form-control" rows="3" required placeholder="Detalle técnico..."></textarea>
                 </div>
                 <div class="form-group">
                     <label>Materiales Utilizados</label>
-                    <textarea class="form-control" rows="2" placeholder="Repuestos, cables, conectores..."></textarea>
+                    <textarea class="form-control" rows="2" placeholder="Repuestos..."></textarea>
                 </div>
                 <div class="form-group">
                     <label>Observaciones / Recomendaciones</label>
-                    <textarea class="form-control" rows="2" placeholder="Recomendaciones para el cliente..."></textarea>
+                    <textarea class="form-control" rows="2" placeholder="Recomendaciones..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Registro Fotográfico (Evidencia)</label>
+                    <label>Evidencia Fotográfica</label>
                     <input type="file" class="form-control" multiple accept="image/*">
                 </div>
                 <div class="form-group">
-                    <label>Correo del Cliente (Envío de Informe PDF)</label>
+                    <label>Correo del Cliente</label>
                     <input type="email" class="form-control" placeholder="cliente@empresa.com" required>
                 </div>
-                <p style="font-size:0.85rem; color:var(--success); font-weight:600;"><i class="fas fa-map-marker-alt"></i> Georreferenciación GPS capturada al instante.</p>
+                <p style="font-size:0.85rem; color:var(--success); font-weight:600;"><i class="fas fa-map-marker-alt"></i> GPS capturado.</p>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-outline" onclick="document.getElementById('modal-cierre').style.display='none'">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Confirmar y Cerrar Ticket</button>
+                    <button type="submit" class="btn btn-primary">Cerrar Ticket</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Descarga App Móvil -->
+    <!-- Modal PWA -->
     <div id="modal-mobile" class="modal">
         <div class="modal-content" style="text-align: center;">
             <i class="fas fa-mobile-alt" style="font-size: 3.5rem; color: var(--accent); margin-bottom: 1rem;"></i>
             <h2>App Móvil ServiTrack PWA</h2>
-            <p style="margin: 1rem 0; color: var(--text-muted);">Instala la aplicación en tu smartphone para recibir alertas en tiempo real y ejecutar cierres en campo.</p>
+            <p style="margin: 1rem 0; color: var(--text-muted);">Instala la aplicación en tu smartphone.</p>
             <div style="background: #F1F5F9; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                <strong>Enlace Directo PWA:</strong><br>
-                <span style="font-size: 0.9rem; color: var(--secondary);">https://techfixapp.netlify.app</span>
+                <strong>Enlace Directo:</strong><br><span style="font-size: 0.9rem; color: var(--secondary);">https://techfixapp.netlify.app</span>
             </div>
             <button onclick="document.getElementById('modal-mobile').style.display='none'" class="btn btn-primary btn-block">Cerrar</button>
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="./js/app.js"></script>
 </body>
