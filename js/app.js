@@ -51,11 +51,15 @@ const app = {
             
             this.applyUserPrivileges();
             
-            // Si el rol es técnico o no tiene permiso de Dashboard, redirigir directo a Gestión de Tickets
-            if(currentUser.role.toLowerCase().includes('técnico') || !currentUser.perms.includes('Dashboard Gerencial')) {
-                this.navigateTo('tickets');
-            } else {
+            // Determinar la vista inicial según los permisos del usuario (Evita mostrar Dashboard si no lo tiene permitido)
+            if(currentUser.perms.includes("Dashboard Gerencial") || currentUser.role === "Administrador") {
                 this.navigateTo('dashboard');
+            } else if(currentUser.perms.includes("Gestión de Tickets")) {
+                this.navigateTo('tickets');
+            } else if(currentUser.perms.includes("Nuevo Ticket")) {
+                this.navigateTo('create-ticket');
+            } else {
+                this.navigateTo('tickets');
             }
         } else {
             alert("Usuario o contraseña incorrectos.");
@@ -134,13 +138,6 @@ const app = {
         }
     },
     navigateTo(section) {
-        // Bloquear acceso al dashboard si es técnico o no tiene permiso
-        if(section === 'dashboard' && currentUser && (currentUser.role.toLowerCase().includes('técnico') || !currentUser.perms.includes('Dashboard Gerencial'))) {
-            alert("Acceso restringido: El perfil técnico no tiene visualización de Dashboard.");
-            this.navigateTo('tickets');
-            return;
-        }
-
         const sections = ['dashboard', 'tickets', 'create-ticket', 'map', 'settings'];
         sections.forEach(s => {
             const el = document.getElementById(`view-${s}`);
@@ -151,7 +148,7 @@ const app = {
         if(target) target.style.display = 'block';
 
         document.querySelectorAll('.sidebar .nav-links li').forEach(li => li.classList.remove('active'));
-        const menuLi = document.getElementById(`menu-${section}`);
+        const menuLi = document.getElementById(`menu-${section.charAt(0).toUpperCase() + section.slice(1)}`);
         if(menuLi) menuLi.classList.add('active');
 
         this.closeMobileMenuOnClick();
@@ -220,9 +217,9 @@ const app = {
         dataState.usuarios.push({ name, pass, role, assignedClient: client, perms });
         this.saveStorage();
         e.target.reset();
-        document.querySelectorAll('.perm-cb').forEach(cb => cb.checked = true);
+        document.querySelectorAll('.perm-cb').forEach(cb => cb.checked = false);
         this.renderAll();
-        alert("Usuario registrado con éxito.");
+        alert("Usuario registrado exitosamente.");
     },
     deleteUser(idx) {
         if(confirm("¿Desea eliminar este usuario?")) {
@@ -272,15 +269,383 @@ const app = {
         this.renderAll();
     },
 
-    // --- MODAL EDICIÓN CON PRIVILEGIOS Y CONTRASEÑA ---
+    // --- MODAL EDICIÓN CON PRIVILEGIOS ---
     openEditModal(type, idx) {
         document.getElementById('edit-type').value = type;
         document.getElementById('edit-index').value = idx;
         const g2 = document.getElementById('edit-group-2');
-        const permGroup = document.getElementById('edit-permissions-group');
+        const gPerms = document.getElementById('edit-group-perms');
         g2.style.display = 'block';
-        permGroup.style.display = 'none';
+        gPerms.style.display = 'none';
 
         if(type === 'client') {
             document.getElementById('modal-edit-title').innerText = "Editar Cliente y Logo";
-            document.getElementById('edit-value-1').value = dataState.clientes[idx].
+            document.getElementById('edit-value-1').value = dataState.clientes[idx].name;
+            document.getElementById('edit-value-2').value = dataState.clientes[idx].logo;
+        } else if(type === 'sede') {
+            document.getElementById('modal-edit-title').innerText = "Editar Sede";
+            document.getElementById('edit-value-1').value = dataState.sedes[idx].sede;
+            g2.style.display = 'none';
+        } else if(type === 'user') {
+            document.getElementById('modal-edit-title').innerText = "Editar Usuario y Privilegios";
+            document.getElementById('edit-value-1').value = dataState.usuarios[idx].name;
+            document.getElementById('edit-value-2').value = dataState.usuarios[idx].pass;
+            gPerms.style.display = 'block';
+            
+            // Marcar checkboxes actuales del usuario
+            const userPerms = dataState.usuarios[idx].perms || [];
+            document.querySelectorAll('.edit-perm-cb').forEach(cb => {
+                cb.checked = userPerms.includes(cb.value);
+            });
+        } else if(type === 'sistema') {
+            document.getElementById('modal-edit-title').innerText = "Editar Sistema";
+            document.getElementById('edit-value-1').value = dataState.sistemas[idx];
+            g2.style.display = 'none';
+        } else if(type === 'falla') {
+            document.getElementById('modal-edit-title').innerText = "Editar Falla";
+            document.getElementById('edit-value-1').value = dataState.fallas[idx];
+            g2.style.display = 'none';
+        } else if(type === 'sla') {
+            document.getElementById('modal-edit-title').innerText = "Editar SLA";
+            document.getElementById('edit-value-1').value = dataState.slaList[idx].desc;
+            document.getElementById('edit-value-2').value = dataState.slaList[idx].days;
+        }
+        document.getElementById('modal-edit').style.display = 'flex';
+    },
+    saveEdit(e) {
+        e.preventDefault();
+        const type = document.getElementById('edit-type').value;
+        const idx = parseInt(document.getElementById('edit-index').value);
+        const v1 = document.getElementById('edit-value-1').value;
+        const v2 = document.getElementById('edit-value-2').value;
+
+        if(type === 'client') { 
+            dataState.clientes[idx].name = v1; 
+            dataState.clientes[idx].logo = v2; 
+        } else if(type === 'sede') { 
+            dataState.sedes[idx].sede = v1; 
+        } else if(type === 'user') { 
+            dataState.usuarios[idx].name = v1; 
+            dataState.usuarios[idx].pass = v2; 
+            // Guardar nuevos privilegios editados
+            const newPerms = Array.from(document.querySelectorAll('.edit-perm-cb:checked')).map(cb => cb.value);
+            dataState.usuarios[idx].perms = newPerms;
+        } else if(type === 'sistema') { 
+            dataState.sistemas[idx] = v1; 
+        } else if(type === 'falla') { 
+            dataState.fallas[idx] = v1; 
+        } else if(type === 'sla') { 
+            dataState.slaList[idx].desc = v1; 
+            dataState.slaList[idx].days = v2; 
+        }
+
+        this.saveStorage();
+        document.getElementById('modal-edit').style.display = 'none';
+        this.renderAll();
+        alert("Cambios guardados con éxito.");
+    },
+
+    // --- TICKETS ---
+    loadTicketSelectors() {
+        const clientEl = document.getElementById('ticket-cliente');
+        if(!clientEl) return;
+        clientEl.innerHTML = '';
+        
+        let availableClients = dataState.clientes;
+        if(currentUser && currentUser.assignedClient !== "TODOS") {
+            availableClients = dataState.clientes.filter(c => c.name === currentUser.assignedClient);
+        }
+        
+        availableClients.forEach(c => clientEl.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+        this.loadSedesForClient();
+
+        const sisEl = document.getElementById('ticket-sistema');
+        sisEl.innerHTML = '';
+        dataState.sistemas.forEach(s => sisEl.innerHTML += `<option value="${s}">${s}</option>`);
+
+        const fallaEl = document.getElementById('ticket-falla');
+        fallaEl.innerHTML = '';
+        dataState.fallas.forEach(f => fallaEl.innerHTML += `<option value="${f}">${f}</option>`);
+
+        const tecEl = document.getElementById('ticket-tecnico');
+        tecEl.innerHTML = '';
+        dataState.usuarios.forEach(u => tecEl.innerHTML += `<option value="${u.name}">${u.name} (${u.role})</option>`);
+
+        const slaEl = document.getElementById('ticket-sla');
+        slaEl.innerHTML = '';
+        dataState.slaList.forEach(s => slaEl.innerHTML += `<option value="${s.days}">${s.desc} (${s.days} Días)</option>`);
+    },
+    loadSedesForClient() {
+        const client = document.getElementById('ticket-cliente').value;
+        const sedeEl = document.getElementById('ticket-sede');
+        if(!sedeEl) return;
+        sedeEl.innerHTML = '';
+        dataState.sedes.filter(s => s.client === client).forEach(s => {
+            sedeEl.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
+        });
+    },
+    saveTicket(e) {
+        e.preventDefault();
+        const ticket = {
+            id: 'TK-' + Math.floor(Math.random() * 9000 + 1000),
+            cliente: document.getElementById('ticket-cliente').value,
+            sede: document.getElementById('ticket-sede').value,
+            sistema: document.getElementById('ticket-sistema').value,
+            falla: document.getElementById('ticket-falla').value,
+            tecnico: document.getElementById('ticket-tecnico').value,
+            sla: document.getElementById('ticket-sla').value,
+            desc: document.getElementById('ticket-desc').value,
+            estado: 'Asignado',
+            fecha: '2026-11'
+        };
+        dataState.tickets.push(ticket);
+        this.saveStorage();
+        alert(`Ticket ${ticket.id} creado con éxito.`);
+        e.target.reset();
+        this.navigateTo('tickets');
+    },
+    abrirCierre(id) {
+        document.getElementById('modal-ticket-id').innerText = id;
+        document.getElementById('modal-cierre').style.display = 'flex';
+    },
+    submitCierre(e) {
+        e.preventDefault();
+        const id = document.getElementById('modal-ticket-id').innerText;
+        const ticket = dataState.tickets.find(t => t.id === id);
+        if(ticket) ticket.estado = 'Cumplido';
+        this.saveStorage();
+        document.getElementById('modal-cierre').style.display = 'none';
+        alert('Ticket cerrado.');
+        this.renderTicketsTable();
+    },
+    renderTicketsTable() {
+        const tbody = document.getElementById('tickets-tbody');
+        if(!tbody) return;
+        
+        let filteredTickets = dataState.tickets;
+        if(activeClientContext) {
+            filteredTickets = filteredTickets.filter(t => t.cliente === activeClientContext);
+        } else if(currentUser && currentUser.assignedClient !== "TODOS") {
+            filteredTickets = filteredTickets.filter(t => t.cliente === currentUser.assignedClient);
+        }
+
+        if(filteredTickets.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted);">No hay tickets registrados.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = '';
+        filteredTickets.forEach(t => {
+            const bg = t.estado === 'Cumplido' ? 'var(--success)' : 'var(--accent)';
+            tbody.innerHTML += `<tr>
+                <td><strong>${t.id}</strong></td>
+                <td>${t.cliente}</td>
+                <td>${t.sede}</td>
+                <td>${t.sistema}</td>
+                <td>${t.falla}</td>
+                <td>${t.tecnico}</td>
+                <td>${t.sla} Días</td>
+                <td><span class="badge" style="background:${bg}">${t.estado}</span></td>
+                <td><button class="btn btn-primary btn-sm" onclick="app.abrirCierre('${t.id}')">Atender</button></td>
+            </tr>`;
+        });
+    },
+
+    // --- DASHBOARD & INDICADORES ---
+    renderDashboard() {
+        let filtered = dataState.tickets;
+        
+        if(activeClientContext) {
+            filtered = filtered.filter(t => t.cliente === activeClientContext);
+        } else if(currentUser && currentUser.assignedClient !== "TODOS") {
+            filtered = filtered.filter(t => t.cliente === currentUser.assignedClient);
+        }
+
+        const fSed = document.getElementById('filt-sede').value;
+        const fTec = document.getElementById('filt-tecnico').value;
+
+        if(fSed) filtered = filtered.filter(t => t.sede === fSed);
+        if(fTec) filtered = filtered.filter(t => t.tecnico === fTec);
+
+        const creados = filtered.length;
+        const asignados = filtered.filter(t => t.estado === 'Asignado').length;
+        const proceso = filtered.filter(t => t.estado === 'En Proceso').length;
+        const retrasados = filtered.filter(t => t.estado === 'Retrasado').length;
+        const cumplidos = filtered.filter(t => t.estado === 'Cumplido').length;
+
+        document.getElementById('kpi-creados').innerText = creados;
+        document.getElementById('kpi-asignados').innerText = asignados;
+        document.getElementById('kpi-proceso').innerText = proceso;
+        document.getElementById('kpi-retrasados').innerText = retrasados;
+        document.getElementById('kpi-cumplidos').innerText = cumplidos;
+        document.getElementById('kpi-tiempo').innerText = cumplidos > 0 ? "14.2h" : "0h";
+
+        this.buildIndicators(filtered);
+    },
+    buildIndicators(filtered) {
+        let clientSedes = dataState.sedes;
+        let activeClient = activeClientContext || (currentUser && currentUser.assignedClient !== "TODOS" ? currentUser.assignedClient : "");
+        if(activeClient) {
+            clientSedes = dataState.sedes.filter(s => s.client === activeClient);
+        }
+        const sedesList = clientSedes.map(s => s.sede);
+        const sistemasList = dataState.sistemas;
+        const tecnicosList = dataState.usuarios.map(u => u.name);
+
+        const ticketSedeCounts = sedesList.map(sede => filtered.filter(t => t.sede === sede).length);
+        if(this.charts.ticketSede) this.charts.ticketSede.destroy();
+        this.charts.ticketSede = new Chart(document.getElementById('chart-ticket-sede').getContext('2d'), {
+            type: 'bar',
+            data: { labels: sedesList, datasets: [{ label: 'Tickets vs Sede', data: ticketSedeCounts, backgroundColor: '#1E3A8A' }] },
+            options: { responsive: true, plugins: { title: { display: false } } }
+        });
+        document.getElementById('analysis-text-1').innerText = `Análisis: Concentración de ${filtered.length} tickets en sedes clave. Recomendación: Evaluar mantenimiento preventivo en las sedes con mayor volumen.`;
+
+        const fallasSedesCounts = sedesList.map(sede => filtered.filter(t => t.sede === sede && t.falla).length);
+        if(this.charts.fallasSedes) this.charts.fallasSedes.destroy();
+        this.charts.fallasSedes = new Chart(document.getElementById('chart-fallas-sedes').getContext('2d'), {
+            type: 'bar',
+            data: { labels: sedesList, datasets: [{ label: 'Fallas Reportadas', data: fallasSedesCounts, backgroundColor: '#EF4444' }] },
+            options: { responsive: true, plugins: { title: { display: false } } }
+        });
+        document.getElementById('analysis-text-2').innerText = `Análisis: Correlación entre fallas e infraestructura. Recomendación: Revisar estabilidad de energía y redes en sitios críticos.`;
+
+        const sistemasCounts = sistemasList.map(sis => filtered.filter(t => t.sistema === sis).length);
+        if(this.charts.ticketSistemas) this.charts.ticketSistemas.destroy();
+        this.charts.ticketSistemas = new Chart(document.getElementById('chart-ticket-sistemas').getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: sistemasList, datasets: [{ data: sistemasCounts, backgroundColor: ['#1E3A8A', '#FF6B35', '#10B981', '#F59E0B'] }] },
+            options: { responsive: true, plugins: { title: { display: false } } }
+        });
+        document.getElementById('analysis-text-3').innerText = `Análisis: Distribución por tecnologías afectadas. Recomendación: Priorizar auditorías sobre sistemas con mayor índice de fallas.`;
+
+        const ticketTecCounts = tecnicosList.map(tec => filtered.filter(t => t.tecnico === tec).length);
+        if(this.charts.ticketTecnico) this.charts.ticketTecnico.destroy();
+        this.charts.ticketTecnico = new Chart(document.getElementById('chart-ticket-tecnico').getContext('2d'), {
+            type: 'bar',
+            data: { labels: tecnicosList, datasets: [{ label: 'Tickets Asignados', data: ticketTecCounts, backgroundColor: '#FF6B35' }] },
+            options: { responsive: true, plugins: { title: { display: false } } }
+        });
+        document.getElementById('analysis-text-4').innerText = `Análisis: Carga laboral asignada al personal técnico. Recomendación: Balancear órdenes para evitar saturación en campo.`;
+
+        const slaTecProm = tecnicosList.map(tec => {
+            const tecTickets = filtered.filter(t => t.tecnico === tec);
+            if(tecTickets.length === 0) return 0;
+            const suma = tecTickets.reduce((acc, curr) => acc + parseFloat(curr.sla || 0), 0);
+            return (suma / tecTickets.length).toFixed(1);
+        });
+        if(this.charts.ticketTecSla) this.charts.ticketTecSla.destroy();
+        this.charts.ticketTecSla = new Chart(document.getElementById('chart-ticket-tec-sla').getContext('2d'), {
+            type: 'bar',
+            data: { labels: tecnicosList, datasets: [{ label: 'Promedio SLA (Días)', data: slaTecProm, backgroundColor: '#10B981' }] },
+            options: { responsive: true, plugins: { title: { display: false } } }
+        });
+        document.getElementById('analysis-text-5').innerText = `Análisis: Cumplimiento de tiempos meta por técnico. Recomendación: Capacitar al personal para reducir el SLA promedio.`;
+
+        if(this.charts.tendenciaSedes) this.charts.tendenciaSedes.destroy();
+        this.charts.tendenciaSedes = new Chart(document.getElementById('chart-tendencia-sedes').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+                datasets: [{ label: 'Sedes con Novedades', data: [1, 2, 2, filtered.length], borderColor: '#0A192F', backgroundColor: 'rgba(10,25,47,0.1)', fill: true, tension: 0.3 }]
+            },
+            options: { responsive: true, plugins: { title: { display: false } } }
+        });
+        document.getElementById('analysis-text-6').innerText = `Análisis: Evolución temporal de sedes impactadas. Recomendación: Establecer alertas tempranas ante picos de fallas.`;
+    },
+
+    // --- RENDERIZADO GENERAL ---
+    renderAll() {
+        const gClientSel = document.getElementById('global-client-filter');
+        const sCli = document.getElementById('sede-client-select');
+        const uClientSel = document.getElementById('new-user-client');
+
+        if(gClientSel) {
+            gClientSel.innerHTML = '<option value="">Todos los Clientes (Vista Master)</option>';
+            dataState.clientes.forEach(c => gClientSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+            gClientSel.value = activeClientContext;
+        }
+        if(sCli) {
+            sCli.innerHTML = '<option value="">Seleccione Cliente...</option>';
+            dataState.clientes.forEach(c => sCli.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+        }
+        if(uClientSel) {
+            uClientSel.innerHTML = '<option value="TODOS">Asignar Todos los Clientes (Master)</option>';
+            dataState.clientes.forEach(c => uClientSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+        }
+
+        const tCli = document.getElementById('table-clientes');
+        if(tCli) {
+            tCli.innerHTML = '';
+            dataState.clientes.forEach((c, i) => {
+                tCli.innerHTML += `<tr><td><strong>${c.name}</strong></td><td><span style="display:inline-block;width:15px;height:15px;background:${c.color};border-radius:4px;"></span></td><td><img src="${c.logo}" style="height:25px; object-fit:contain;"></td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('client', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteClient(${i})">Del</button></td></tr>`;
+            });
+        }
+
+        const tSed = document.getElementById('table-sedes');
+        const fSed = document.getElementById('filt-sede');
+        if(tSed && fSed) {
+            tSed.innerHTML = ''; fSed.innerHTML = '<option value="">Sede (Todas)</option>';
+            dataState.sedes.forEach((s, i) => {
+                tSed.innerHTML += `<tr><td><strong>${s.sede}</strong></td><td>${s.client}</td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('sede', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteSede(${i})">Del</button></td></tr>`;
+                fSed.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
+            });
+        }
+
+        const tUsu = document.getElementById('table-usuarios');
+        const fTec = document.getElementById('filt-tecnico');
+        if(tUsu && fTec) {
+            tUsu.innerHTML = ''; fTec.innerHTML = '<option value="">Técnico (Todos)</option>';
+            dataState.usuarios.forEach((u, i) => {
+                tUsu.innerHTML += `<tr><td><strong>${u.name}</strong></td><td>${u.role}</td><td>${u.assignedClient}</td><td><span style="font-size:0.8rem;color:var(--text-muted);">${u.perms.join(', ')}</span></td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('user', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteUser(${i})">Del</button></td></tr>`;
+                fTec.innerHTML += `<option value="${u.name}">${u.name}</option>`;
+            });
+        }
+
+        const tSys = document.getElementById('table-sistemas');
+        if(tSys) {
+            tSys.innerHTML = '';
+            dataState.sistemas.forEach((s, i) => {
+                tSys.innerHTML += `<tr><td>${s}</td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('sistema', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteSistema(${i})">Del</button></td></tr>`;
+            });
+        }
+
+        const tFal = document.getElementById('table-fallas');
+        if(tFal) {
+            tFal.innerHTML = '';
+            dataState.fallas.forEach((f, i) => {
+                tFal.innerHTML += `<tr><td>${f}</td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('falla', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteFalla(${i})">Del</button></td></tr>`;
+            });
+        }
+
+        const tSla = document.getElementById('table-sla');
+        if(tSla) {
+            tSla.innerHTML = '';
+            dataState.slaList.files = [];
+            dataState.slaList.forEach((sla, i) => {
+                tSla.innerHTML += `<tr><td>${sla.desc}</td><td><strong>${sla.days} Días</strong></td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('sla', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteSla(${i})">Del</button></td></tr>`;
+            });
+        }
+
+        this.renderDashboard();
+    },
+    initMap() {
+        if(!this.map) {
+            this.map = L.map('tech-map').setView([4.6097, -74.0817], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
+            L.marker([4.6097, -74.0817]).addTo(this.map).bindPopup("<b>Técnico:</b> Carlos Pérez (GPS Activo)");
+        }
+        setTimeout(() => this.map.invalidateSize(), 200);
+    },
+    generatePDF() {
+        alert("Generando informe PDF gerencial...");
+    },
+    saveStorage() {
+        localStorage.setItem('servitrack_db_v13', JSON.stringify(dataState));
+    },
+    loadStorage() {
+        const saved = localStorage.getItem('servitrack_db_v13');
+        if(saved) dataState = JSON.parse(saved);
+    }
+};
+
+window.onload = () => app.init();
