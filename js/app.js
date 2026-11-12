@@ -1,13 +1,6 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Configuración de Firebase compatible con tu estructura
 const firebaseConfig = {
-  apiKey: "AIzaSyA2i85JZIlyEctgZ_0SqPDIplLqMzRd0sI",
+  apiKey: "AIzaSyA2i85JZiLyEctgZ_0SqPD1plLqMzRd0sI",
   authDomain: "techfixapp-7ab17.firebaseapp.com",
   projectId: "techfixapp-7ab17",
   storageBucket: "techfixapp-7ab17.firebasestorage.app",
@@ -16,9 +9,13 @@ const firebaseConfig = {
   measurementId: "G-9F35YLNZ4Y"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+// Inicializar Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
+
+// Aquí continúa tu código actual...
 let dataState = {
     // AQUÍ AGREGAS LOS TICKETS PARA QUE APAREZCAN EN CUALQUIER CELULAR
     tickets: [
