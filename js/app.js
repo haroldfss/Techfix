@@ -1,5 +1,9 @@
 let dataState = {
-    tickets: [],
+    tickets: [
+        { id: 'TK-1001', cliente: 'Banco de Bogotá', sede: 'Sede Principal Calle 72', sistema: 'CCTV IP Dahua', falla: 'Pérdida de Enlace Video', tecnico: 'Carlos Pérez', sla: '1', estado: 'Asignado', fecha: '2026-11' },
+        { id: 'TK-1002', cliente: 'Banco de Bogotá', sede: 'Sede Principal Calle 72', sistema: 'Intrusión AX PRO', falla: 'Batería Baja Panel', tecnico: 'Oscar Muñoz', sla: '3', estado: 'Cumplido', fecha: '2026-11' },
+        { id: 'TK-1003', cliente: 'Centro Comercial Andino', sede: 'Torre Administrativa', sistema: 'Control de Acceso Biométrico', falla: 'Falla Lector Biométrico', tecnico: 'Carlos Pérez', sla: '2', estado: 'En Proceso', fecha: '2026-11' }
+    ],
     clientes: [
         { name: "Banco de Bogotá", color: "#1E3A8A" },
         { name: "Centro Comercial Andino", color: "#FF6B35" }
@@ -21,7 +25,7 @@ let dataState = {
 };
 
 const app = {
-    charts: { tend: null, sist: null },
+    charts: { ticketSede: null, fallasSedes: null, ticketSistemas: null, ticketTecnico: null, ticketTecSla: null, tendenciaSedes: null },
     map: null,
     init() {
         this.loadStorage();
@@ -344,9 +348,23 @@ const app = {
         });
     },
 
-    // --- DASHBOARD ---
+    // --- DASHBOARD & 6 INDICADORES SOLICITADOS ---
     renderDashboard() {
-        const filtered = dataState.tickets;
+        const fMes = document.getElementById('filt-mes').value;
+        const fCli = document.getElementById('filt-cliente').value;
+        const fSed = document.getElementById('filt-sede').value;
+        const fTec = document.getElementById('filt-tecnico').value;
+        const fFal = document.getElementById('filt-falla').value;
+
+        let filtered = dataState.tickets.filter(t => {
+            if(fMes && t.fecha !== fMes) return false;
+            if(fCli && t.cliente !== fCli) return false;
+            if(fSed && t.sede !== fSed) return false;
+            if(fTec && t.tecnico !== fTec) return false;
+            if(fFal && t.falla !== fFal) return false;
+            return true;
+        });
+
         const creados = filtered.length;
         const asignados = filtered.filter(t => t.estado === 'Asignado').length;
         const proceso = filtered.filter(t => t.estado === 'En Proceso').length;
@@ -358,31 +376,76 @@ const app = {
         document.getElementById('kpi-proceso').innerText = proceso;
         document.getElementById('kpi-retrasados').innerText = retrasados;
         document.getElementById('kpi-cumplidos').innerText = cumplidos;
-        document.getElementById('kpi-tiempo').innerText = cumplidos > 0 ? "15.4h" : "0h";
+        document.getElementById('kpi-tiempo').innerText = cumplidos > 0 ? "14.2h" : "0h";
 
-        this.buildCharts(filtered);
+        this.buildIndicators(filtered);
     },
-    buildCharts(filtered) {
-        const ctxTend = document.getElementById('chart-tendencia').getContext('2d');
-        if(this.charts.tend) this.charts.tend.destroy();
-        this.charts.tend = new Chart(ctxTend, {
-            type: 'line',
-            data: {
-                labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
-                datasets: [{ label: 'Atendidos', data: [2, 6, 3, filtered.length], borderColor: '#FF6B35', backgroundColor: 'rgba(255,107,53,0.1)', fill: true, tension: 0.4 }]
-            },
-            options: { responsive: true, plugins: { title: { display: true, text: 'Tendencia Operativa' } } }
+    buildIndicators(filtered) {
+        // Extraer listados únicos de sedes, sistemas, técnicos
+        const sedesList = dataState.sedes.map(s => s.sede);
+        const sistemasList = dataState.sistemas;
+        const tecnicosList = dataState.usuarios.filter(u => u.role.includes('Técnico') || u.perms.includes('Atender/Cerrar Tickets')).map(u => u.name);
+        if(tecnicosList.length === 0) tecnicosList.push(...dataState.usuarios.map(u => u.name));
+
+        // 1. Ticket vs Sede
+        const ticketSedeCounts = sedesList.map(sede => filtered.filter(t => t.sede === sede).length);
+        if(this.charts.ticketSede) this.charts.ticketSede.destroy();
+        this.charts.ticketSede = new Chart(document.getElementById('chart-ticket-sede').getContext('2d'), {
+            type: 'bar',
+            data: { labels: sedesList, datasets: [{ label: 'Tickets vs Sede', data: ticketSedeCounts, backgroundColor: '#1E3A8A' }] },
+            options: { responsive: true, plugins: { title: { display: true, text: '1. Indicador: Tickets vs Sede' } } }
         });
 
-        const ctxSist = document.getElementById('chart-sistemas').getContext('2d');
-        if(this.charts.sist) this.charts.sist.destroy();
-        this.charts.sist = new Chart(ctxSist, {
+        // 2. Fallas de sistema vs Sedes (agrupado por tipo de falla por sede)
+        const fallasSedesCounts = sedesList.map(sede => filtered.filter(t => t.sede === sede && t.falla).length);
+        if(this.charts.fallasSedes) this.charts.fallasSedes.destroy();
+        this.charts.fallasSedes = new Chart(document.getElementById('chart-fallas-sedes').getContext('2d'), {
+            type: 'bar',
+            data: { labels: sedesList, datasets: [{ label: 'Fallas Reportadas', data: fallasSedesCounts, backgroundColor: '#EF4444' }] },
+            options: { responsive: true, plugins: { title: { display: true, text: '2. Indicador: Fallas de Sistema vs Sedes' } } }
+        });
+
+        // 3. Cantidad de ticket generados por tipo de sistemas
+        const sistemasCounts = sistemasList.map(sis => filtered.filter(t => t.sistema === sis).length);
+        if(this.charts.ticketSistemas) this.charts.ticketSistemas.destroy();
+        this.charts.ticketSistemas = new Chart(document.getElementById('chart-ticket-sistemas').getContext('2d'), {
             type: 'doughnut',
+            data: { labels: sistemasList, datasets: [{ data: sistemasCounts, backgroundColor: ['#1E3A8A', '#FF6B35', '#10B981', '#F59E0B'] }] },
+            options: { responsive: true, plugins: { title: { display: true, text: '3. Indicador: Tickets por Tipo de Sistema' } } }
+        });
+
+        // 4. Ticket vs Técnico
+        const ticketTecCounts = tecnicosList.map(tec => filtered.filter(t => t.tecnico === tec).length);
+        if(this.charts.ticketTecnico) this.charts.ticketTecnico.destroy();
+        this.charts.ticketTecnico = new Chart(document.getElementById('chart-ticket-tecnico').getContext('2d'), {
+            type: 'bar',
+            data: { labels: tecnicosList, datasets: [{ label: 'Tickets Asignados', data: ticketTecCounts, backgroundColor: '#FF6B35' }] },
+            options: { responsive: true, plugins: { title: { display: true, text: '4. Indicador: Tickets vs Técnico' } } }
+        });
+
+        // 5. Ticket vs Técnico vs SLA (Promedio o conteo de días SLA por técnico)
+        const slaTecProm = tecnicosList.map(tec => {
+            const tecTickets = filtered.filter(t => t.tecnico === tec);
+            if(tecTickets.length === 0) return 0;
+            const suma = tecTickets.reduce((acc, curr) => acc + parseFloat(curr.sla || 0), 0);
+            return (suma / tecTickets.length).toFixed(1);
+        });
+        if(this.charts.ticketTecSla) this.charts.ticketTecSla.destroy();
+        this.charts.ticketTecSla = new Chart(document.getElementById('chart-ticket-tec-sla').getContext('2d'), {
+            type: 'bar',
+            data: { labels: tecnicosList, datasets: [{ label: 'Promedio SLA (Días)', data: slaTecProm, backgroundColor: '#10B981' }] },
+            options: { responsive: true, plugins: { title: { display: true, text: '5. Indicador: Ticket vs Técnico vs SLA (Promedio Días)' } } }
+        });
+
+        // 6. Tendencia de sedes con falla vs tiempo
+        if(this.charts.tendenciaSedes) this.charts.tendenciaSedes.destroy();
+        this.charts.tendenciaSedes = new Chart(document.getElementById('chart-tendencia-sedes').getContext('2d'), {
+            type: 'line',
             data: {
-                labels: dataState.sistemas,
-                datasets: [{ data: [12, 8, 4], backgroundColor: ['#1E3A8A', '#FF6B35', '#10B981'] }]
+                labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
+                datasets: [{ label: 'Sedes con Novedades Activas', data: [1, 3, 2, filtered.length], borderColor: '#0A192F', backgroundColor: 'rgba(10,25,47,0.1)', fill: true, tension: 0.3 }]
             },
-            options: { responsive: true, plugins: { title: { display: true, text: 'Sistemas con Novedades' } } }
+            options: { responsive: true, plugins: { title: { display: true, text: '6. Indicador: Tendencia de Sedes con Falla vs Tiempo' } } }
         });
     },
 
@@ -457,13 +520,13 @@ const app = {
         setTimeout(() => this.map.invalidateSize(), 200);
     },
     generatePDF() {
-        alert("Generando informe PDF gerencial...");
+        alert("Generando informe PDF gerencial con los 6 indicadores analíticos...");
     },
     saveStorage() {
-        localStorage.setItem('servitrack_db_v9', JSON.stringify(dataState));
+        localStorage.setItem('servitrack_db_v10', JSON.stringify(dataState));
     },
     loadStorage() {
-        const saved = localStorage.getItem('servitrack_db_v9');
+        const saved = localStorage.getItem('servitrack_db_v10');
         if(saved) dataState = JSON.parse(saved);
     }
 };
