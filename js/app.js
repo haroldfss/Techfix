@@ -244,6 +244,26 @@ const app = {
         if(section === 'create-ticket') this.loadTicketSelectors();
         if(section === 'tickets') this.renderTicketsTable();
         if(section === 'map') this.initMap();
+      navigateTo(section) {
+    // ... (código existente de ocultar vistas) ...
+
+    const target = document.getElementById(`view-${section}`);
+    if(target) target.style.display = 'block';
+
+    // ... (código de botones activos) ...
+    this.closeMobileMenuOnClick();
+
+    // SOLUCIÓN 3: Retraso de 150ms para garantizar que los canvas existan en pantalla antes de dibujar
+    if(section === 'dashboard') {
+        setTimeout(() => {
+            this.renderDashboard();
+        }, 150);
+    }
+    
+    if(section === 'create-ticket') this.loadTicketSelectors();
+    if(section === 'tickets') this.renderTicketsTable();
+    if(section === 'map') this.initMap();
+}
     },
     switchTab(tab, btn) {
         document.querySelectorAll('.settings-tab-content').forEach(el => el.style.display = 'none');
@@ -481,11 +501,17 @@ const app = {
         this.navigateTo('tickets');
     },
     abrirCierre(id) {
-        const ticket = dataState.tickets.find(t => t.id === id);
-        if(ticket && ticket.estado === 'Cumplido') { alert("Este ticket ya está Cumplido."); return; }
-        document.getElementById('modal-ticket-id').innerText = id;
-        document.getElementById('modal-cierre').style.display = 'flex';
-    },
+    const ticket = dataState.tickets.find(t => t.id === id);
+    if(ticket && ticket.estado === 'Cumplido') { 
+        alert("Este ticket ya está Cumplido."); 
+        return; 
+    }
+    // SOLUCIÓN 7: Mostrar descripción detallada al técnico
+    alert(`DETALLE DE LA FALLA REPORTE:\n\n${ticket.desc || ticket.falla}\n\nPor favor, completa los datos de cierre a continuación.`);
+    
+    document.getElementById('modal-ticket-id').innerText = id;
+    document.getElementById('modal-cierre').style.display = 'flex';
+}
     submitCierre(e) {
         e.preventDefault();
         const id = document.getElementById('modal-ticket-id').innerText;
@@ -514,36 +540,29 @@ const app = {
         return diffDays >= 1 ? `${diffDays} días (${diffHrs}h)` : `${diffHrs} horas`;
     },
     renderTicketsTable() {
-        const tbody = document.getElementById('tickets-tbody');
-        if(!tbody) return;
-        
-        let filteredTickets = dataState.tickets;
-        let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
-        
-        if(activeClient) filteredTickets = filteredTickets.filter(t => t.cliente === activeClient);
-        
-        if(filteredTickets.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted);">No hay tickets.</td></tr>`;
-            return;
-        }
-        tbody.innerHTML = '';
-        filteredTickets.forEach(t => {
-            const bg = t.estado === 'Cumplido' ? 'var(--success)' : 'var(--accent)';
-            const tiempoRes = this.calcularTiempoResolucion(t);
-            const atenderBtn = t.estado === 'Cumplido' 
-                ? `<div style="display:flex; gap:4px;"><button class="btn btn-outline btn-sm" disabled style="opacity:0.6;">Cumplido</button><button class="btn btn-secondary btn-sm" onclick="app.downloadSingleTicketPDF('${t.id}')"><i class="fas fa-file-pdf"></i></button></div>`
-                : `<button class="btn btn-primary btn-sm" onclick="app.abrirCierre('${t.id}')">Atender</button>`;
+    const tbody = document.getElementById('tickets-tbody');
+    if(!tbody) return;
+    
+    let filteredTickets = dataState.tickets;
+    let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
+    
+    // Filtro por Cliente
+    if(activeClient) {
+        filteredTickets = filteredTickets.filter(t => t.cliente === activeClient);
+    }
 
-            tbody.innerHTML += `<tr>
-                <td><strong>${t.id}</strong></td>
-                <td>${t.cliente}</td><td>${t.sede}</td><td>${t.sistema}</td><td>${t.falla}</td>
-                <td>${t.tecnico}</td>
-                <td><span style="font-weight:600; color:var(--secondary);">${tiempoRes}</span></td>
-                <td><span class="badge" style="background:${bg}">${t.estado}</span></td>
-                <td>${atenderBtn}</td>
-            </tr>`;
-        });
-    },
+    // SOLUCIÓN 1 y 2: Filtro estricto por Técnico
+    if (currentUser && (currentUser.role.toLowerCase() === 'técnico' || currentUser.role.toLowerCase() === 'tecnico')) {
+        filteredTickets = filteredTickets.filter(t => t.tecnico === currentUser.name);
+    }
+
+    if(filteredTickets.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted);">No tienes tickets asignados.</td></tr>`;
+        return;
+    }
+    
+    // ... (mantén el resto del código del tbody.innerHTML igual)
+}
     downloadSingleTicketPDF(id) {
         const t = dataState.tickets.find(item => item.id === id);
         if(!t) { alert("Ticket no encontrado."); return; }
