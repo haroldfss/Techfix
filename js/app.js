@@ -44,18 +44,16 @@ const app = {
         const found = dataState.usuarios.find(u => u.name.toLowerCase() === userIn.toLowerCase() && u.pass === passIn);
         if(found) {
             currentUser = found;
-            activeClientContext = found.assignedClient === "TODOS" ? "" : found.assignedClient;
+            // SI EL USUARIO TIENE UN CLIENTE ASIGNADO ESPECÍFICO, BLOQUEAR EL CONTEXTO ESTRICTAMENTE
+            activeClientContext = (found.assignedClient && found.assignedClient !== "TODOS") ? found.assignedClient : "";
             
             document.getElementById('login-view').classList.remove('active');
             document.getElementById('app-view').classList.add('active');
             
             this.applyUserPrivileges();
             
-            // Redirección inicial segura según privilegios
             if(currentUser.perms.includes("Dashboard Gerencial") || currentUser.role === "Administrador") {
                 this.navigateTo('dashboard');
-            } else if(currentUser.perms.includes("Gestión de Tickets")) {
-                this.navigateTo('tickets');
             } else {
                 this.navigateTo('tickets');
             }
@@ -82,7 +80,6 @@ const app = {
             }
         });
 
-        // Aplicar también a la barra inferior móvil
         const bottomNav = document.getElementById('mobile-bottom-nav');
         if(bottomNav) {
             bottomNav.querySelectorAll('button').forEach(btn => {
@@ -97,7 +94,6 @@ const app = {
             });
         }
 
-        // Si el rol técnico no tiene permiso de crear ticket, ocultar botón superior
         const btnNewTop = document.getElementById('btn-new-ticket-top');
         if(btnNewTop) {
             btnNewTop.style.display = (currentUser.perms.includes("Nuevo Ticket") || currentUser.role === "Administrador") ? 'inline-flex' : 'none';
@@ -105,9 +101,20 @@ const app = {
 
         document.getElementById('sidebar-user-role-badge').innerText = `${currentUser.role} (${currentUser.assignedClient})`;
         
-        if(currentUser.assignedClient !== "TODOS") {
+        // RESTRICCIÓN VISUAL DE CLIENTE
+        if(currentUser.assignedClient && currentUser.assignedClient !== "TODOS") {
             const clientObj = dataState.clientes.find(c => c.name === currentUser.assignedClient);
             if(clientObj) this.applyClientBranding(clientObj);
+            
+            // Bloquear el selector global si el usuario solo tiene acceso a su cliente
+            const gClientSel = document.getElementById('global-client-filter');
+            if(gClientSel && currentUser.role !== "Administrador") {
+                gClientSel.value = currentUser.assignedClient;
+                gClientSel.disabled = true;
+            }
+        } else {
+            const gClientSel = document.getElementById('global-client-filter');
+            if(gClientSel) gClientSel.disabled = false;
         }
     },
     applyClientBranding(clientObj) {
@@ -132,6 +139,11 @@ const app = {
     },
     changeActiveClientContext() {
         const val = document.getElementById('global-client-filter').value;
+        // Si el usuario tiene cliente asignado fijo, impedir cambiarlo
+        if(currentUser && currentUser.assignedClient !== "TODOS" && currentUser.role !== "Administrador") {
+            activeClientContext = currentUser.assignedClient;
+            return;
+        }
         activeClientContext = val;
         const clientObj = dataState.clientes.find(c => c.name === val);
         this.applyClientBranding(clientObj);
@@ -188,7 +200,6 @@ const app = {
         const menuLi = document.getElementById(`menu-${section.charAt(0).toUpperCase() + section.slice(1)}`);
         if(menuLi) menuLi.classList.add('active');
 
-        // Actualizar iconos activos en la barra inferior móvil
         document.querySelectorAll('.mobile-bottom-nav button').forEach(b => b.classList.remove('active'));
         const mobileBtn = document.getElementById(`mn-${section}`);
         if(mobileBtn) mobileBtn.classList.add('active');
@@ -394,7 +405,7 @@ const app = {
         clientEl.innerHTML = '';
         
         let availableClients = dataState.clientes;
-        if(currentUser && currentUser.assignedClient !== "TODOS") {
+        if(currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") {
             availableClients = dataState.clientes.filter(c => c.name === currentUser.assignedClient);
         }
         
@@ -422,7 +433,6 @@ const app = {
         const sedeEl = document.getElementById('ticket-sede');
         if(!sedeEl) return;
         sedeEl.innerHTML = '';
-        // Filtrado estrictamente exclusivo de sedes del cliente seleccionado en el formulario
         dataState.sedes.filter(s => s.client === client).forEach(s => {
             sedeEl.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
         });
@@ -467,8 +477,9 @@ const app = {
         
         let filteredTickets = dataState.tickets;
         
-        // Filtrado estricto por contexto global o cliente asignado al usuario
-        let activeClient = activeClientContext || (currentUser && currentUser.assignedClient !== "TODOS" ? currentUser.assignedClient : "");
+        // RESTRICCIÓN ESTRICTA: SI EL USUARIO TIENE CLIENTE ASIGNADO, FORZAR FILTRADO
+        let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
+        
         if(activeClient) {
             filteredTickets = filteredTickets.filter(t => t.cliente === activeClient);
         }
@@ -494,11 +505,13 @@ const app = {
         });
     },
 
-    // --- DASHBOARD & INDICADORES CON FILTRADO ESTRICTO DE SEDES ---
+    // --- DASHBOARD & INDICADORES ---
     renderDashboard() {
         let filtered = dataState.tickets;
         
-        let activeClient = activeClientContext || (currentUser && currentUser.assignedClient !== "TODOS" ? currentUser.assignedClient : "");
+        // RESTRICCIÓN ESTRICTA DE CLIENTE EN DASHBOARD
+        let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
+        
         if(activeClient) {
             filtered = filtered.filter(t => t.cliente === activeClient);
         }
@@ -526,9 +539,8 @@ const app = {
     },
     buildIndicators(filtered) {
         let clientSedes = dataState.sedes;
-        let activeClient = activeClientContext || (currentUser && currentUser.assignedClient !== "TODOS" ? currentUser.assignedClient : "");
+        let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
         
-        // Filtrado estrictamente exclusivo de sedes para el cliente activo
         if(activeClient) {
             clientSedes = dataState.sedes.filter(s => s.client === activeClient);
         }
@@ -685,10 +697,10 @@ const app = {
         alert("Generando informe PDF gerencial...");
     },
     saveStorage() {
-        localStorage.setItem('servitrack_db_v14', JSON.stringify(dataState));
+        localStorage.setItem('servitrack_db_v15', JSON.stringify(dataState));
     },
     loadStorage() {
-        const saved = localStorage.getItem('servitrack_db_v14');
+        const saved = localStorage.getItem('servitrack_db_v15');
         if(saved) dataState = JSON.parse(saved);
     }
 };
