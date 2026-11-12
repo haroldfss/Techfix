@@ -1,27 +1,13 @@
 let dataState = {
     tickets: [],
-    clientes: [
-        { name: "Banco de Bogotá", color: "#1E3A8A" },
-        { name: "Centro Comercial Andino", color: "#FF6B35" }
-    ],
-    sedes: [
-        { client: "Banco de Bogotá", sede: "Sede Principal Calle 72" },
-        { client: "Centro Comercial Andino", sede: "Torre Administrativa" }
-    ],
-    usuarios: [
-        { name: "Carlos Pérez", role: "Técnico Especialista", perms: ["Atender/Cerrar Tickets", "Ver Geolocalización"] },
-        { name: "Oscar Muñoz", role: "Operador SLA", perms: ["Crear Tickets", "Ver Dashboard"] }
-    ],
-    sistemas: ["CCTV IP Dahua", "Intrusión AX PRO", "Control de Acceso Biométrico"],
-    fallas: ["Pérdida de Enlace Video", "Batería Baja Panel", "Falla Lector Biométrico"],
-    slaList: [
-        { desc: "Crítico - Urgente", days: 1 },
-        { desc: "Estándar Operativo", days: 3 }
-    ]
+    clientes: [{ name: "Banco de Bogotá", color: "#1E3A8A" }],
+    sedes: [{ client: "Banco de Bogotá", sede: "Sede Principal" }],
+    usuarios: [{ name: "Carlos Pérez", role: "Técnico" }],
+    sistemas: ["CCTV IP Dahua", "Intrusión AX PRO"],
+    fallas: ["Pérdida de Video", "Falla de Panel"]
 };
 
 const app = {
-    charts: { tend: null, sist: null },
     map: null,
     init() {
         this.loadStorage();
@@ -29,14 +15,15 @@ const app = {
     },
     login(e) {
         e.preventDefault();
-        const user = document.getElementById('login-user').value;
-        const pass = document.getElementById('login-pass').value;
+        const user = document.getElementById('login-user').value.trim();
+        const pass = document.getElementById('login-pass').value.trim();
+        
         if(user === "admin" && pass === "admin") {
             document.getElementById('login-view').classList.remove('active');
             document.getElementById('app-view').classList.add('active');
             this.navigateTo('dashboard');
         } else {
-            alert("Credenciales incorrectas. Use: admin / admin");
+            alert("Usuario o contraseña incorrectos. Use: admin / admin");
         }
     },
     logout() {
@@ -44,8 +31,8 @@ const app = {
         document.getElementById('login-view').classList.add('active');
     },
     navigateTo(section) {
-        document.querySelectorAll('.content-section').forEach(el => el.style.display = 'none');
-        document.getElementById(`view-${section}`).style.display = 'block';
+        document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
+        document.getElementById(`view-${section}`).classList.add('active');
         if(section === 'dashboard') this.renderDashboard();
         if(section === 'create-ticket') this.loadTicketSelectors();
         if(section === 'tickets') this.renderTicketsTable();
@@ -57,11 +44,8 @@ const app = {
         document.getElementById(`tab-${tab}`).style.display = 'block';
         btn.classList.add('active-tab');
     },
-    openMobileModal() {
-        document.getElementById('modal-mobile').style.display = 'flex';
-    },
-
-    // --- CRUD CLIENTES & SEDES ---
+    openMobileModal() { alert("Aplicación PWA lista para instalar desde el navegador."); },
+    
     addClient(e) {
         e.preventDefault();
         const name = document.getElementById('new-client-name').value;
@@ -70,56 +54,18 @@ const app = {
         this.saveStorage();
         e.target.reset();
         this.renderAll();
-        alert("Cliente registrado exitosamente.");
+        alert("Cliente guardado.");
     },
-    deleteClient(idx) {
-        if(confirm("¿Desea eliminar este cliente?")) {
-            dataState.clientes.splice(idx, 1);
-            this.saveStorage();
-            this.renderAll();
-        }
-    },
-    addSede(e) {
-        e.preventDefault();
-        const client = document.getElementById('sede-client-select').value;
-        const sede = document.getElementById('new-sede-name').value;
-        if(!client) { alert("Seleccione un cliente."); return; }
-        dataState.sedes.push({ client, sede });
-        this.saveStorage();
-        e.target.reset();
-        this.renderAll();
-        alert("Sede agregada exitosamente.");
-    },
-    deleteSede(idx) {
-        if(confirm("¿Desea eliminar esta sede?")) {
-            dataState.sedes.splice(idx, 1);
-            this.saveStorage();
-            this.renderAll();
-        }
-    },
-
-    // --- CRUD USUARIOS ---
     addUser(e) {
         e.preventDefault();
         const name = document.getElementById('new-user-name').value;
         const role = document.getElementById('new-role-name').value;
-        const perms = Array.from(document.querySelectorAll('.perm-cb:checked')).map(cb => cb.value);
-        dataState.usuarios.push({ name, role, perms });
+        dataState.usuarios.push({ name, role });
         this.saveStorage();
         e.target.reset();
-        document.querySelectorAll('.perm-cb').forEach(cb => cb.checked = false);
         this.renderAll();
-        alert("Usuario registrado con éxito.");
+        alert("Usuario guardado.");
     },
-    deleteUser(idx) {
-        if(confirm("¿Desea eliminar este usuario?")) {
-            dataState.usuarios.splice(idx, 1);
-            this.saveStorage();
-            this.renderAll();
-        }
-    },
-
-    // --- CRUD SISTEMAS & FALLAS ---
     addSistema(e) {
         e.preventDefault();
         const sis = document.getElementById('new-sistema-name').value;
@@ -127,86 +73,6 @@ const app = {
         this.saveStorage();
         e.target.reset();
         this.renderAll();
-    },
-    deleteSistema(idx) {
-        dataState.sistemas.splice(idx, 1);
-        this.saveStorage();
-        this.renderAll();
-    },
-    addFalla(e) {
-        e.preventDefault();
-        const falla = document.getElementById('new-falla-name').value;
-        dataState.fallas.push(falla);
-        this.saveStorage();
-        e.target.reset();
-        this.renderAll();
-    },
-    deleteFalla(idx) {
-        dataState.fallas.splice(idx, 1);
-        this.saveStorage();
-        this.renderAll();
-    },
-
-    // --- CRUD SLA ---
-    addSla(e) {
-        e.preventDefault();
-        const desc = document.getElementById('new-sla-desc').value;
-        const days = document.getElementById('new-sla-days').value;
-        dataState.slaList.push({ desc, days });
-        this.saveStorage();
-        e.target.reset();
-        this.renderAll();
-    },
-    deleteSla(idx) {
-        dataState.slaList.splice(idx, 1);
-        this.saveStorage();
-        this.renderAll();
-    },
-
-    // --- TICKETS & BÚSQUEDA ---
-    loadTicketSelectors() {
-        const clientEl = document.getElementById('ticket-cliente');
-        clientEl.innerHTML = '';
-        dataState.clientes.forEach(c => clientEl.innerHTML += `<option value="${c.name}">${c.name}</option>`);
-        this.loadSedesForClient();
-
-        const sisEl = document.getElementById('ticket-sistema');
-        sisEl.innerHTML = '';
-        dataState.sistemas.forEach(s => sisEl.innerHTML += `<option value="${s}">${s}</option>`);
-
-        const fallaEl = document.getElementById('ticket-falla');
-        fallaEl.innerHTML = '';
-        dataState.fallas.forEach(f => fallaEl.innerHTML += `<option value="${f}">${f}</option>`);
-
-        const tecEl = document.getElementById('ticket-tecnico');
-        tecEl.innerHTML = '';
-        dataState.usuarios.forEach(u => tecEl.innerHTML += `<option value="${u.name}">${u.name} (${u.role})</option>`);
-    },
-    loadSedesForClient() {
-        const client = document.getElementById('ticket-cliente').value;
-        const sedeEl = document.getElementById('ticket-sede');
-        sedeEl.innerHTML = '';
-        dataState.sedes.filter(s => s.client === client).forEach(s => {
-            sedeEl.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
-        });
-    },
-    filterClientDropdown() {
-        const query = document.getElementById('search-client').value.toLowerCase();
-        const select = document.getElementById('ticket-cliente');
-        select.innerHTML = '';
-        dataState.clientes.filter(c => c.name.toLowerCase().includes(query)).forEach(c => {
-            select.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-        });
-        this.loadSedesForClient();
-    },
-    filterSedeDropdown() {
-        const query = document.getElementById('search-sede').value.toLowerCase();
-        const client = document.getElementById('ticket-cliente').value;
-        const select = document.getElementById('ticket-sede');
-        select.innerHTML = '';
-        dataState.sedes.filter(s => s.client === client && s.sede.toLowerCase().includes(query)).forEach(s => {
-            select.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
-        });
     },
     saveTicket(e) {
         e.preventDefault();
@@ -219,192 +85,79 @@ const app = {
             tecnico: document.getElementById('ticket-tecnico').value,
             sla: document.getElementById('ticket-sla').value,
             desc: document.getElementById('ticket-desc').value,
-            estado: 'Asignado',
-            fecha: '2026-11'
+            estado: 'Asignado'
         };
         dataState.tickets.push(ticket);
         this.saveStorage();
-        alert(`Ticket ${ticket.id} creado y asignado exitosamente.`);
+        alert(`Ticket ${ticket.id} creado.`);
         e.target.reset();
         this.navigateTo('tickets');
     },
-    abrirCierre(id) {
-        document.getElementById('modal-ticket-id').innerText = id;
-        document.getElementById('modal-cierre').style.display = 'flex';
+    loadTicketSelectors() {
+        const clientEl = document.getElementById('ticket-cliente');
+        clientEl.innerHTML = '';
+        dataState.clientes.forEach(c => clientEl.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+        this.loadSedesForClient();
+        
+        const sisEl = document.getElementById('ticket-sistema');
+        sisEl.innerHTML = '';
+        dataState.sistemas.forEach(s => sisEl.innerHTML += `<option value="${s}">${s}</option>`);
+
+        const fallaEl = document.getElementById('ticket-falla');
+        fallaEl.innerHTML = '';
+        dataState.fallas.forEach(f => fallaEl.innerHTML += `<option value="${f}">${f}</option>`);
+
+        const tecEl = document.getElementById('ticket-tecnico');
+        tecEl.innerHTML = '';
+        dataState.usuarios.forEach(u => tecEl.innerHTML += `<option value="${u.name}">${u.name}</option>`);
     },
-    submitCierre(e) {
-        e.preventDefault();
-        const id = document.getElementById('modal-ticket-id').innerText;
-        const ticket = dataState.tickets.find(t => t.id === id);
-        if(ticket) ticket.estado = 'Cumplido';
-        this.saveStorage();
-        document.getElementById('modal-cierre').style.display = 'none';
-        alert('Ticket cerrado con éxito. Informe PDF enviado por correo.');
-        this.renderTicketsTable();
+    loadSedesForClient() {
+        const client = document.getElementById('ticket-cliente').value;
+        const sedeEl = document.getElementById('ticket-sede');
+        sedeEl.innerHTML = '';
+        dataState.sedes.filter(s => s.client === client).forEach(s => {
+            sedeEl.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
+        });
     },
     renderTicketsTable() {
         const tbody = document.getElementById('tickets-tbody');
-        if(dataState.tickets.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted);">No hay tickets registrados.</td></tr>`;
-            return;
-        }
-        tbody.innerHTML = '';
+        tbody.innerHTML = dataState.tickets.length === 0 ? `<tr><td colspan="9" style="text-align:center; color:#64748B;">No hay tickets registrados.</td></tr>` : '';
         dataState.tickets.forEach(t => {
-            const bg = t.estado === 'Cumplido' ? 'var(--success)' : 'var(--accent)';
-            tbody.innerHTML += `<tr>
-                <td><strong>${t.id}</strong></td>
-                <td>${t.cliente}</td>
-                <td>${t.sede}</td>
-                <td>${t.sistema}</td>
-                <td>${t.falla}</td>
-                <td>${t.tecnico}</td>
-                <td>${t.sla} Días</td>
-                <td><span class="badge" style="background:${bg}">${t.estado}</span></td>
-                <td><button class="btn btn-primary" style="padding:0.3rem 0.8rem; font-size:0.8rem;" onclick="app.abrirCierre('${t.id}')">Atender / Cerrar</button></td>
-            </tr>`;
+            tbody.innerHTML += `<tr><td><strong>${t.id}</strong></td><td>${t.cliente}</td><td>${t.sede}</td><td>${t.sistema}</td><td>${t.falla}</td><td>${t.tecnico}</td><td>${t.sla}D</td><td><span class="badge">${t.estado}</span></td><td><button class="btn btn-primary" style="padding:0.2rem 0.6rem;font-size:0.75rem;" onclick="alert('Atendiendo ticket')">Atender</button></td></tr>`;
         });
     },
-
-    // --- DASHBOARD & INSIGHTS ---
-    renderDashboard() {
-        const fMes = document.getElementById('filt-mes').value;
-        const fCli = document.getElementById('filt-client').value;
-        const fSed = document.getElementById('filt-sede').value;
-        const fTec = document.getElementById('filt-tecnico').value;
-        const fFal = document.getElementById('filt-falla').value;
-
-        let filtered = dataState.tickets.filter(t => {
-            if(fMes && t.fecha !== fMes) return false;
-            if(fCli && t.cliente !== fCli) return false;
-            if(fSed && t.sede !== fSed) return false;
-            if(fTec && t.tecnico !== fTec) return false;
-            if(fFal && t.falla !== fFal) return false;
-            return true;
-        });
-
-        const creados = filtered.length;
-        const asignados = filtered.filter(t => t.estado === 'Asignado').length;
-        const proceso = filtered.filter(t => t.estado === 'En Proceso').length;
-        const retrasados = filtered.filter(t => t.estado === 'Retrasado').length;
-        const cumplidos = filtered.filter(t => t.estado === 'Cumplido').length;
-
-        document.getElementById('kpi-creados').innerText = creados;
-        document.getElementById('kpi-asignados').innerText = asignados;
-        document.getElementById('kpi-proceso').innerText = proceso;
-        document.getElementById('kpi-retrasados').innerText = retrasados;
-        document.getElementById('kpi-cumplidos').innerText = cumplidos;
-        document.getElementById('kpi-tiempo').innerText = cumplidos > 0 ? "18.4h" : "0h";
-
-        // Recomendaciones por indicador
-        const insight = document.getElementById('ai-insight-text');
-        if(creados === 0) {
-            insight.innerHTML = "<strong>Diagnóstico Operativo:</strong> Sistema sin volumen de carga actual. Se recomienda habilitar nuevas órdenes de servicio desde el módulo de creación de tickets.";
-        } else if(retrasados > 0) {
-            insight.innerHTML = `<strong><span style="color:var(--danger)">Alerta Crítica:</span></strong> Existen ${retrasados} tickets fuera de SLA. Se aconseja reasignar personal técnico inmediato para mitigar penalizaciones operativas.`;
-        } else {
-            insight.innerHTML = "<strong><span style="color:var(--success)">Rendimiento Óptimo:</span></strong> Los tiempos de respuesta y cierre cumplen con los estándares gerenciales establecidos. Operación estable.";
-        }
-
-        this.buildCharts(filtered);
-    },
-    buildCharts(filtered) {
-        const ctxTend = document.getElementById('chart-tendencia').getContext('2d');
-        if(this.charts.tend) this.charts.tend.destroy();
-        this.charts.tend = new Chart(ctxTend, {
-            type: 'line',
-            data: {
-                labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
-                datasets: [{ label: 'Tickets Atendidos', data: [2, 5, 3, filtered.length], borderColor: '#FF6B35', backgroundColor: 'rgba(255,107,53,0.1)', fill: true, tension: 0.4 }]
-            },
-            options: { responsive: true, plugins: { title: { display: true, text: 'Tendencia Mensual de Atención' } } }
-        });
-
-        const ctxSist = document.getElementById('chart-sistemas').getContext('2d');
-        if(this.charts.sist) this.charts.sist.destroy();
-        this.charts.sist = new Chart(ctxSist, {
-            type: 'doughnut',
-            data: {
-                labels: dataState.sistemas,
-                datasets: [{ data: [12, 8, 5], backgroundColor: ['#1E3A8A', '#FF6B35', '#10B981'] }]
-            },
-            options: { responsive: true, plugins: { title: { display: true, text: 'Distribución por Tipo de Sistema' } } }
-        });
-    },
-
-    // --- RENDERIZADO GENERAL Y AJUSTES ---
     renderAll() {
-        // Clientes
         const tCli = document.getElementById('table-clientes');
-        const sCli = document.getElementById('sede-client-select');
-        const fCli = document.getElementById('filt-cliente');
-        tCli.innerHTML = ''; sCli.innerHTML = '<option value="">Seleccione Cliente...</option>'; fCli.innerHTML = '<option value="">Cliente (Todos)</option>';
-        dataState.clientes.forEach((c, i) => {
-            tCli.innerHTML += `<tr><td><strong>${c.name}</strong></td><td><span style="display:inline-block;width:15px;height:15px;background:${c.color};border-radius:4px;"></span></td><td><button class="btn btn-danger" onclick="app.deleteClient(${i})">Eliminar</button></td></tr>`;
-            sCli.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-            fCli.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-        });
-
-        // Sedes
-        const tSed = document.getElementById('table-sedes');
-        const fSed = document.getElementById('filt-sede');
-        tSed.innerHTML = ''; fSed.innerHTML = '<option value="">Sede (Todas)</option>';
-        dataState.sedes.forEach((s, i) => {
-            tSed.innerHTML += `<tr><td><strong>${s.sede}</strong></td><td>${s.client}</td><td><button class="btn btn-danger" onclick="app.deleteSede(${i})">Eliminar</button></td></tr>`;
-            fSed.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
-        });
-
-        // Usuarios
+        if(tCli) {
+            tCli.innerHTML = '';
+            dataState.clientes.forEach(c => tCli.innerHTML += `<tr><td>${c.name}</td><td><span style="background:${c.color};width:12px;height:12px;display:inline-block;border-radius:2px;"></span></td><td>-</td></tr>`);
+        }
         const tUsu = document.getElementById('table-usuarios');
-        const fTec = document.getElementById('filt-tecnico');
-        tUsu.innerHTML = ''; fTec.innerHTML = '<option value="">Técnico (Todos)</option>';
-        dataState.usuarios.forEach((u, i) => {
-            tUsu.innerHTML += `<tr><td><strong>${u.name}</strong></td><td>${u.role}</td><td><span style="font-size:0.8rem;color:var(--text-muted);">${u.perms.join(', ')}</span></td><td><button class="btn btn-danger" onclick="app.deleteUser(${i})">Eliminar</button></td></tr>`;
-            fTec.innerHTML += `<option value="${u.name}">${u.name}</option>`;
-        });
-
-        // Sistemas
+        if(tUsu) {
+            tUsu.innerHTML = '';
+            dataState.usuarios.forEach(u => tUsu.innerHTML += `<tr><td>${u.name}</td><td>${u.role}</td><td>-</td></tr>`);
+        }
         const tSys = document.getElementById('table-sistemas');
-        tSys.innerHTML = '';
-        dataState.sistemas.forEach((s, i) => {
-            tSys.innerHTML += `<tr><td>${s}</td><td><button class="btn btn-danger" onclick="app.deleteSistema(${i})">Eliminar</button></td></tr>`;
-        });
-
-        // Fallas
-        const tFal = document.getElementById('table-fallas');
-        const fFal = document.getElementById('filt-falla');
-        tFal.innerHTML = ''; fFal.innerHTML = '<option value="">Tipo Falla (Todas)</option>';
-        dataState.fallas.forEach((f, i) => {
-            tFal.innerHTML += `<tr><td>${f}</td><td><button class="btn btn-danger" onclick="app.deleteFalla(${i})">Eliminar</button></td></tr>`;
-            fFal.innerHTML += `<option value="${f}">${f}</option>`;
-        });
-
-        // SLA
-        const tSla = document.getElementById('table-sla');
-        tSla.innerHTML = '';
-        dataState.slaList.forEach((sla, i) => {
-            tSla.innerHTML += `<tr><td>${sla.desc}</td><td><strong>${sla.days} Días</strong></td><td><button class="btn btn-danger" onclick="app.deleteSla(${i})">Eliminar</button></td></tr>`;
-        });
-
+        if(tSys) {
+            tSys.innerHTML = '';
+            dataState.sistemas.forEach(s => tSys.innerHTML += `<tr><td>${s}</td><td>-</td></tr>`);
+        }
         this.renderDashboard();
+    },
+    renderDashboard() {
+        document.getElementById('kpi-creados').innerText = dataState.tickets.length;
+        document.getElementById('kpi-asignados').innerText = dataState.tickets.filter(t => t.estado==='Asignado').length;
     },
     initMap() {
         if(!this.map) {
             this.map = L.map('tech-map').setView([4.6097, -74.0817], 12);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
-            L.marker([4.6097, -74.0817]).addTo(this.map).bindPopup("<b>Técnico:</b> Carlos Pérez (En ruta)");
         }
         setTimeout(() => this.map.invalidateSize(), 200);
     },
-    generatePDF() {
-        alert("Generando informe gerencial PDF con analítica ejecutiva...");
-    },
-    saveStorage() {
-        localStorage.setItem('servitrack_db_v5', JSON.stringify(dataState));
-    },
-    loadStorage() {
-        const saved = localStorage.getItem('servitrack_db_v5');
-        if(saved) dataState = JSON.parse(saved);
-    }
+    generatePDF() { alert("Generando reporte PDF..."); },
+    saveStorage() { localStorage.setItem('servitrack_db_v6', JSON.stringify(dataState)); },
+    loadStorage() { const saved = localStorage.getItem('servitrack_db_v6'); if(saved) dataState = JSON.parse(saved); }
 };
 
 window.onload = () => app.init();
