@@ -715,15 +715,40 @@ const app = {
         setTimeout(() => this.map.invalidateSize(), 200);
         this.renderConnectedTechsTable();
     },
+    // --- CONEXIÓN A BASE DE DATOS EN LA NUBE ---
     saveStorage() {
-        // ACTUALIZACIÓN VERSIÓN 23: Obliga a leer la nueva lista de usuarios y tickets de forma forzada.
-        localStorage.setItem('servitrack_db_v23', JSON.stringify(dataState));
+        // 1. Guardar copia local por si falla el internet
+        localStorage.setItem('servitrack_db_cloud', JSON.stringify(dataState));
+        
+        // 2. Subir a Firestore (La Nube)
+        db.collection("plataforma").doc("estadoGlobal").set(dataState)
+            .then(() => console.log("Datos sincronizados en la nube exitosamente."))
+            .catch((error) => console.error("Error sincronizando en la nube: ", error));
     },
+    
     loadStorage() {
-        const saved = localStorage.getItem('servitrack_db_v23');
+        // 1. Carga rápida local para que no haya pantalla en blanco
+        const saved = localStorage.getItem('servitrack_db_cloud');
         if(saved) {
             dataState = JSON.parse(saved);
         }
+
+        // 2. Escuchar cambios en tiempo real desde la nube
+        db.collection("plataforma").doc("estadoGlobal").onSnapshot((doc) => {
+            if (doc.exists) {
+                // Si hay datos en la nube, actualizar la app al instante
+                dataState = doc.data();
+                localStorage.setItem('servitrack_db_cloud', JSON.stringify(dataState));
+                
+                // Si el usuario ya inició sesión, refrescar las tablas/gráficas automáticamente
+                if(currentUser) {
+                    this.renderAll();
+                }
+            } else {
+                // Si la base de datos está vacía (primer uso), subir los datos por defecto
+                this.saveStorage();
+            }
+        });
     }
 };
 
