@@ -95,3 +95,22 @@ body { background-color: var(--bg-light); color: var(--text-main); display: flex
 
 /* Custom Settings Tabs */
 .settings-tabs { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+/* SOLUCIÓN 4 y 5: Optimización Móvil y UI */
+.table-container, .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    width: 100%;
+    min-width: 600px; /* Evita que las columnas se aplasten */
+}
+
+@media (max-width: 768px) {
+    .sidebar { width: 100%; height: auto; position: relative; padding: 10px; }
+    .main-content { margin-left: 0; padding: 10px; }
+    .btn { padding: 10px 15px; font-size: 14px; width: 100%; margin-bottom: 5px; }
+    .modal-content { width: 95%; margin: 10% auto; padding: 15px; }
+    .kpi-cards { grid-template-columns: 1fr 1fr; }
+}
