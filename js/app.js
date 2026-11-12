@@ -14,9 +14,9 @@ let dataState = {
         { client: "Centro Comercial Andino", sede: "Plazoleta de Comidas" }
     ],
     usuarios: [
-        { name: "admin", pass: "admin", role: "Administrador", assignedClient: "TODOS", perms: ["Dashboard Gerencial", "Gestión de Tickets", "Nuevo Ticket", "Mapa Geolocalizado", "Ajustes & Parámetros"] },
-        { name: "Carlos Pérez", pass: "1234", role: "Técnico", assignedClient: "Banco de Bogotá", perms: ["Gestión de Tickets"] },
-        { name: "Oscar Muñoz", pass: "1234", role: "Operador", assignedClient: "Centro Comercial Andino", perms: ["Dashboard Gerencial", "Gestión de Tickets", "Nuevo Ticket"] }
+        { name: "admin", pass: "admin", role: "Administrador", assignedClient: "TODOS", perms: ["Dashboard Gerencial", "Gestión de Tickets", "Nuevo Ticket", "Mapa Geolocalizado", "Ajustes & Parámetros"], lastLogin: "2026-11-12 10:20" },
+        { name: "Carlos Pérez", pass: "1234", role: "Técnico", assignedClient: "Banco de Bogotá", perms: ["Gestión de Tickets"], lastLogin: "2026-11-12 09:45" },
+        { name: "Oscar Muñoz", pass: "1234", role: "Operador", assignedClient: "Centro Comercial Andino", perms: ["Dashboard Gerencial", "Gestión de Tickets", "Nuevo Ticket"], lastLogin: "2026-11-12 08:30" }
     ],
     sistemas: ["CCTV IP Dahua", "Intrusión AX PRO", "Control de Acceso Biométrico"],
     fallas: ["Pérdida de Enlace Video", "Batería Baja Panel", "Falla Lector Biométrico"],
@@ -44,9 +44,10 @@ const app = {
         const found = dataState.usuarios.find(u => u.name.toLowerCase() === userIn.toLowerCase() && u.pass === passIn);
         if(found) {
             currentUser = found;
-            // Bloquear contexto de cliente si el usuario tiene asignado uno exclusivo
+            currentUser.lastLogin = new Date().toISOString().replace('T', ' ').substring(0, 16);
             activeClientContext = (found.assignedClient && found.assignedClient !== "TODOS") ? found.assignedClient : "";
             
+            this.saveStorage();
             document.getElementById('login-view').classList.remove('active');
             document.getElementById('app-view').classList.add('active');
             
@@ -101,21 +102,18 @@ const app = {
 
         document.getElementById('sidebar-user-role-badge').innerText = `${currentUser.role} (${currentUser.assignedClient})`;
         
-        // RESTRICCIÓN ESTRICTA DE INTERFAZ PARA USUARIOS NO ADMINISTRADORES
+        const gClientSel = document.getElementById('global-client-filter');
         if(currentUser.assignedClient && currentUser.assignedClient !== "TODOS") {
             const clientObj = dataState.clientes.find(c => c.name === currentUser.assignedClient);
             if(clientObj) this.applyClientBranding(clientObj);
             
-            const gClientSel = document.getElementById('global-client-filter');
             if(gClientSel) {
                 gClientSel.value = currentUser.assignedClient;
-                // Si no es admin, deshabilitar el selector global para que no pueda cambiar de cliente
                 if(currentUser.role !== "Administrador") {
-                    gClientSel.disabled = true;
+                    gClientSel.disabled = true; // Bloquear selección global para no admin
                 }
             }
         } else {
-            const gClientSel = document.getElementById('global-client-filter');
             if(gClientSel) gClientSel.disabled = false;
         }
     },
@@ -154,7 +152,7 @@ const app = {
     updateSedeDropdowns() {
         const sedeSelect = document.getElementById('filt-sede');
         if(!sedeSelect) return;
-        sedeSelect.innerHTML = '<option value="">Sede (Todas)</option>';
+        sedeSelect.innerHTML = '';
         
         let targetSedes = dataState.sedes;
         let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
@@ -270,7 +268,7 @@ const app = {
         const role = document.getElementById('new-role-name').value;
         const perms = Array.from(document.querySelectorAll('.perm-cb:checked')).map(cb => cb.value);
         
-        dataState.usuarios.push({ name, pass, role, assignedClient: client, perms });
+        dataState.usuarios.push({ name, pass, role, assignedClient: client, perms, lastLogin: "Nunca" });
         this.saveStorage();
         e.target.reset();
         document.querySelectorAll('.perm-cb').forEach(cb => cb.checked = false);
@@ -421,9 +419,15 @@ const app = {
         fallaEl.innerHTML = '';
         dataState.fallas.forEach(f => fallaEl.innerHTML += `<option value="${f}">${f}</option>`);
 
+        // AISLAMIENTO: Los técnicos del formulario solo deben mostrarse si pertenecen al cliente del usuario actual
         const tecEl = document.getElementById('ticket-tecnico');
         tecEl.innerHTML = '';
-        dataState.usuarios.forEach(u => tecEl.innerHTML += `<option value="${u.name}">${u.name} (${u.role})</option>`);
+        let targetTecs = dataState.usuarios.filter(u => u.role.toLowerCase().includes('técnico') || u.role.toLowerCase().includes('tecnico'));
+        if(currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") {
+            targetTecs = targetTecs.filter(u => u.assignedClient === currentUser.assignedClient || u.assignedClient === "TODOS");
+        }
+        if(targetTecs.length === 0) targetTecs = dataState.usuarios; // fallback
+        targetTecs.forEach(u => tecEl.innerHTML += `<option value="${u.name}">${u.name} (${u.role})</option>`);
 
         const slaEl = document.getElementById('ticket-sla');
         slaEl.innerHTML = '';
@@ -504,205 +508,20 @@ const app = {
         });
     },
 
-    // --- DASHBOARD & INDICADORES CON RESTRICCIÓN ESTRICTA DE SEDES ---
+    // --- DASHBOARD & INDICADORES CON SOPORTE MULTI-SEDE ---
     renderDashboard() {
         let filtered = dataState.tickets;
         
-        // FORZAR FILTRADO ESTRICTO DE TICKETS POR CLIENTE ASIGNADO
         let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
         
         if(activeClient) {
             filtered = filtered.filter(t => t.cliente === activeClient);
         }
 
-        const fSed = document.getElementById('filt-sede').value;
+        // Obtener sedes seleccionadas en multiselect
+        const sedeSelect = document.getElementById('filt-sede');
+        const selectedSedes = Array.from(sedeSelect.selectedOptions).map(opt => opt.value);
         const fTec = document.getElementById('filt-tecnico').value;
 
-        if(fSed) filtered = filtered.filter(t => t.sede === fSed);
-        if(fTec) filtered = filtered.filter(t => t.tecnico === fTec);
-
-        const creados = filtered.length;
-        const asignados = filtered.filter(t => t.estado === 'Asignado').length;
-        const proceso = filtered.filter(t => t.estado === 'En Proceso').length;
-        const retrasados = filtered.filter(t => t.estado === 'Retrasado').length;
-        const cumplidos = filtered.filter(t => t.estado === 'Cumplido').length;
-
-        document.getElementById('kpi-creados').innerText = creados;
-        document.getElementById('kpi-asignados').innerText = asignados;
-        document.getElementById('kpi-proceso').innerText = proceso;
-        document.getElementById('kpi-retrasados').innerText = retrasados;
-        document.getElementById('kpi-cumplidos').innerText = cumplidos;
-        document.getElementById('kpi-tiempo').innerText = cumplidos > 0 ? "14.2h" : "0h";
-
-        this.buildIndicators(filtered);
-    },
-    buildIndicators(filtered) {
-        let clientSedes = dataState.sedes;
-        let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
-        
-        // RESTRICCIÓN ABSOLUTA: Las sedes mostradas en los gráficos del dashboard deben pertenecer ÚNICAMENTE al cliente activo
-        if(activeClient) {
-            clientSedes = dataState.sedes.filter(s => s.client === activeClient);
-        }
-        
-        const sedesList = clientSedes.map(s => s.sede);
-        const sistemasList = dataState.sistemas;
-        const tecnicosList = dataState.usuarios.map(u => u.name);
-
-        const ticketSedeCounts = sedesList.map(sede => filtered.filter(t => t.sede === sede).length);
-        if(this.charts.ticketSede) this.charts.ticketSede.destroy();
-        this.charts.ticketSede = new Chart(document.getElementById('chart-ticket-sede').getContext('2d'), {
-            type: 'bar',
-            data: { labels: sedesList, datasets: [{ label: 'Tickets vs Sede', data: ticketSedeCounts, backgroundColor: '#1E3A8A' }] },
-            options: { responsive: true, plugins: { title: { display: false } } }
-        });
-        document.getElementById('analysis-text-1').innerText = `Análisis: Concentración de ${filtered.length} tickets en sedes exclusivas. Recomendación: Evaluar mantenimiento preventivo en las sedes con mayor volumen.`;
-
-        const fallasSedesCounts = sedesList.map(sede => filtered.filter(t => t.sede === sede && t.falla).length);
-        if(this.charts.fallasSedes) this.charts.fallasSedes.destroy();
-        this.charts.fallasSedes = new Chart(document.getElementById('chart-fallas-sedes').getContext('2d'), {
-            type: 'bar',
-            data: { labels: sedesList, datasets: [{ label: 'Fallas Reportadas', data: fallasSedesCounts, backgroundColor: '#EF4444' }] },
-            options: { responsive: true, plugins: { title: { display: false } } }
-        });
-        document.getElementById('analysis-text-2').innerText = `Análisis: Correlación entre fallas e infraestructura de sedes. Recomendación: Revisar estabilidad de energía y redes en sitios críticos.`;
-
-        const sistemasCounts = sistemasList.map(sis => filtered.filter(t => t.sistema === sis).length);
-        if(this.charts.ticketSistemas) this.charts.ticketSistemas.destroy();
-        this.charts.ticketSistemas = new Chart(document.getElementById('chart-ticket-sistemas').getContext('2d'), {
-            type: 'doughnut',
-            data: { labels: sistemasList, datasets: [{ data: sistemasCounts, backgroundColor: ['#1E3A8A', '#FF6B35', '#10B981', '#F59E0B'] }] },
-            options: { responsive: true, plugins: { title: { display: false } } }
-        });
-        document.getElementById('analysis-text-3').innerText = `Análisis: Distribución por tecnologías afectadas. Recomendación: Priorizar auditorías sobre sistemas con mayor índice de fallas.`;
-
-        const ticketTecCounts = tecnicosList.map(tec => filtered.filter(t => t.tecnico === tec).length);
-        if(this.charts.ticketTecnico) this.charts.ticketTecnico.destroy();
-        this.charts.ticketTecnico = new Chart(document.getElementById('chart-ticket-tecnico').getContext('2d'), {
-            type: 'bar',
-            data: { labels: tecnicosList, datasets: [{ label: 'Tickets Asignados', data: ticketTecCounts, backgroundColor: '#FF6B35' }] },
-            options: { responsive: true, plugins: { title: { display: false } } }
-        });
-        document.getElementById('analysis-text-4').innerText = `Análisis: Carga laboral asignada al personal técnico. Recomendación: Balancear órdenes para evitar saturación en campo.`;
-
-        const slaTecProm = tecnicosList.map(tec => {
-            const tecTickets = filtered.filter(t => t.tecnico === tec);
-            if(tecTickets.length === 0) return 0;
-            const suma = tecTickets.reduce((acc, curr) => acc + parseFloat(curr.sla || 0), 0);
-            return (suma / tecTickets.length).toFixed(1);
-        });
-        if(this.charts.ticketTecSla) this.charts.ticketTecSla.destroy();
-        this.charts.ticketTecSla = new Chart(document.getElementById('chart-ticket-tec-sla').getContext('2d'), {
-            type: 'bar',
-            data: { labels: tecnicosList, datasets: [{ label: 'Promedio SLA (Días)', data: slaTecProm, backgroundColor: '#10B981' }] },
-            options: { responsive: true, plugins: { title: { display: false } } }
-        });
-        document.getElementById('analysis-text-5').innerText = `Análisis: Cumplimiento de tiempos meta por técnico. Recomendación: Capacitar al personal para reducir el SLA promedio.`;
-
-        if(this.charts.tendenciaSedes) this.charts.tendenciaSedes.destroy();
-        this.charts.tendenciaSedes = new Chart(document.getElementById('chart-tendencia-sedes').getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
-                datasets: [{ label: 'Sedes con Novedades', data: [1, 2, 2, filtered.length], borderColor: '#0A192F', backgroundColor: 'rgba(10,25,47,0.1)', fill: true, tension: 0.3 }]
-            },
-            options: { responsive: true, plugins: { title: { display: false } } }
-        });
-        document.getElementById('analysis-text-6').innerText = `Análisis: Evolución temporal de sedes impactadas. Recomendación: Establecer alertas tempranas ante picos de fallas.`;
-    },
-
-    // --- RENDERIZADO GENERAL ---
-    renderAll() {
-        const gClientSel = document.getElementById('global-client-filter');
-        const sCli = document.getElementById('sede-client-select');
-        const uClientSel = document.getElementById('new-user-client');
-
-        if(gClientSel) {
-            gClientSel.innerHTML = '<option value="">Todos los Clientes (Vista Master)</option>';
-            dataState.clientes.forEach(c => gClientSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
-            gClientSel.value = activeClientContext;
-        }
-        if(sCli) {
-            sCli.innerHTML = '<option value="">Seleccione Cliente...</option>';
-            dataState.clientes.forEach(c => sCli.innerHTML += `<option value="${c.name}">${c.name}</option>`);
-        }
-        if(uClientSel) {
-            uClientSel.innerHTML = '<option value="TODOS">Asignar Todos los Clientes (Master)</option>';
-            dataState.clientes.forEach(c => uClientSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
-        }
-
-        const tCli = document.getElementById('table-clientes');
-        if(tCli) {
-            tCli.innerHTML = '';
-            dataState.clientes.forEach((c, i) => {
-                tCli.innerHTML += `<tr><td><strong>${c.name}</strong></td><td><span style="display:inline-block;width:15px;height:15px;background:${c.color};border-radius:4px;"></span></td><td><img src="${c.logo}" style="height:25px; object-fit:contain;"></td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('client', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteClient(${i})">Del</button></td></tr>`;
-            });
-        }
-
-        const tSed = document.getElementById('table-sedes');
-        if(tSed) {
-            tSed.innerHTML = '';
-            dataState.sedes.forEach((s, i) => {
-                tSed.innerHTML += `<tr><td><strong>${s.sede}</strong></td><td>${s.client}</td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('sede', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteSede(${i})">Del</button></td></tr>`;
-            });
-        }
-
-        this.updateSedeDropdowns();
-
-        const tUsu = document.getElementById('table-usuarios');
-        const fTec = document.getElementById('filt-tecnico');
-        if(tUsu && fTec) {
-            tUsu.innerHTML = ''; fTec.innerHTML = '<option value="">Técnico (Todos)</option>';
-            dataState.usuarios.forEach((u, i) => {
-                tUsu.innerHTML += `<tr><td><strong>${u.name}</strong></td><td>${u.role}</td><td>${u.assignedClient}</td><td><span style="font-size:0.85rem;color:var(--text-muted);">${u.perms.join(', ')}</span></td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('user', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteUser(${i})">Del</button></td></tr>`;
-                fTec.innerHTML += `<option value="${u.name}">${u.name}</option>`;
-            });
-        }
-
-        const tSys = document.getElementById('table-sistemas');
-        if(tSys) {
-            tSys.innerHTML = '';
-            dataState.sistemas.forEach((s, i) => {
-                tSys.innerHTML += `<tr><td>${s}</td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('sistema', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteSistema(${i})">Del</button></td></tr>`;
-            });
-        }
-
-        const tFal = document.getElementById('table-fallas');
-        if(tFal) {
-            tFal.innerHTML = '';
-            dataState.fallas.forEach((f, i) => {
-                tFal.innerHTML += `<tr><td>${f}</td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('falla', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteFalla(${i})">Del</button></td></tr>`;
-            });
-        }
-
-        const tSla = document.getElementById('table-sla');
-        if(tSla) {
-            tSla.innerHTML = '';
-            dataState.slaList.forEach((sla, i) => {
-                tSla.innerHTML += `<tr><td>${sla.desc}</td><td><strong>${sla.days} Días</strong></td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('sla', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteSla(${i})">Del</button></td></tr>`;
-            });
-        }
-
-        this.renderDashboard();
-    },
-    initMap() {
-        if(!this.map) {
-            this.map = L.map('tech-map').setView([4.6097, -74.0817], 12);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
-            L.marker([4.6097, -74.0817]).addTo(this.map).bindPopup("<b>Técnico:</b> Carlos Pérez (GPS Activo)");
-        }
-        setTimeout(() => this.map.invalidateSize(), 200);
-    },
-    generatePDF() {
-        alert("Generando informe PDF gerencial...");
-    },
-    saveStorage() {
-        localStorage.setItem('servitrack_db_v16', JSON.stringify(dataState));
-    },
-    loadStorage() {
-        const saved = localStorage.getItem('servitrack_db_v16');
-        if(saved) dataState = JSON.parse(saved);
-    }
-};
-
-window.onload = () => app.init();
+        if(selectedSedes.length > 0) {
+            filtered = filtered.filter(t => selectedSedes.
