@@ -497,9 +497,13 @@ const app = {
     
     document.getElementById('modal-ticket-id').innerText = id;
     document.getElementById('modal-cierre').style.display = 'flex';
-}
-    submitCierre(e) {
-        e.preventDefault();
+},
+
+submitCierre(e) {
+    e.preventDefault();
+    const id = document.getElementById('modal-ticket-id').innerText;
+    const ticket = dataState.tickets.find(t => t.id === id);
+    const correoCliente = document.getElementById('cierre-correo').value;
         const id = document.getElementById('modal-ticket-id').innerText;
         const ticket = dataState.tickets.find(t => t.id === id);
         const correoCliente = document.getElementById('cierre-correo').value;
