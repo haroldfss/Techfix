@@ -220,7 +220,7 @@ const app = {
             if(sb) sb.classList.remove('mobile-open');
         }
     },
-    navigateTo(section) {
+       navigateTo(section) {
         const sections = ['dashboard', 'tickets', 'create-ticket', 'map', 'settings'];
         sections.forEach(s => {
             const el = document.getElementById(`view-${s}`);
@@ -240,32 +240,18 @@ const app = {
 
         this.closeMobileMenuOnClick();
 
-        if(section === 'dashboard') this.renderDashboard();
+        // Retraso para garantizar que los canvas existan en pantalla antes de dibujar
+        if(section === 'dashboard') {
+            setTimeout(() => {
+                this.renderDashboard();
+            }, 150);
+        }
+        
         if(section === 'create-ticket') this.loadTicketSelectors();
         if(section === 'tickets') this.renderTicketsTable();
         if(section === 'map') this.initMap();
-      navigateTo(section) {
-    // ... (código existente de ocultar vistas) ...
-
-    const target = document.getElementById(`view-${section}`);
-    if(target) target.style.display = 'block';
-
-    // ... (código de botones activos) ...
-    this.closeMobileMenuOnClick();
-
-    // SOLUCIÓN 3: Retraso de 150ms para garantizar que los canvas existan en pantalla antes de dibujar
-    if(section === 'dashboard') {
-        setTimeout(() => {
-            this.renderDashboard();
-        }, 150);
-    }
-    
-    if(section === 'create-ticket') this.loadTicketSelectors();
-    if(section === 'tickets') this.renderTicketsTable();
-    if(section === 'map') this.initMap();
-}
     },
-    switchTab(tab, btn) {
+  switchTab(tab, btn) {
         document.querySelectorAll('.settings-tab-content').forEach(el => el.style.display = 'none');
         document.querySelectorAll('.settings-tabs button').forEach(b => b.classList.remove('active-tab'));
         document.getElementById(`tab-${tab}`).style.display = 'block';
