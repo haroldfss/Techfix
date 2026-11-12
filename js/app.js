@@ -537,18 +537,46 @@ submitCierre(e) {
         filteredTickets = filteredTickets.filter(t => t.cliente === activeClient);
     }
 
-    // SOLUCIÓN 1 y 2: Filtro estricto por Técnico
-    if (currentUser && (currentUser.role.toLowerCase() === 'técnico' || currentUser.role.toLowerCase() === 'tecnico')) {
-        filteredTickets = filteredTickets.filter(t => t.tecnico === currentUser.name);
-    }
+    // Filtro estricto por Técnico antes de validar y pintar
+        if (currentUser && (currentUser.role.toLowerCase() === 'técnico' || currentUser.role.toLowerCase() === 'tecnico')) {
+            filteredTickets = filteredTickets.filter(t => t.tecnico === currentUser.name);
+        }
 
-    if(filteredTickets.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted);">No tienes tickets asignados.</td></tr>`;
-        return;
-    }
-    
-    // ... (mantén el resto del código del tbody.innerHTML igual)
-}
+        if(filteredTickets.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted);">No tienes tickets asignados.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        filteredTickets.forEach(t => {
+            const bg = t.estado === 'Cumplido' ? 'var(--success)' : 'var(--accent)';
+            const tiempoRes = this.calcularTiempoResolucion(t);
+            const atenderBtn = t.estado === 'Cumplido' 
+                ? `<div style="display:flex; gap:4px;"><button class="btn btn-outline btn-sm" disabled style="opacity:0.6;">Cumplido</button><button class="btn btn-secondary btn-sm" onclick="app.downloadSingleTicketPDF('${t.id}')"><i class="fas fa-file-pdf"></i></button></div>`
+                : `<button class="btn btn-primary btn-sm" onclick="app.abrirCierre('${t.id}')">Atender</button>`;
+
+            tbody.innerHTML += `<tr>
+                <td><strong>${t.id}</strong></td>
+                <td>${t.cliente}</td><td>${t.sede}</td><td>${t.sistema}</td><td>${t.falla}</td>
+                <td>${t.tecnico}</td>
+                <td><span style="font-weight:600; color:var(--secondary);">${tiempoRes}</span></td>
+                <td><span class="badge" style="background:${bg}">${t.estado}</span></td>
+                <td>${atenderBtn}</td>
+            </tr>`;
+        });
+    },  // <--- Esta coma es obligatoria para separar renderTicketsTable de la siguiente función
+
+    downloadSingleTicketPDF(id) {
+        const t = dataState.tickets.find(item => item.id === id);
+        if(!t) { alert("Ticket no encontrado."); return; }
+        const clientObj = dataState.clientes.find(c => c.name === t.cliente) || {};
+        const htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Informe Ticket ${t.id}</title><style>body { font-family: Arial, sans-serif; padding: 30px; color: #1E293B; } .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1E3A8A; padding-bottom: 15px; margin-bottom: 20px; } .logo { max-height: 50px; max-width: 150px; object-fit: contain; } h1 { font-size: 20px; color: #1E3A8A; margin: 0; } .info-box { background: #F8FAFC; border: 1px solid #E2E8F0; padding: 15px; border-radius: 8px; margin-bottom: 15px; } .info-box h3 { margin-top: 0; color: #0A192F; font-size: 15px; border-bottom: 1px solid #CBD5E1; padding-bottom: 5px; } p { margin: 6px 0; font-size: 13px; } .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 10px; }</style></head><body><div class="header"><div><h1>CERTIFICADO DE CUMPLIMIENTO</h1><p>Plataforma ServiTrack PWA</p></div><div>${clientObj.logo ? `<img src="${clientObj.logo}" class="logo" alt="Logo Cliente">` : `<strong>${t.cliente}</strong>`}</div></div><div class="info-box"><h3>1. Información General</h3><p><strong>ID del Ticket:</strong> ${t.id}</p><p><strong>Cliente / Empresa:</strong> ${t.cliente}</p><p><strong>Sede Operativa:</strong> ${t.sede}</p><p><strong>Sistema Afectado:</strong> ${t.sistema}</p><p><strong>Tipo de Falla:</strong> ${t.falla}</p></div><div class="info-box"><h3>2. Control de Tiempos y Personal</h3><p><strong>Técnico Asignado:</strong> ${t.tecnico}</p><p><strong>Estado Actual:</strong> <span style="color: #10B981; font-weight: bold;">${t.estado}</span></p><p><strong>SLA Pactado:</strong> ${t.sla} Días</p><p><strong>Fecha de Creación:</strong> ${t.fechaCreacion || t.fecha}</p><p><strong>Fecha de Cierre:</strong> ${t.fechaCumplido || 'N/A'}</p><p><strong>Tiempo Total de Resolución:</strong> ${this.calcularTiempoResolucion(t)}</p></div><div class="info-box"><h3>3. Detalle de Atención en Campo</h3><p><strong>Actividades Realizadas:</strong><br>${t.actividades || 'Sin registro detallado'}</p><p style="margin-top: 10px;"><strong>Repuestos y Materiales:</strong><br>${t.materiales || 'Ninguno'}</p><p style="margin-top: 10px;"><strong>Recomendaciones para el Cliente:</strong><br>${t.recomendaciones || 'Ninguna'}</p></div><div class="footer"><p>Documento generado electrónicamente por ServiTrack PWA - Control Multi-Cliente</p></div></body></html>`;
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url;
+        a.download = `Informe_Cumplimiento_${t.id}_${t.cliente.replace(/\s+/g, '_')}.html`; a.click();
+        URL.revokeObjectURL(url);
+    },
     downloadSingleTicketPDF(id) {
         const t = dataState.tickets.find(item => item.id === id);
         if(!t) { alert("Ticket no encontrado."); return; }
