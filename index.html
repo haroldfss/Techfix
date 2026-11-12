@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>ServiTrack PWA - Multi-Cliente & Móvil Proporcional</title>
+    <title>ServiTrack PWA - Multi-Cliente & Multi-Sede</title>
     <!-- Fuentes y Estilos Tecnológicos Avanzados -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -75,6 +75,12 @@
         .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--primary); }
         .form-control { width: 100%; padding: 0.85rem; border: 1px solid var(--border); border-radius: 10px; outline: none; transition: 0.2s; font-size: 1rem; background: #fff; }
         .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(255,107,53,0.15); }
+        
+        /* Estilo Multiselect mejorado para sedes */
+        select[multiple] { height: 110px; padding: 0.5rem; }
+        select[multiple] option { padding: 6px 10px; border-bottom: 1px solid #f1f5f9; border-radius: 4px; }
+        select[multiple] option:checked { background: var(--secondary) linear-gradient(0deg, var(--secondary), var(--secondary)); color: white; }
+
         .checkbox-group { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem; }
         .checkbox-group label { display: inline-flex; align-items: center; font-weight: normal; font-size: 0.95rem; cursor: pointer; }
         .checkbox-group input { margin-right: 0.5rem; width: 20px; height: 20px; accent-color: var(--accent); }
@@ -210,8 +216,8 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Filtrar por Sede</label>
-                            <select id="filt-sede" class="form-control" onchange="app.renderDashboard()"><option value="">Sede (Todas)</option></select>
+                            <label>Filtrar por Sede <span style="font-size:0.75rem; color:var(--text-muted);">(Ctrl+Click para multiselección)</span></label>
+                            <select id="filt-sede" class="form-control" multiple onchange="app.renderDashboard()"></select>
                         </div>
                         <div class="form-group">
                             <label>Filtrar por Técnico</label>
@@ -370,9 +376,19 @@
 
             <!-- Map View -->
             <section id="view-map" class="content-section" style="display: none;">
-                <h1>Geolocalización GPS</h1>
+                <h1>Geolocalización GPS & Técnicos en Línea</h1>
                 <div class="card">
-                    <div id="tech-map" style="height: 400px; width: 100%; border-radius: 12px;"></div>
+                    <div id="tech-map" style="height: 380px; width: 100%; border-radius: 12px; margin-bottom: 1.5rem;"></div>
+                    
+                    <h3 style="font-size: 1.1rem; color: var(--primary); margin-bottom: 0.8rem;"><i class="fas fa-users"></i> Técnicos Logueados y Conectados en Plataforma</h3>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr><th>Técnico</th><th>Rol / Perfil</th><th>Cliente Asignado</th><th>Estado GPS</th><th>Última Conexión</th></tr>
+                            </thead>
+                            <tbody id="table-connected-techs"></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
