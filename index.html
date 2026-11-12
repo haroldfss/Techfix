@@ -2,8 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ServiTrack - Dashboard Analítico & Control de Usuarios</title>
+    <!-- Viewport optimizado para que en móviles no se vea pequeño (escala correcta) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ServiTrack - Sistema Multi-Cliente & Control de Roles</title>
     <!-- Fuentes y Estilos Avanzados -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -24,7 +25,7 @@
             --border: #E2E8F0;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+        body { background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; font-size: 15px; }
         .view { display: none; width: 100%; height: 100%; }
         .view.active { display: flex; }
 
@@ -41,7 +42,7 @@
         .sidebar-header h2 { font-weight: 700; color: var(--accent); font-size: 1.3rem; }
         .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; background: var(--accent); color: white; }
         .nav-links { list-style: none; padding: 1rem 0; flex: 1; overflow-y: auto; }
-        .nav-links li { padding: 0.9rem 1.4rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; opacity: 0.85; font-size: 0.92rem; }
+        .nav-links li { padding: 0.9rem 1.4rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; opacity: 0.85; font-size: 0.95rem; }
         .nav-links li:hover, .nav-links li.active { opacity: 1; background: rgba(255,255,255,0.08); border-left: 4px solid var(--accent); font-weight: 500; }
         .sidebar-footer { padding: 1.2rem; border-top: 1px solid rgba(255,255,255,0.1); }
 
@@ -66,14 +67,14 @@
 
         /* Forms & Buttons */
         .form-group { margin-bottom: 1rem; text-align: left; }
-        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--primary); }
-        .form-control { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; transition: 0.2s; font-size: 0.9rem; background: #fff; }
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--primary); }
+        .form-control { width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: 10px; outline: none; transition: 0.2s; font-size: 0.95rem; background: #fff; }
         .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(255,107,53,0.15); }
         .checkbox-group { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem; }
-        .checkbox-group label { display: inline-flex; align-items: center; font-weight: normal; font-size: 0.9rem; cursor: pointer; }
-        .checkbox-group input { margin-right: 0.5rem; width: 16px; height: 16px; accent-color: var(--accent); }
+        .checkbox-group label { display: inline-flex; align-items: center; font-weight: normal; font-size: 0.95rem; cursor: pointer; }
+        .checkbox-group input { margin-right: 0.5rem; width: 18px; height: 18px; accent-color: var(--accent); }
 
-        .btn { padding: 0.7rem 1.2rem; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; }
+        .btn { padding: 0.75rem 1.2rem; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; }
         .btn-block { width: 100%; }
         .btn-primary { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(255,107,53,0.3); }
         .btn-primary:hover { background: #e05a2b; transform: translateY(-1px); }
@@ -81,25 +82,25 @@
         .btn-secondary:hover { background: #1d4ed8; }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
         .btn-outline:hover { background: #f1f5f9; }
-        .btn-danger { background: var(--danger); color: white; padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius: 6px; }
-        .btn-warning { background: var(--warning); color: white; padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius: 6px; }
-        .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
+        .btn-danger { background: var(--danger); color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem; border-radius: 6px; }
+        .btn-warning { background: var(--warning); color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem; border-radius: 6px; }
+        .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.85rem; }
 
         /* Tables */
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; min-width: 600px; }
-        .table th, .table td { padding: 0.9rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
-        .table th { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; background: #F8FAFC; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; min-width: 650px; }
+        .table th, .table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.92rem; }
+        .table th { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; background: #F8FAFC; }
 
-        /* KPIs & Análisis por Gráfico */
+        /* KPIs & Análisis */
         .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
         .kpi-card { background: var(--card-bg); padding: 1.2rem; border-radius: 16px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); border-top: 5px solid var(--secondary); cursor: pointer; transition: 0.3s; }
         .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px -3px rgba(0,0,0,0.08); }
-        .kpi-card h3 { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .kpi-value { font-size: 1.6rem; font-weight: 700; margin-top: 0.3rem; color: var(--primary); }
+        .kpi-card h3 { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 1.7rem; font-weight: 700; margin-top: 0.3rem; color: var(--primary); }
 
         .chart-header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
-        .chart-analysis-box { background: linear-gradient(135deg, #EFF6FF, #F0FDF4); border: 1px solid #BFDBFE; border-left: 6px solid var(--secondary); padding: 1rem; border-radius: 10px; margin-top: 0.8rem; font-size: 0.85rem; color: #334155; line-height: 1.4; }
+        .chart-analysis-box { background: linear-gradient(135deg, #EFF6FF, #F0FDF4); border: 1px solid #BFDBFE; border-left: 6px solid var(--secondary); padding: 1rem; border-radius: 10px; margin-top: 0.8rem; font-size: 0.9rem; color: #334155; line-height: 1.4; }
         .chart-analysis-box h5 { color: var(--secondary); margin-bottom: 0.2rem; display: flex; align-items: center; gap: 6px; }
 
         /* Tabs Ajustes */
@@ -109,7 +110,7 @@
 
         /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,25,47,0.7); backdrop-filter: blur(5px); align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
-        .modal-content { background: white; padding: 2rem; border-radius: 20px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: white; padding: 2rem; border-radius: 20px; width: 100%; max-width: 550px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
 
         @media (max-width: 900px) {
@@ -117,7 +118,7 @@
             .sidebar { position: fixed; left: -260px; top: 0; height: 100vh; transition: left 0.3s ease; }
             .sidebar.mobile-open { left: 0; }
             .mobile-topbar { display: flex; }
-            .main-content { padding: 5rem 1rem 2rem 1rem; height: auto; overflow: visible; }
+            .main-content { padding: 5.5rem 1rem 2rem 1rem; height: auto; overflow: visible; }
             .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; }
             .grid-2, .grid-3, .grid-5 { grid-template-columns: 1fr; gap: 0.8rem; }
         }
@@ -147,7 +148,7 @@
                 </div>
                 <button type="submit" class="btn btn-primary btn-block mt-1">Ingresar al Sistema</button>
             </form>
-            <p class="mt-1" style="font-size: 0.8rem; color: var(--text-muted);">(Admin por defecto: admin / admin)</p>
+            <p class="mt-1" style="font-size: 0.85rem; color: var(--text-muted);">(Admin por defecto: admin / admin)</p>
         </div>
     </div>
 
@@ -181,12 +182,12 @@
                     <button class="btn btn-secondary" onclick="app.generatePDF()"><i class="fas fa-file-pdf"></i> Exportar Reporte</button>
                 </div>
 
-                <!-- Selector Global y Filtros -->
+                <!-- Filtros Interactivos -->
                 <div class="card filters-card">
-                    <h3 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.6rem;"><i class="fas fa-filter"></i> Filtros Interactivos & Contexto</h3>
+                    <h3 style="font-size: 0.9rem; color: var(--primary); margin-bottom: 0.6rem;"><i class="fas fa-filter"></i> Filtros Interactivos & Contexto</h3>
                     <div class="grid-3">
                         <div class="form-group">
-                            <label>Filtrar por Cliente (Vista Master / Específica)</label>
+                            <label>Filtrar por Cliente</label>
                             <select id="global-client-filter" class="form-control" onchange="app.changeActiveClientContext()">
                                 <option value="">Todos los Clientes (Vista Master)</option>
                             </select>
@@ -212,12 +213,11 @@
                     <div class="kpi-card"><h3>SLA Prom.</h3><p id="kpi-tiempo" class="kpi-value">0h</p></div>
                 </div>
 
-                <!-- 6 Gráficos con Análisis Independiente y Botón de Ocultar -->
+                <!-- 6 Gráficos con Análisis Independiente -->
                 <div class="grid-2">
-                    <!-- 1. Ticket vs Sede -->
                     <div class="card">
                         <div class="chart-header-action">
-                            <h4 style="font-size:0.95rem; color:var(--primary);">1. Tickets vs Sede</h4>
+                            <h4 style="font-size:1rem; color:var(--primary);">1. Tickets vs Sede</h4>
                             <button class="btn btn-outline btn-sm" onclick="app.toggleAnalysis('box-analysis-1', this)"><i class="fas fa-eye-slash"></i> Ocultar Análisis</button>
                         </div>
                         <canvas id="chart-ticket-sede" height="140"></canvas>
@@ -227,10 +227,9 @@
                         </div>
                     </div>
 
-                    <!-- 2. Fallas de Sistema vs Sedes -->
                     <div class="card">
                         <div class="chart-header-action">
-                            <h4 style="font-size:0.95rem; color:var(--primary);">2. Fallas de Sistema vs Sedes</h4>
+                            <h4 style="font-size:1rem; color:var(--primary);">2. Fallas de Sistema vs Sedes</h4>
                             <button class="btn btn-outline btn-sm" onclick="app.toggleAnalysis('box-analysis-2', this)"><i class="fas fa-eye-slash"></i> Ocultar Análisis</button>
                         </div>
                         <canvas id="chart-fallas-sedes" height="140"></canvas>
@@ -242,10 +241,9 @@
                 </div>
 
                 <div class="grid-2 mt-1">
-                    <!-- 3. Tickets por Tipo de Sistema -->
                     <div class="card">
                         <div class="chart-header-action">
-                            <h4 style="font-size:0.95rem; color:var(--primary);">3. Tickets por Tipo de Sistema</h4>
+                            <h4 style="font-size:1rem; color:var(--primary);">3. Tickets por Tipo de Sistema</h4>
                             <button class="btn btn-outline btn-sm" onclick="app.toggleAnalysis('box-analysis-3', this)"><i class="fas fa-eye-slash"></i> Ocultar Análisis</button>
                         </div>
                         <canvas id="chart-ticket-sistemas" height="140"></canvas>
@@ -255,10 +253,9 @@
                         </div>
                     </div>
 
-                    <!-- 4. Tickets vs Técnico -->
                     <div class="card">
                         <div class="chart-header-action">
-                            <h4 style="font-size:0.95rem; color:var(--primary);">4. Tickets vs Técnico</h4>
+                            <h4 style="font-size:1rem; color:var(--primary);">4. Tickets vs Técnico</h4>
                             <button class="btn btn-outline btn-sm" onclick="app.toggleAnalysis('box-analysis-4', this)"><i class="fas fa-eye-slash"></i> Ocultar Análisis</button>
                         </div>
                         <canvas id="chart-ticket-tecnico" height="140"></canvas>
@@ -270,10 +267,9 @@
                 </div>
 
                 <div class="grid-2 mt-1">
-                    <!-- 5. Ticket vs Técnico vs SLA -->
                     <div class="card">
                         <div class="chart-header-action">
-                            <h4 style="font-size:0.95rem; color:var(--primary);">5. Ticket vs Técnico vs SLA</h4>
+                            <h4 style="font-size:1rem; color:var(--primary);">5. Ticket vs Técnico vs SLA</h4>
                             <button class="btn btn-outline btn-sm" onclick="app.toggleAnalysis('box-analysis-5', this)"><i class="fas fa-eye-slash"></i> Ocultar Análisis</button>
                         </div>
                         <canvas id="chart-ticket-tec-sla" height="140"></canvas>
@@ -283,10 +279,9 @@
                         </div>
                     </div>
 
-                    <!-- 6. Tendencia de Sedes con Falla vs Tiempo -->
                     <div class="card">
                         <div class="chart-header-action">
-                            <h4 style="font-size:0.95rem; color:var(--primary);">6. Tendencia de Sedes con Falla vs Tiempo</h4>
+                            <h4 style="font-size:1rem; color:var(--primary);">6. Tendencia de Sedes con Falla vs Tiempo</h4>
                             <button class="btn btn-outline btn-sm" onclick="app.toggleAnalysis('box-analysis-6', this)"><i class="fas fa-eye-slash"></i> Ocultar Análisis</button>
                         </div>
                         <canvas id="chart-tendencia-sedes" height="140"></canvas>
@@ -323,11 +318,11 @@
                     <form onsubmit="app.saveTicket(event)">
                         <div class="grid-3">
                             <div class="form-group">
-                                <label>Cliente (Asignado)</label>
+                                <label>Cliente</label>
                                 <select id="ticket-cliente" class="form-control" onchange="app.loadSedesForClient()" required></select>
                             </div>
                             <div class="form-group">
-                                <label>Sede (Exclusiva)</label>
+                                <label>Sede</label>
                                 <select id="ticket-sede" class="form-control" required></select>
                             </div>
                             <div class="form-group">
@@ -370,7 +365,7 @@
                 
                 <div class="settings-tabs">
                     <button class="btn btn-outline active-tab" onclick="app.switchTab('clientes', this)">Clientes & Logotipo</button>
-                    <button class="btn btn-outline" onclick="app.switchTab('usuarios', this)">Usuarios & Contraseñas</button>
+                    <button class="btn btn-outline" onclick="app.switchTab('usuarios', this)">Usuarios, Privilegios & Permisos</button>
                     <button class="btn btn-outline" onclick="app.switchTab('sistemas', this)">Sistemas & Fallas</button>
                     <button class="btn btn-outline" onclick="app.switchTab('sla', this)">Gestión SLA</button>
                 </div>
@@ -410,7 +405,7 @@
                 </div>
 
                 <div id="tab-usuarios" class="card settings-tab-content" style="display:none;">
-                    <h3>Gestión de Usuarios, Contraseñas y Privilegios</h3>
+                    <h3>Gestión de Usuarios, Privilegios y Accesos</h3>
                     <form onsubmit="app.addUser(event)" class="mt-1">
                         <div class="grid-3">
                             <input type="text" id="new-user-name" placeholder="Nombre Usuario" class="form-control" required>
@@ -420,23 +415,23 @@
                             </select>
                         </div>
                         <div class="grid-3 mt-1">
-                            <input type="text" id="new-role-name" placeholder="Rol (Ej. Operador, Técnico)" class="form-control" required>
+                            <input type="text" id="new-role-name" placeholder="Rol (Ej. Técnico, Operador)" class="form-control" required>
                         </div>
                         <div class="form-group mt-1">
-                            <label><strong>Privilegios de Acceso a Módulos:</strong></label>
+                            <label><strong>Permisos de Acceso a Módulos:</strong></label>
                             <div class="checkbox-group">
                                 <label><input type="checkbox" class="perm-cb" value="Dashboard Gerencial" checked> Dashboard Gerencial</label>
                                 <label><input type="checkbox" class="perm-cb" value="Gestión de Tickets" checked> Gestión de Tickets</label>
                                 <label><input type="checkbox" class="perm-cb" value="Nuevo Ticket" checked> Nuevo Ticket</label>
                                 <label><input type="checkbox" class="perm-cb" value="Mapa Geolocalizado" checked> Mapa Geolocalizado</label>
-                                <label><input type="checkbox" class="perm-cb" value="Ajustes & Parámetros"> Ajustes & Parámetros (Admin)</label>
+                                <label><input type="checkbox" class="perm-cb" value="Ajustes & Parámetros"> Ajustes & Parámetros</label>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-secondary btn-block mt-1">Registrar Usuario</button>
                     </form>
                     <div class="table-responsive mt-2">
                         <table class="table">
-                            <thead><tr><th>Usuario</th><th>Contraseña</th><th>Rol</th><th>Cliente</th><th>Privilegios</th><th>Acciones</th></tr></thead>
+                            <thead><tr><th>Usuario</th><th>Contraseña</th><th>Rol</th><th>Cliente</th><th>Permisos</th><th>Acciones</th></tr></thead>
                             <tbody id="table-usuarios"></tbody>
                         </table>
                     </div>
@@ -502,9 +497,22 @@
                 <input type="hidden" id="edit-index">
                 <div class="form-group"><label>Valor Principal</label><input type="text" id="edit-value-1" class="form-control" required></div>
                 <div class="form-group" id="edit-group-2"><label>Valor Secundario (Contraseña / Logo / Rol)</label><input type="text" id="edit-value-2" class="form-control"></div>
+                
+                <!-- Contenedor dinámico de permisos para edición de usuarios -->
+                <div class="form-group" id="edit-permissions-group" style="display:none;">
+                    <label><strong>Editar Permisos de Acceso:</strong></label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" class="edit-perm-cb" value="Dashboard Gerencial"> Dashboard Gerencial</label>
+                        <label><input type="checkbox" class="edit-perm-cb" value="Gestión de Tickets"> Gestión de Tickets</label>
+                        <label><input type="checkbox" class="edit-perm-cb" value="Nuevo Ticket"> Nuevo Ticket</label>
+                        <label><input type="checkbox" class="edit-perm-cb" value="Mapa Geolocalizado"> Mapa Geolocalizado</label>
+                        <label><input type="checkbox" class="edit-perm-cb" value="Ajustes & Parámetros"> Ajustes & Parámetros</label>
+                    </div>
+                </div>
+
                 <div class="modal-actions">
                     <button type="button" class="btn btn-outline" onclick="document.getElementById('modal-edit').style.display='none'">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                 </div>
             </form>
         </div>
@@ -519,7 +527,7 @@
                 <div class="form-group"><label>Recomendaciones</label><textarea class="form-control" rows="2" placeholder="Notas..."></textarea></div>
                 <div class="form-group"><label>Evidencia Fotográfica</label><input type="file" class="form-control" multiple accept="image/*"></div>
                 <div class="form-group"><label>Correo Cliente</label><input type="email" class="form-control" placeholder="correo@empresa.com" required></div>
-                <p style="font-size:0.85rem; color:var(--success); font-weight:600;"><i class="fas fa-map-marker-alt"></i> GPS Activo.</p>
+                <p style="font-size:0.9rem; color:var(--success); font-weight:600;"><i class="fas fa-map-marker-alt"></i> GPS Activo.</p>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-outline" onclick="document.getElementById('modal-cierre').style.display='none'">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Cerrar Ticket</button>
@@ -530,17 +538,4 @@
 
     <div id="modal-mobile" class="modal">
         <div class="modal-content" style="text-align: center;">
-            <i class="fas fa-mobile-alt" style="font-size: 3.5rem; color: var(--accent); margin-bottom: 1rem;"></i>
-            <h2>App Móvil PWA</h2>
-            <p style="margin: 1rem 0; color: var(--text-muted);">Instala la aplicación en tu celular.</p>
-            <div style="background: #F1F5F9; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                <strong>Enlace Directo:</strong><br><span style="font-size: 0.9rem; color: var(--secondary);">https://techfixapp.netlify.app</span>
-            </div>
-            <button onclick="document.getElementById('modal-mobile').style.display='none'" class="btn btn-primary btn-block">Cerrar</button>
-        </div>
-    </div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="./js/app.js"></script>
-</body>
-</html>
+            <i class="
