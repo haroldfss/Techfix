@@ -44,8 +44,21 @@ const app = {
         document.getElementById('login-view').classList.add('active');
     },
     navigateTo(section) {
-        document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
-        document.getElementById(`view-${section}`).classList.add('active');
+        // Ocultar todas las secciones y mostrar la seleccionada
+        const sections = ['dashboard', 'tickets', 'create-ticket', 'map', 'settings'];
+        sections.forEach(s => {
+            const el = document.getElementById(`view-${s}`);
+            if(el) el.style.display = 'none';
+        });
+
+        const target = document.getElementById(`view-${section}`);
+        if(target) target.style.display = 'block';
+
+        // Actualizar clase activa en el menú lateral
+        document.querySelectorAll('.sidebar .nav-links li').forEach(li => li.classList.remove('active'));
+        const menuLi = document.getElementById(`menu-${section}`);
+        if(menuLi) menuLi.classList.add('active');
+
         if(section === 'dashboard') this.renderDashboard();
         if(section === 'create-ticket') this.loadTicketSelectors();
         if(section === 'tickets') this.renderTicketsTable();
@@ -161,7 +174,7 @@ const app = {
         this.renderAll();
     },
 
-    // --- MODAL DE EDICIÓN GENERAL ---
+    // --- MODAL DE EDICIÓN ---
     openEditModal(type, idx) {
         document.getElementById('edit-type').value = type;
         document.getElementById('edit-index').value = idx;
@@ -300,6 +313,7 @@ const app = {
     },
     renderTicketsTable() {
         const tbody = document.getElementById('tickets-tbody');
+        if(!tbody) return;
         if(dataState.tickets.length === 0) {
             tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted);">No hay tickets registrados.</td></tr>`;
             return;
@@ -351,31 +365,7 @@ const app = {
         document.getElementById('kpi-cumplidos').innerText = cumplidos;
         document.getElementById('kpi-tiempo').innerText = cumplidos > 0 ? "16.2h" : "0h";
 
-        // Observaciones y Recomendaciones por Indicador
-        const container = document.getElementById('kpi-recommendations-container');
-        container.innerHTML = `
-            <div class="recommendation-box" style="border-left-color: var(--secondary);">
-                <h4><i class="fas fa-info-circle" style="color: var(--secondary);"></i> Indicador de Asignados (${asignados})</h4>
-                <p><strong>Observación:</strong> Hay ${asignados} órdenes listas para despliegue técnico. <strong>Recomendación:</strong> Valide que los técnicos asignados tengan cobertura GPS activa en el mapa para agilizar la llegada a la sede.</p>
-            </div>
-            <div class="recommendation-box" style="border-left-color: var(--warning);">
-                <h4><i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i> Indicador En Proceso (${proceso})</h4>
-                <p><strong>Observación:</strong> ${proceso} reportes en atención directa. <strong>Recomendación:</strong> Monitoree el uso de repuestos y supervise que el inventario concuerde con los materiales registrados en el sistema.</p>
-            </div>
-            <div class="recommendation-box" style="border-left-color: var(--danger);">
-                <h4><i class="fas fa-times-circle" style="color: var(--danger);"></i> Indicador Retrasados (${retrasados})</h4>
-                <p><strong>Observación:</strong> ${retrasados} tickets superaron el tiempo SLA estimado. <strong>Recomendación:</strong> Realice una reasignación prioritaria de personal para evitar penalizaciones de calidad con el cliente corporativo.</p>
-            </div>
-            <div class="recommendation-box" style="border-left-color: var(--success);">
-                <h4><i class="fas fa-check-circle" style="color: var(--success);"></i> Indicador Cumplidos (${cumplidos})</h4>
-                <p><strong>Observación:</strong> ${cumplidos} servicios cerrados satisfactoriamente con reporte PDF enviado. <strong>Recomendación:</strong> Mantenga el ritmo de cierre y valide las encuestas de satisfacción del cliente.</p>
-            </div>
-        `;
-
         this.buildCharts(filtered);
-    },
-    filterDashboardStatus(status) {
-        this.navigateTo('tickets');
     },
     buildCharts(filtered) {
         const ctxTend = document.getElementById('chart-tendencia').getContext('2d');
@@ -403,57 +393,63 @@ const app = {
 
     // --- RENDERIZADO GENERAL Y AJUSTES ---
     renderAll() {
-        // Clientes
         const tCli = document.getElementById('table-clientes');
         const sCli = document.getElementById('sede-client-select');
         const fCli = document.getElementById('filt-cliente');
-        tCli.innerHTML = ''; sCli.innerHTML = '<option value="">Seleccione Cliente...</option>'; fCli.innerHTML = '<option value="">Cliente (Todos)</option>';
-        dataState.clientes.forEach((c, i) => {
-            tCli.innerHTML += `<tr><td><strong>${c.name}</strong></td><td><span style="display:inline-block;width:15px;height:15px;background:${c.color};border-radius:4px;"></span></td><td><button class="btn btn-warning" onclick="app.openEditModal('client', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteClient(${i})">Eliminar</button></td></tr>`;
-            sCli.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-            fCli.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-        });
+        if(tCli && sCli && fCli) {
+            tCli.innerHTML = ''; sCli.innerHTML = '<option value="">Seleccione Cliente...</option>'; fCli.innerHTML = '<option value="">Cliente (Todos)</option>';
+            dataState.clientes.forEach((c, i) => {
+                tCli.innerHTML += `<tr><td><strong>${c.name}</strong></td><td><span style="display:inline-block;width:15px;height:15px;background:${c.color};border-radius:4px;"></span></td><td><button class="btn btn-warning" onclick="app.openEditModal('client', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteClient(${i})">Eliminar</button></td></tr>`;
+                sCli.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+                fCli.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+            });
+        }
 
-        // Sedes
         const tSed = document.getElementById('table-sedes');
         const fSed = document.getElementById('filt-sede');
-        tSed.innerHTML = ''; fSed.innerHTML = '<option value="">Sede (Todas)</option>';
-        dataState.sedes.forEach((s, i) => {
-            tSed.innerHTML += `<tr><td><strong>${s.sede}</strong></td><td>${s.client}</td><td><button class="btn btn-warning" onclick="app.openEditModal('sede', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteSede(${i})">Eliminar</button></td></tr>`;
-            fSed.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
-        });
+        if(tSed && fSed) {
+            tSed.innerHTML = ''; fSed.innerHTML = '<option value="">Sede (Todas)</option>';
+            dataState.sedes.forEach((s, i) => {
+                tSed.innerHTML += `<tr><td><strong>${s.sede}</strong></td><td>${s.client}</td><td><button class="btn btn-warning" onclick="app.openEditModal('sede', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteSede(${i})">Eliminar</button></td></tr>`;
+                fSed.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
+            });
+        }
 
-        // Usuarios
         const tUsu = document.getElementById('table-usuarios');
         const fTec = document.getElementById('filt-tecnico');
-        tUsu.innerHTML = ''; fTec.innerHTML = '<option value="">Técnico (Todos)</option>';
-        dataState.usuarios.forEach((u, i) => {
-            tUsu.innerHTML += `<tr><td><strong>${u.name}</strong></td><td>${u.role}</td><td><span style="font-size:0.8rem;color:var(--text-muted);">${u.perms.join(', ')}</span></td><td><button class="btn btn-warning" onclick="app.openEditModal('user', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteUser(${i})">Eliminar</button></td></tr>`;
-            fTec.innerHTML += `<option value="${u.name}">${u.name}</option>`;
-        });
+        if(tUsu && fTec) {
+            tUsu.innerHTML = ''; fTec.innerHTML = '<option value="">Técnico (Todos)</option>';
+            dataState.usuarios.forEach((u, i) => {
+                tUsu.innerHTML += `<tr><td><strong>${u.name}</strong></td><td>${u.role}</td><td><span style="font-size:0.8rem;color:var(--text-muted);">${u.perms.join(', ')}</span></td><td><button class="btn btn-warning" onclick="app.openEditModal('user', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteUser(${i})">Eliminar</button></td></tr>`;
+                fTec.innerHTML += `<option value="${u.name}">${u.name}</option>`;
+            });
+        }
 
-        // Sistemas
         const tSys = document.getElementById('table-sistemas');
-        tSys.innerHTML = '';
-        dataState.sistemas.forEach((s, i) => {
-            tSys.innerHTML += `<tr><td>${s}</td><td><button class="btn btn-warning" onclick="app.openEditModal('sistema', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteSistema(${i})">Eliminar</button></td></tr>`;
-        });
+        if(tSys) {
+            tSys.innerHTML = '';
+            dataState.sistemas.forEach((s, i) => {
+                tSys.innerHTML += `<tr><td>${s}</td><td><button class="btn btn-warning" onclick="app.openEditModal('sistema', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteSistema(${i})">Eliminar</button></td></tr>`;
+            });
+        }
 
-        // Fallas
         const tFal = document.getElementById('table-fallas');
         const fFal = document.getElementById('filt-falla');
-        tFal.innerHTML = ''; fFal.innerHTML = '<option value="">Tipo Falla (Todas)</option>';
-        dataState.fallas.forEach((f, i) => {
-            tFal.innerHTML += `<tr><td>${f}</td><td><button class="btn btn-warning" onclick="app.openEditModal('falla', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteFalla(${i})">Eliminar</button></td></tr>`;
-            fFal.innerHTML += `<option value="${f}">${f}</option>`;
-        });
+        if(tFal && fFal) {
+            tFal.innerHTML = ''; fFal.innerHTML = '<option value="">Tipo Falla (Todas)</option>';
+            dataState.fallas.forEach((f, i) => {
+                tFal.innerHTML += `<tr><td>${f}</td><td><button class="btn btn-warning" onclick="app.openEditModal('falla', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteFalla(${i})">Eliminar</button></td></tr>`;
+                fFal.innerHTML += `<option value="${f}">${f}</option>`;
+            });
+        }
 
-        // SLA
         const tSla = document.getElementById('table-sla');
-        tSla.innerHTML = '';
-        dataState.slaList.forEach((sla, i) => {
-            tSla.innerHTML += `<tr><td>${sla.desc}</td><td><strong>${sla.days} Días</strong></td><td><button class="btn btn-warning" onclick="app.openEditModal('sla', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteSla(${i})">Eliminar</button></td></tr>`;
-        });
+        if(tSla) {
+            tSla.innerHTML = '';
+            dataState.slaList.forEach((sla, i) => {
+                tSla.innerHTML += `<tr><td>${sla.desc}</td><td><strong>${sla.days} Días</strong></td><td><button class="btn btn-warning" onclick="app.openEditModal('sla', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteSla(${i})">Eliminar</button></td></tr>`;
+            });
+        }
 
         this.renderDashboard();
     },
@@ -469,10 +465,10 @@ const app = {
         alert("Generando informe gerencial PDF con analítica ejecutiva...");
     },
     saveStorage() {
-        localStorage.setItem('servitrack_db_v7', JSON.stringify(dataState));
+        localStorage.setItem('servitrack_db_v8', JSON.stringify(dataState));
     },
     loadStorage() {
-        const saved = localStorage.getItem('servitrack_db_v7');
+        const saved = localStorage.getItem('servitrack_db_v8');
         if(saved) dataState = JSON.parse(saved);
     }
 };
