@@ -146,7 +146,7 @@
         <button class="menu-toggle-btn" onclick="app.toggleMobileMenu()"><i class="fas fa-bars"></i></button>
     </div>
 
-    <!-- Bottom Nav Móvil (Icónica y Táctil Proporcional) -->
+    <!-- Bottom Nav Móvil -->
     <div class="mobile-bottom-nav" id="mobile-bottom-nav" style="display:none;">
         <button id="mn-dashboard" onclick="app.navigateTo('dashboard')"><i class="fas fa-chart-pie"></i><span>Dash</span></button>
         <button id="mn-tickets" onclick="app.navigateTo('tickets')"><i class="fas fa-ticket-alt"></i><span>Tickets</span></button>
@@ -209,7 +209,7 @@
                 <div class="card filters-card">
                     <h3 style="font-size: 0.95rem; color: var(--primary); margin-bottom: 0.6rem;"><i class="fas fa-filter"></i> Filtros Interactivos & Contexto</h3>
                     <div class="grid-3">
-                        <div class="form-group">
+                        <div class="form-group" id="global-client-filter-box">
                             <label>Filtrar por Cliente (Sedes Exclusivas)</label>
                             <select id="global-client-filter" class="form-control" onchange="app.changeActiveClientContext()">
                                 <option value="">Todos los Clientes (Vista Master)</option>
@@ -217,9 +217,7 @@
                         </div>
                         <div class="form-group">
                             <label>Filtrar por Sedes <span style="font-size:0.75rem; color:var(--text-muted);">(Selección Múltiple)</span></label>
-                            <div id="filt-sedes-container" class="multiselect-container">
-                                <!-- Casillas generadas dinámicamente -->
-                            </div>
+                            <div id="filt-sedes-container" class="multiselect-container"></div>
                         </div>
                         <div class="form-group">
                             <label>Filtrar por Técnico</label>
@@ -242,7 +240,7 @@
                 <div class="grid-2">
                     <div class="card">
                         <div class="chart-header-action">
-                            <h4 style="font-size:1rem; color:var(--primary);">1. Tickets vs Sede</h4>
+                            <h4 style="font-size:1rem; color:var(--primary);">1. Tickets vs Sede (Desglose por Estado)</h4>
                             <button class="btn btn-outline btn-sm" onclick="app.toggleAnalysis('box-analysis-1', this)"><i class="fas fa-eye-slash"></i> Ocultar Análisis</button>
                         </div>
                         <canvas id="chart-ticket-sede" height="140"></canvas>
@@ -322,7 +320,7 @@
             <section id="view-tickets" class="content-section" style="display: none;">
                 <div class="header-action">
                     <h1>Gestión de Tickets (Por Cliente)</h1>
-                    <button class="btn btn-primary" id="btn-new-ticket-top" onclick="app.navigateTo('create-ticket')"><i class="fas fa-plus"></i> Nuevo</button>
+                    <!-- Botón "Nuevo" eliminado de gestión de tickets según requerimiento -->
                 </div>
                 <div class="card">
                     <div class="table-responsive">
@@ -342,7 +340,7 @@
                 <div class="card">
                     <form onsubmit="app.saveTicket(event)">
                         <div class="grid-3">
-                            <div class="form-group">
+                            <div class="form-group" id="ticket-cliente-group">
                                 <label>Cliente (Asignado)</label>
                                 <select id="ticket-cliente" class="form-control" onchange="app.loadSedesForClient()" required></select>
                             </div>
