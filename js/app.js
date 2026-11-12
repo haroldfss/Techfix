@@ -648,6 +648,7 @@ submitCierre(e) {
         });
 
         const totalFilt = filtered.length;
+        const cumplidos = filtered.filter(t => t.estado === 'Cumplido').length; 
         const pctCumplidos = totalFilt > 0 ? ((cumplidos / totalFilt) * 100).toFixed(0) : 0;
         document.getElementById('analysis-text-1').innerText = `Análisis: Hay ${totalFilt} tickets activos bajo el filtro actual (${pctCumplidos}% cumplidos).`;
         document.getElementById('analysis-text-2').innerText = `Análisis de Fallas: Se registran ${filtered.filter(t=>t.falla).length} incidencias.`;
