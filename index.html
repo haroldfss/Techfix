@@ -510,3 +510,44 @@
                 </div>
 
                 <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="document.getElementById('modal-edit').style.display='none'">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-cierre" class="modal">
+        <div class="modal-content">
+            <h2>Atender Ticket <span id="modal-ticket-id"></span></h2>
+            <form onsubmit="app.submitCierre(event)">
+                <div class="form-group"><label>Actividades Realizadas</label><textarea class="form-control" rows="3" required placeholder="Solución..."></textarea></div>
+                <div class="form-group"><label>Materiales</label><textarea class="form-control" rows="2" placeholder="Repuestos..."></textarea></div>
+                <div class="form-group"><label>Recomendaciones</label><textarea class="form-control" rows="2" placeholder="Notas..."></textarea></div>
+                <div class="form-group"><label>Evidencia Fotográfica</label><input type="file" class="form-control" multiple accept="image/*"></div>
+                <div class="form-group"><label>Correo Cliente</label><input type="email" class="form-control" placeholder="correo@empresa.com" required></div>
+                <p style="font-size:0.85rem; color:var(--success); font-weight:600;"><i class="fas fa-map-marker-alt"></i> GPS Activo.</p>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="document.getElementById('modal-cierre').style.display='none'">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Cerrar Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-mobile" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <i class="fas fa-mobile-alt" style="font-size: 3.5rem; color: var(--accent); margin-bottom: 1rem;"></i>
+            <h2>App Móvil PWA</h2>
+            <p style="margin: 1rem 0; color: var(--text-muted);">Instala la aplicación en tu celular.</p>
+            <div style="background: #F1F5F9; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <strong>Enlace Directo:</strong><br><span style="font-size: 0.9rem; color: var(--secondary);">https://techfixapp.netlify.app</span>
+            </div>
+            <button onclick="document.getElementById('modal-mobile').style.display='none'" class="btn btn-primary btn-block">Cerrar</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="./js/app.js"></script>
+</body>
+</html>
