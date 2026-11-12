@@ -15,8 +15,8 @@ let dataState = {
     ],
     usuarios: [
         { name: "admin", pass: "admin", role: "Administrador", assignedClient: "TODOS", perms: ["Dashboard Gerencial", "Gestión de Tickets", "Nuevo Ticket", "Mapa Geolocalizado", "Ajustes & Parámetros"] },
-        { name: "Carlos Pérez", pass: "1234", role: "Técnico", assignedClient: "Banco de Bogotá", perms: ["Gestión de Tickets", "Nuevo Ticket"] },
-        { name: "Oscar Muñoz", pass: "1234", role: "Operador", assignedClient: "Centro Comercial Andino", perms: ["Dashboard Gerencial", "Gestión de Tickets"] }
+        { name: "Carlos Pérez", pass: "1234", role: "Técnico", assignedClient: "Banco de Bogotá", perms: ["Gestión de Tickets"] },
+        { name: "Oscar Muñoz", pass: "1234", role: "Operador", assignedClient: "Centro Comercial Andino", perms: ["Dashboard Gerencial", "Gestión de Tickets", "Nuevo Ticket"] }
     ],
     sistemas: ["CCTV IP Dahua", "Intrusión AX PRO", "Control de Acceso Biométrico"],
     fallas: ["Pérdida de Enlace Video", "Batería Baja Panel", "Falla Lector Biométrico"],
@@ -51,13 +51,11 @@ const app = {
             
             this.applyUserPrivileges();
             
-            // Determinar la vista inicial según los permisos del usuario (Evita mostrar Dashboard si no lo tiene permitido)
+            // Redirección inicial segura según privilegios
             if(currentUser.perms.includes("Dashboard Gerencial") || currentUser.role === "Administrador") {
                 this.navigateTo('dashboard');
             } else if(currentUser.perms.includes("Gestión de Tickets")) {
                 this.navigateTo('tickets');
-            } else if(currentUser.perms.includes("Nuevo Ticket")) {
-                this.navigateTo('create-ticket');
             } else {
                 this.navigateTo('tickets');
             }
@@ -83,6 +81,28 @@ const app = {
                 li.style.display = 'none';
             }
         });
+
+        // Aplicar también a la barra inferior móvil
+        const bottomNav = document.getElementById('mobile-bottom-nav');
+        if(bottomNav) {
+            bottomNav.querySelectorAll('button').forEach(btn => {
+                const txt = btn.innerText.toLowerCase();
+                if(txt.includes('dash') && !currentUser.perms.includes("Dashboard Gerencial") && currentUser.role !== "Administrador") {
+                    btn.style.display = 'none';
+                } else if(txt.includes('nuevo') && !currentUser.perms.includes("Nuevo Ticket") && currentUser.role !== "Administrador") {
+                    btn.style.display = 'none';
+                } else {
+                    btn.style.display = 'flex';
+                }
+            });
+        }
+
+        // Si el rol técnico no tiene permiso de crear ticket, ocultar botón superior
+        const btnNewTop = document.getElementById('btn-new-ticket-top');
+        if(btnNewTop) {
+            btnNewTop.style.display = (currentUser.perms.includes("Nuevo Ticket") || currentUser.role === "Administrador") ? 'inline-flex' : 'none';
+        }
+
         document.getElementById('sidebar-user-role-badge').innerText = `${currentUser.role} (${currentUser.assignedClient})`;
         
         if(currentUser.assignedClient !== "TODOS") {
@@ -115,7 +135,24 @@ const app = {
         activeClientContext = val;
         const clientObj = dataState.clientes.find(c => c.name === val);
         this.applyClientBranding(clientObj);
+        this.updateSedeDropdowns();
         this.renderDashboard();
+    },
+    updateSedeDropdowns() {
+        const sedeSelect = document.getElementById('filt-sede');
+        if(!sedeSelect) return;
+        sedeSelect.innerHTML = '<option value="">Sede (Todas)</option>';
+        
+        let targetSedes = dataState.sedes;
+        let activeClient = activeClientContext || (currentUser && currentUser.assignedClient !== "TODOS" ? currentUser.assignedClient : "");
+        
+        if(activeClient) {
+            targetSedes = dataState.sedes.filter(s => s.client === activeClient);
+        }
+        
+        targetSedes.forEach(s => {
+            sedeSelect.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
+        });
     },
     toggleAnalysis(boxId, btn) {
         const box = document.getElementById(boxId);
@@ -150,6 +187,11 @@ const app = {
         document.querySelectorAll('.sidebar .nav-links li').forEach(li => li.classList.remove('active'));
         const menuLi = document.getElementById(`menu-${section.charAt(0).toUpperCase() + section.slice(1)}`);
         if(menuLi) menuLi.classList.add('active');
+
+        // Actualizar iconos activos en la barra inferior móvil
+        document.querySelectorAll('.mobile-bottom-nav button').forEach(b => b.classList.remove('active'));
+        const mobileBtn = document.getElementById(`mn-${section}`);
+        if(mobileBtn) mobileBtn.classList.add('active');
 
         this.closeMobileMenuOnClick();
 
@@ -197,6 +239,7 @@ const app = {
         this.saveStorage();
         e.target.reset();
         this.renderAll();
+        this.updateSedeDropdowns();
         alert("Sede agregada.");
     },
     deleteSede(idx) {
@@ -204,6 +247,7 @@ const app = {
             dataState.sedes.splice(idx, 1);
             this.saveStorage();
             this.renderAll();
+            this.updateSedeDropdowns();
         }
     },
     addUser(e) {
@@ -269,7 +313,7 @@ const app = {
         this.renderAll();
     },
 
-    // --- MODAL EDICIÓN CON PRIVILEGIOS ---
+    // --- MODAL EDICIÓN ---
     openEditModal(type, idx) {
         document.getElementById('edit-type').value = type;
         document.getElementById('edit-index').value = idx;
@@ -292,7 +336,6 @@ const app = {
             document.getElementById('edit-value-2').value = dataState.usuarios[idx].pass;
             gPerms.style.display = 'block';
             
-            // Marcar checkboxes actuales del usuario
             const userPerms = dataState.usuarios[idx].perms || [];
             document.querySelectorAll('.edit-perm-cb').forEach(cb => {
                 cb.checked = userPerms.includes(cb.value);
@@ -327,7 +370,6 @@ const app = {
         } else if(type === 'user') { 
             dataState.usuarios[idx].name = v1; 
             dataState.usuarios[idx].pass = v2; 
-            // Guardar nuevos privilegios editados
             const newPerms = Array.from(document.querySelectorAll('.edit-perm-cb:checked')).map(cb => cb.value);
             dataState.usuarios[idx].perms = newPerms;
         } else if(type === 'sistema') { 
@@ -380,6 +422,7 @@ const app = {
         const sedeEl = document.getElementById('ticket-sede');
         if(!sedeEl) return;
         sedeEl.innerHTML = '';
+        // Filtrado estrictamente exclusivo de sedes del cliente seleccionado en el formulario
         dataState.sedes.filter(s => s.client === client).forEach(s => {
             sedeEl.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
         });
@@ -423,14 +466,15 @@ const app = {
         if(!tbody) return;
         
         let filteredTickets = dataState.tickets;
-        if(activeClientContext) {
-            filteredTickets = filteredTickets.filter(t => t.cliente === activeClientContext);
-        } else if(currentUser && currentUser.assignedClient !== "TODOS") {
-            filteredTickets = filteredTickets.filter(t => t.cliente === currentUser.assignedClient);
+        
+        // Filtrado estricto por contexto global o cliente asignado al usuario
+        let activeClient = activeClientContext || (currentUser && currentUser.assignedClient !== "TODOS" ? currentUser.assignedClient : "");
+        if(activeClient) {
+            filteredTickets = filteredTickets.filter(t => t.cliente === activeClient);
         }
 
         if(filteredTickets.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted);">No hay tickets registrados.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted);">No hay tickets registrados para este cliente.</td></tr>`;
             return;
         }
         tbody.innerHTML = '';
@@ -450,14 +494,13 @@ const app = {
         });
     },
 
-    // --- DASHBOARD & INDICADORES ---
+    // --- DASHBOARD & INDICADORES CON FILTRADO ESTRICTO DE SEDES ---
     renderDashboard() {
         let filtered = dataState.tickets;
         
-        if(activeClientContext) {
-            filtered = filtered.filter(t => t.cliente === activeClientContext);
-        } else if(currentUser && currentUser.assignedClient !== "TODOS") {
-            filtered = filtered.filter(t => t.cliente === currentUser.assignedClient);
+        let activeClient = activeClientContext || (currentUser && currentUser.assignedClient !== "TODOS" ? currentUser.assignedClient : "");
+        if(activeClient) {
+            filtered = filtered.filter(t => t.cliente === activeClient);
         }
 
         const fSed = document.getElementById('filt-sede').value;
@@ -484,9 +527,12 @@ const app = {
     buildIndicators(filtered) {
         let clientSedes = dataState.sedes;
         let activeClient = activeClientContext || (currentUser && currentUser.assignedClient !== "TODOS" ? currentUser.assignedClient : "");
+        
+        // Filtrado estrictamente exclusivo de sedes para el cliente activo
         if(activeClient) {
             clientSedes = dataState.sedes.filter(s => s.client === activeClient);
         }
+        
         const sedesList = clientSedes.map(s => s.sede);
         const sistemasList = dataState.sistemas;
         const tecnicosList = dataState.usuarios.map(u => u.name);
@@ -498,7 +544,7 @@ const app = {
             data: { labels: sedesList, datasets: [{ label: 'Tickets vs Sede', data: ticketSedeCounts, backgroundColor: '#1E3A8A' }] },
             options: { responsive: true, plugins: { title: { display: false } } }
         });
-        document.getElementById('analysis-text-1').innerText = `Análisis: Concentración de ${filtered.length} tickets en sedes clave. Recomendación: Evaluar mantenimiento preventivo en las sedes con mayor volumen.`;
+        document.getElementById('analysis-text-1').innerText = `Análisis: Concentración de ${filtered.length} tickets en sedes exclusivas. Recomendación: Evaluar mantenimiento preventivo en las sedes con mayor volumen.`;
 
         const fallasSedesCounts = sedesList.map(sede => filtered.filter(t => t.sede === sede && t.falla).length);
         if(this.charts.fallasSedes) this.charts.fallasSedes.destroy();
@@ -507,7 +553,7 @@ const app = {
             data: { labels: sedesList, datasets: [{ label: 'Fallas Reportadas', data: fallasSedesCounts, backgroundColor: '#EF4444' }] },
             options: { responsive: true, plugins: { title: { display: false } } }
         });
-        document.getElementById('analysis-text-2').innerText = `Análisis: Correlación entre fallas e infraestructura. Recomendación: Revisar estabilidad de energía y redes en sitios críticos.`;
+        document.getElementById('analysis-text-2').innerText = `Análisis: Correlación entre fallas e infraestructura de sedes. Recomendación: Revisar estabilidad de energía y redes en sitios críticos.`;
 
         const sistemasCounts = sistemasList.map(sis => filtered.filter(t => t.sistema === sis).length);
         if(this.charts.ticketSistemas) this.charts.ticketSistemas.destroy();
@@ -570,82 +616,4 @@ const app = {
         }
         if(uClientSel) {
             uClientSel.innerHTML = '<option value="TODOS">Asignar Todos los Clientes (Master)</option>';
-            dataState.clientes.forEach(c => uClientSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
-        }
-
-        const tCli = document.getElementById('table-clientes');
-        if(tCli) {
-            tCli.innerHTML = '';
-            dataState.clientes.forEach((c, i) => {
-                tCli.innerHTML += `<tr><td><strong>${c.name}</strong></td><td><span style="display:inline-block;width:15px;height:15px;background:${c.color};border-radius:4px;"></span></td><td><img src="${c.logo}" style="height:25px; object-fit:contain;"></td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('client', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteClient(${i})">Del</button></td></tr>`;
-            });
-        }
-
-        const tSed = document.getElementById('table-sedes');
-        const fSed = document.getElementById('filt-sede');
-        if(tSed && fSed) {
-            tSed.innerHTML = ''; fSed.innerHTML = '<option value="">Sede (Todas)</option>';
-            dataState.sedes.forEach((s, i) => {
-                tSed.innerHTML += `<tr><td><strong>${s.sede}</strong></td><td>${s.client}</td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('sede', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteSede(${i})">Del</button></td></tr>`;
-                fSed.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
-            });
-        }
-
-        const tUsu = document.getElementById('table-usuarios');
-        const fTec = document.getElementById('filt-tecnico');
-        if(tUsu && fTec) {
-            tUsu.innerHTML = ''; fTec.innerHTML = '<option value="">Técnico (Todos)</option>';
-            dataState.usuarios.forEach((u, i) => {
-                tUsu.innerHTML += `<tr><td><strong>${u.name}</strong></td><td>${u.role}</td><td>${u.assignedClient}</td><td><span style="font-size:0.8rem;color:var(--text-muted);">${u.perms.join(', ')}</span></td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('user', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteUser(${i})">Del</button></td></tr>`;
-                fTec.innerHTML += `<option value="${u.name}">${u.name}</option>`;
-            });
-        }
-
-        const tSys = document.getElementById('table-sistemas');
-        if(tSys) {
-            tSys.innerHTML = '';
-            dataState.sistemas.forEach((s, i) => {
-                tSys.innerHTML += `<tr><td>${s}</td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('sistema', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteSistema(${i})">Del</button></td></tr>`;
-            });
-        }
-
-        const tFal = document.getElementById('table-fallas');
-        if(tFal) {
-            tFal.innerHTML = '';
-            dataState.fallas.forEach((f, i) => {
-                tFal.innerHTML += `<tr><td>${f}</td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('falla', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteFalla(${i})">Del</button></td></tr>`;
-            });
-        }
-
-        const tSla = document.getElementById('table-sla');
-        if(tSla) {
-            tSla.innerHTML = '';
-            dataState.slaList.files = [];
-            dataState.slaList.forEach((sla, i) => {
-                tSla.innerHTML += `<tr><td>${sla.desc}</td><td><strong>${sla.days} Días</strong></td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('sla', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteSla(${i})">Del</button></td></tr>`;
-            });
-        }
-
-        this.renderDashboard();
-    },
-    initMap() {
-        if(!this.map) {
-            this.map = L.map('tech-map').setView([4.6097, -74.0817], 12);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
-            L.marker([4.6097, -74.0817]).addTo(this.map).bindPopup("<b>Técnico:</b> Carlos Pérez (GPS Activo)");
-        }
-        setTimeout(() => this.map.invalidateSize(), 200);
-    },
-    generatePDF() {
-        alert("Generando informe PDF gerencial...");
-    },
-    saveStorage() {
-        localStorage.setItem('servitrack_db_v13', JSON.stringify(dataState));
-    },
-    loadStorage() {
-        const saved = localStorage.getItem('servitrack_db_v13');
-        if(saved) dataState = JSON.parse(saved);
-    }
-};
-
-window.onload = () => app.init();
+            dataState.clientes.forEach(c => uClientSel.innerHTML +=
