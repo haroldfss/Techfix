@@ -15,7 +15,10 @@ let dataState = {
     ],
     usuarios: [
         { name: "admin", pass: "admin", role: "Administrador", assignedClient: "TODOS", perms: ["Dashboard Gerencial", "Gestión de Tickets", "Nuevo Ticket", "Mapa Geolocalizado", "Ajustes & Parámetros"], lastLogin: "2026-11-12 10:20" },
-        { name: "juan", pass: "123456", role: "Técnico", assignedClient: "Banco de Bogotá", perms: ["Gestión de Tickets"], lastLogin: "Nunca" }
+        { name: "Meicon", pass: "123456", role: "Técnico", assignedClient: "Texmoda", perms: ["Gestión de Tickets"], lastLogin: "Nunca" },
+        { name: "Fortox", pass: "123456", role: "Técnico", assignedClient: "Texmoda", perms: ["Gestión de Tickets"], lastLogin: "Nunca" },
+        { name: "oscar.munoz", pass: "123456", role: "Operador", assignedClient: "Texmoda", perms: ["Dashboard Gerencial", "Gestión de Tickets", "Nuevo Ticket", "Mapa Geolocalizado"], lastLogin: "2026-11-12 10:20" },
+
     ],
     sistemas: ["CCTV IP Dahua", "Intrusión AX PRO", "Control de Acceso Biométrico"],
     fallas: ["Pérdida de Enlace Video", "Batería Baja Panel", "Falla Lector Biométrico"],
