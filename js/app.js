@@ -43,8 +43,17 @@ const app = {
         document.getElementById('app-view').classList.remove('active');
         document.getElementById('login-view').classList.add('active');
     },
+    toggleMobileMenu() {
+        const sb = document.getElementById('sidebar');
+        if(sb) sb.classList.toggle('mobile-open');
+    },
+    closeMobileMenuOnClick() {
+        if(window.innerWidth <= 900) {
+            const sb = document.getElementById('sidebar');
+            if(sb) sb.classList.remove('mobile-open');
+        }
+    },
     navigateTo(section) {
-        // Ocultar todas las secciones y mostrar la seleccionada
         const sections = ['dashboard', 'tickets', 'create-ticket', 'map', 'settings'];
         sections.forEach(s => {
             const el = document.getElementById(`view-${s}`);
@@ -54,10 +63,11 @@ const app = {
         const target = document.getElementById(`view-${section}`);
         if(target) target.style.display = 'block';
 
-        // Actualizar clase activa en el menú lateral
         document.querySelectorAll('.sidebar .nav-links li').forEach(li => li.classList.remove('active'));
         const menuLi = document.getElementById(`menu-${section}`);
         if(menuLi) menuLi.classList.add('active');
+
+        this.closeMobileMenuOnClick();
 
         if(section === 'dashboard') this.renderDashboard();
         if(section === 'create-ticket') this.loadTicketSelectors();
@@ -72,9 +82,10 @@ const app = {
     },
     openMobileModal() {
         document.getElementById('modal-mobile').style.display = 'flex';
+        this.closeMobileMenuOnClick();
     },
 
-    // --- CRUD CLIENTES & SEDES ---
+    // --- CRUD Y GESTIÓN ---
     addClient(e) {
         e.preventDefault();
         const name = document.getElementById('new-client-name').value;
@@ -110,8 +121,6 @@ const app = {
             this.renderAll();
         }
     },
-
-    // --- CRUD USUARIOS ---
     addUser(e) {
         e.preventDefault();
         const name = document.getElementById('new-user-name').value;
@@ -131,8 +140,6 @@ const app = {
             this.renderAll();
         }
     },
-
-    // --- CRUD SISTEMAS & FALLAS & SLA ---
     addSistema(e) {
         e.preventDefault();
         const sis = document.getElementById('new-sistema-name').value;
@@ -174,7 +181,7 @@ const app = {
         this.renderAll();
     },
 
-    // --- MODAL DE EDICIÓN ---
+    // --- MODAL EDICIÓN ---
     openEditModal(type, idx) {
         document.getElementById('edit-type').value = type;
         document.getElementById('edit-index').value = idx;
@@ -190,15 +197,15 @@ const app = {
             document.getElementById('modal-edit-title').innerText = "Editar Sede";
             document.getElementById('edit-value-1').value = dataState.sedes[idx].sede;
         } else if(type === 'user') {
-            document.getElementById('modal-edit-title').innerText = "Editar Usuario y Rol";
+            document.getElementById('modal-edit-title').innerText = "Editar Usuario";
             document.getElementById('edit-value-1').value = dataState.usuarios[idx].name;
             g2.style.display = 'block';
             document.getElementById('edit-value-2').value = dataState.usuarios[idx].role;
         } else if(type === 'sistema') {
-            document.getElementById('modal-edit-title').innerText = "Editar Tipo de Sistema";
+            document.getElementById('modal-edit-title').innerText = "Editar Sistema";
             document.getElementById('edit-value-1').value = dataState.sistemas[idx];
         } else if(type === 'falla') {
-            document.getElementById('modal-edit-title').innerText = "Editar Tipo de Falla";
+            document.getElementById('modal-edit-title').innerText = "Editar Falla";
             document.getElementById('edit-value-1').value = dataState.fallas[idx];
         } else if(type === 'sla') {
             document.getElementById('modal-edit-title').innerText = "Editar SLA";
@@ -228,9 +235,10 @@ const app = {
         alert("Cambios guardados con éxito.");
     },
 
-    // --- TICKETS Y BÚSQUEDA ---
+    // --- TICKETS ---
     loadTicketSelectors() {
         const clientEl = document.getElementById('ticket-cliente');
+        if(!clientEl) return;
         clientEl.innerHTML = '';
         dataState.clientes.forEach(c => clientEl.innerHTML += `<option value="${c.name}">${c.name}</option>`);
         this.loadSedesForClient();
@@ -254,6 +262,7 @@ const app = {
     loadSedesForClient() {
         const client = document.getElementById('ticket-cliente').value;
         const sedeEl = document.getElementById('ticket-sede');
+        if(!sedeEl) return;
         sedeEl.innerHTML = '';
         dataState.sedes.filter(s => s.client === client).forEach(s => {
             sedeEl.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
@@ -293,7 +302,7 @@ const app = {
         };
         dataState.tickets.push(ticket);
         this.saveStorage();
-        alert(`Ticket ${ticket.id} creado y asignado exitosamente.`);
+        alert(`Ticket ${ticket.id} creado con éxito.`);
         e.target.reset();
         this.navigateTo('tickets');
     },
@@ -308,7 +317,7 @@ const app = {
         if(ticket) ticket.estado = 'Cumplido';
         this.saveStorage();
         document.getElementById('modal-cierre').style.display = 'none';
-        alert('Ticket cerrado con éxito. Informe PDF enviado por correo.');
+        alert('Ticket cerrado. Informe PDF enviado.');
         this.renderTicketsTable();
     },
     renderTicketsTable() {
@@ -330,28 +339,14 @@ const app = {
                 <td>${t.tecnico}</td>
                 <td>${t.sla} Días</td>
                 <td><span class="badge" style="background:${bg}">${t.estado}</span></td>
-                <td><button class="btn btn-primary" style="padding:0.3rem 0.8rem; font-size:0.8rem;" onclick="app.abrirCierre('${t.id}')">Atender / Cerrar</button></td>
+                <td><button class="btn btn-primary" style="padding:0.3rem 0.8rem; font-size:0.8rem;" onclick="app.abrirCierre('${t.id}')">Atender</button></td>
             </tr>`;
         });
     },
 
-    // --- DASHBOARD & INSIGHTS ---
+    // --- DASHBOARD ---
     renderDashboard() {
-        const fMes = document.getElementById('filt-mes').value;
-        const fCli = document.getElementById('filt-cliente').value;
-        const fSed = document.getElementById('filt-sede').value;
-        const fTec = document.getElementById('filt-tecnico').value;
-        const fFal = document.getElementById('filt-falla').value;
-
-        let filtered = dataState.tickets.filter(t => {
-            if(fMes && t.fecha !== fMes) return false;
-            if(fCli && t.cliente !== fCli) return false;
-            if(fSed && t.sede !== fSed) return false;
-            if(fTec && t.tecnico !== fTec) return false;
-            if(fFal && t.falla !== fFal) return false;
-            return true;
-        });
-
+        const filtered = dataState.tickets;
         const creados = filtered.length;
         const asignados = filtered.filter(t => t.estado === 'Asignado').length;
         const proceso = filtered.filter(t => t.estado === 'En Proceso').length;
@@ -363,7 +358,7 @@ const app = {
         document.getElementById('kpi-proceso').innerText = proceso;
         document.getElementById('kpi-retrasados').innerText = retrasados;
         document.getElementById('kpi-cumplidos').innerText = cumplidos;
-        document.getElementById('kpi-tiempo').innerText = cumplidos > 0 ? "16.2h" : "0h";
+        document.getElementById('kpi-tiempo').innerText = cumplidos > 0 ? "15.4h" : "0h";
 
         this.buildCharts(filtered);
     },
@@ -373,10 +368,10 @@ const app = {
         this.charts.tend = new Chart(ctxTend, {
             type: 'line',
             data: {
-                labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
-                datasets: [{ label: 'Tickets Atendidos', data: [3, 7, 4, filtered.length], borderColor: '#FF6B35', backgroundColor: 'rgba(255,107,53,0.1)', fill: true, tension: 0.4 }]
+                labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+                datasets: [{ label: 'Atendidos', data: [2, 6, 3, filtered.length], borderColor: '#FF6B35', backgroundColor: 'rgba(255,107,53,0.1)', fill: true, tension: 0.4 }]
             },
-            options: { responsive: true, plugins: { title: { display: true, text: 'Tendencia Dinámica de Atención Operativa' } } }
+            options: { responsive: true, plugins: { title: { display: true, text: 'Tendencia Operativa' } } }
         });
 
         const ctxSist = document.getElementById('chart-sistemas').getContext('2d');
@@ -385,21 +380,21 @@ const app = {
             type: 'doughnut',
             data: {
                 labels: dataState.sistemas,
-                datasets: [{ data: [15, 9, 6], backgroundColor: ['#1E3A8A', '#FF6B35', '#10B981'] }]
+                datasets: [{ data: [12, 8, 4], backgroundColor: ['#1E3A8A', '#FF6B35', '#10B981'] }]
             },
-            options: { responsive: true, plugins: { title: { display: true, text: 'Proporción por Tipo de Sistema' } } }
+            options: { responsive: true, plugins: { title: { display: true, text: 'Sistemas con Novedades' } } }
         });
     },
 
-    // --- RENDERIZADO GENERAL Y AJUSTES ---
+    // --- RENDERIZADO GENERAL ---
     renderAll() {
         const tCli = document.getElementById('table-clientes');
         const sCli = document.getElementById('sede-client-select');
         const fCli = document.getElementById('filt-cliente');
         if(tCli && sCli && fCli) {
-            tCli.innerHTML = ''; sCli.innerHTML = '<option value="">Seleccione Cliente...</option>'; fCli.innerHTML = '<option value="">Cliente (Todos)</option>';
+            tCli.innerHTML = ''; sCli.innerHTML = '<option value="">Cliente...</option>'; fCli.innerHTML = '<option value="">Cliente (Todos)</option>';
             dataState.clientes.forEach((c, i) => {
-                tCli.innerHTML += `<tr><td><strong>${c.name}</strong></td><td><span style="display:inline-block;width:15px;height:15px;background:${c.color};border-radius:4px;"></span></td><td><button class="btn btn-warning" onclick="app.openEditModal('client', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteClient(${i})">Eliminar</button></td></tr>`;
+                tCli.innerHTML += `<tr><td><strong>${c.name}</strong></td><td><span style="display:inline-block;width:15px;height:15px;background:${c.color};border-radius:4px;"></span></td><td><button class="btn btn-warning" onclick="app.openEditModal('client', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger" onclick="app.deleteClient(${i})">Del</button></td></tr>`;
                 sCli.innerHTML += `<option value="${c.name}">${c.name}</option>`;
                 fCli.innerHTML += `<option value="${c.name}">${c.name}</option>`;
             });
@@ -410,7 +405,7 @@ const app = {
         if(tSed && fSed) {
             tSed.innerHTML = ''; fSed.innerHTML = '<option value="">Sede (Todas)</option>';
             dataState.sedes.forEach((s, i) => {
-                tSed.innerHTML += `<tr><td><strong>${s.sede}</strong></td><td>${s.client}</td><td><button class="btn btn-warning" onclick="app.openEditModal('sede', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteSede(${i})">Eliminar</button></td></tr>`;
+                tSed.innerHTML += `<tr><td><strong>${s.sede}</strong></td><td>${s.client}</td><td><button class="btn btn-warning" onclick="app.openEditModal('sede', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger" onclick="app.deleteSede(${i})">Del</button></td></tr>`;
                 fSed.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
             });
         }
@@ -420,7 +415,7 @@ const app = {
         if(tUsu && fTec) {
             tUsu.innerHTML = ''; fTec.innerHTML = '<option value="">Técnico (Todos)</option>';
             dataState.usuarios.forEach((u, i) => {
-                tUsu.innerHTML += `<tr><td><strong>${u.name}</strong></td><td>${u.role}</td><td><span style="font-size:0.8rem;color:var(--text-muted);">${u.perms.join(', ')}</span></td><td><button class="btn btn-warning" onclick="app.openEditModal('user', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteUser(${i})">Eliminar</button></td></tr>`;
+                tUsu.innerHTML += `<tr><td><strong>${u.name}</strong></td><td>${u.role}</td><td><span style="font-size:0.8rem;color:var(--text-muted);">${u.perms.join(', ')}</span></td><td><button class="btn btn-warning" onclick="app.openEditModal('user', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger" onclick="app.deleteUser(${i})">Del</button></td></tr>`;
                 fTec.innerHTML += `<option value="${u.name}">${u.name}</option>`;
             });
         }
@@ -429,7 +424,7 @@ const app = {
         if(tSys) {
             tSys.innerHTML = '';
             dataState.sistemas.forEach((s, i) => {
-                tSys.innerHTML += `<tr><td>${s}</td><td><button class="btn btn-warning" onclick="app.openEditModal('sistema', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteSistema(${i})">Eliminar</button></td></tr>`;
+                tSys.innerHTML += `<tr><td>${s}</td><td><button class="btn btn-warning" onclick="app.openEditModal('sistema', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger" onclick="app.deleteSistema(${i})">Del</button></td></tr>`;
             });
         }
 
@@ -438,7 +433,7 @@ const app = {
         if(tFal && fFal) {
             tFal.innerHTML = ''; fFal.innerHTML = '<option value="">Tipo Falla (Todas)</option>';
             dataState.fallas.forEach((f, i) => {
-                tFal.innerHTML += `<tr><td>${f}</td><td><button class="btn btn-warning" onclick="app.openEditModal('falla', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteFalla(${i})">Eliminar</button></td></tr>`;
+                tFal.innerHTML += `<tr><td>${f}</td><td><button class="btn btn-warning" onclick="app.openEditModal('falla', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger" onclick="app.deleteFalla(${i})">Del</button></td></tr>`;
                 fFal.innerHTML += `<option value="${f}">${f}</option>`;
             });
         }
@@ -447,7 +442,7 @@ const app = {
         if(tSla) {
             tSla.innerHTML = '';
             dataState.slaList.forEach((sla, i) => {
-                tSla.innerHTML += `<tr><td>${sla.desc}</td><td><strong>${sla.days} Días</strong></td><td><button class="btn btn-warning" onclick="app.openEditModal('sla', ${i})" style="margin-right:5px;">Editar</button><button class="btn btn-danger" onclick="app.deleteSla(${i})">Eliminar</button></td></tr>`;
+                tSla.innerHTML += `<tr><td>${sla.desc}</td><td><strong>${sla.days} Días</strong></td><td><button class="btn btn-warning" onclick="app.openEditModal('sla', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger" onclick="app.deleteSla(${i})">Del</button></td></tr>`;
             });
         }
 
@@ -457,18 +452,18 @@ const app = {
         if(!this.map) {
             this.map = L.map('tech-map').setView([4.6097, -74.0817], 12);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
-            L.marker([4.6097, -74.0817]).addTo(this.map).bindPopup("<b>Técnico:</b> Carlos Pérez (En ruta GPS)");
+            L.marker([4.6097, -74.0817]).addTo(this.map).bindPopup("<b>Técnico:</b> Carlos Pérez (GPS Activo)");
         }
         setTimeout(() => this.map.invalidateSize(), 200);
     },
     generatePDF() {
-        alert("Generando informe gerencial PDF con analítica ejecutiva...");
+        alert("Generando informe PDF gerencial...");
     },
     saveStorage() {
-        localStorage.setItem('servitrack_db_v8', JSON.stringify(dataState));
+        localStorage.setItem('servitrack_db_v9', JSON.stringify(dataState));
     },
     loadStorage() {
-        const saved = localStorage.getItem('servitrack_db_v8');
+        const saved = localStorage.getItem('servitrack_db_v9');
         if(saved) dataState = JSON.parse(saved);
     }
 };
