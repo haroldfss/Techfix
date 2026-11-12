@@ -503,11 +503,7 @@ submitCierre(e) {
     e.preventDefault();
     const id = document.getElementById('modal-ticket-id').innerText;
     const ticket = dataState.tickets.find(t => t.id === id);
-    const correoCliente = document.getElementById('cierre-correo').value;
-        const id = document.getElementById('modal-ticket-id').innerText;
-        const ticket = dataState.tickets.find(t => t.id === id);
-        const correoCliente = document.getElementById('cierre-correo').value;
-        
+    const correoCliente = document.getElementById('cierre-correo').value;      
         if(ticket) {
             if(ticket.estado === 'Cumplido') return;
             ticket.estado = 'Cumplido';
