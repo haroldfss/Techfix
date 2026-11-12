@@ -1,8 +1,8 @@
 let dataState = {
     tickets: [
-        { id: 'TK-1001', cliente: 'Banco de Bogotá', sede: 'Sede Principal Calle 72', sistema: 'CCTV IP Dahua', falla: 'Pérdida de Enlace Video', tecnico: 'Carlos Pérez', sla: '1', estado: 'Asignado', fecha: '2026-11' },
-        { id: 'TK-1002', cliente: 'Centro Comercial Andino', sede: 'Torre Administrativa Andino', sistema: 'Intrusión AX PRO', falla: 'Batería Baja Panel', tecnico: 'Oscar Muñoz', sla: '3', estado: 'Cumplido', fecha: '2026-11' },
-        { id: 'TK-1003', cliente: 'Banco de Bogotá', sede: 'Sucursal Norte 170', sistema: 'Control de Acceso Biométrico', falla: 'Falla Lector Biométrico', tecnico: 'Carlos Pérez', sla: '1', estado: 'En Proceso', fecha: '2026-11' }
+        { id: 'TK-1001', cliente: 'Banco de Bogotá', sede: 'Sede Principal Calle 72', sistema: 'CCTV IP Dahua', falla: 'Pérdida de Enlace Video', tecnico: 'Carlos Pérez', sla: '1', estado: 'Asignado', fecha: '2026-11-01', fechaCreacion: '2026-11-01T08:00', fechaCumplido: null, actividades: '', materiales: '', recomendaciones: '' },
+        { id: 'TK-1002', cliente: 'Centro Comercial Andino', sede: 'Torre Administrativa Andino', sistema: 'Intrusión AX PRO', falla: 'Batería Baja Panel', tecnico: 'Oscar Muñoz', sla: '3', estado: 'Cumplido', fecha: '2026-11-05', fechaCreacion: '2026-11-05T09:30', fechaCumplido: '2026-11-06T14:15', actividades: 'Reemplazo de batería de respaldo y calibración de panel.', materiales: '1x Batería 12V 7Ah', recomendaciones: 'Realizar pruebas trimestrales.' },
+        { id: 'TK-1003', cliente: 'Banco de Bogotá', sede: 'Sucursal Norte 170', sistema: 'Control de Acceso Biométrico', falla: 'Falla Lector Biométrico', tecnico: 'Carlos Pérez', sla: '1', estado: 'En Proceso', fecha: '2026-11-10', fechaCreacion: '2026-11-10T11:00', fechaCumplido: null, actividades: '', materiales: '', recomendaciones: '' }
     ],
     clientes: [
         { name: "Banco de Bogotá", color: "#1E3A8A", logo: "https://cdn-icons-png.flaticon.com/512/2830/2830284.png" },
@@ -54,10 +54,15 @@ const app = {
             
             this.applyUserPrivileges();
             
+            // Corrección acceso móvil: si tiene permiso de Dashboard entra ahí, si no, entra al primer módulo permitido
             if(currentUser.perms.includes("Dashboard Gerencial") || currentUser.role === "Administrador") {
                 this.navigateTo('dashboard');
-            } else {
+            } else if(currentUser.perms.includes("Gestión de Tickets")) {
                 this.navigateTo('tickets');
+            } else if(currentUser.perms.includes("Nuevo Ticket")) {
+                this.navigateTo('create-ticket');
+            } else {
+                this.navigateTo('map');
             }
         } else {
             alert("Usuario o contraseña incorrectos.");
@@ -98,7 +103,6 @@ const app = {
 
         document.getElementById('sidebar-user-role-badge').innerText = `${currentUser.role} (${currentUser.assignedClient})`;
         
-        // RESTRICCIÓN 1, 2 Y 6: Ocultar selector global de clientes si no es admin, fijando su cliente
         const gClientSelBox = document.getElementById('global-client-filter-box');
         const gClientSel = document.getElementById('global-client-filter');
         if(currentUser.assignedClient && currentUser.assignedClient !== "TODOS") {
@@ -106,14 +110,13 @@ const app = {
             if(clientObj) this.applyClientBranding(clientObj);
             
             if(gClientSelBox && currentUser.role !== "Administrador") {
-                gClientSelBox.style.display = 'none'; // Ocultar por completo el filtro de otro cliente en dashboard
+                gClientSelBox.style.display = 'none';
             }
         } else {
             if(gClientSelBox) gClientSelBox.style.display = 'block';
             if(gClientSel) gClientSel.disabled = false;
         }
 
-        // RESTRICCIÓN 3: En creación de tickets, si el usuario tiene cliente asignado, ocultar selector de cliente
         const ticketClienteGroup = document.getElementById('ticket-cliente-group');
         if(ticketClienteGroup) {
             ticketClienteGroup.style.display = (currentUser.role === "Administrador" || currentUser.assignedClient === "TODOS") ? 'block' : 'none';
@@ -159,7 +162,6 @@ const app = {
         let targetSedes = dataState.sedes;
         let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
         
-        // RESTRICCIÓN 1 Y 6: Filtrar estrictamente sedes solo del cliente asignado
         if(activeClient) {
             targetSedes = dataState.sedes.filter(s => s.client === activeClient);
         }
@@ -433,7 +435,6 @@ const app = {
         fallaEl.innerHTML = '';
         dataState.fallas.forEach(f => fallaEl.innerHTML += `<option value="${f}">${f}</option>`);
 
-        // RESTRICCIÓN 3: Técnicos y usuarios estrictamente del cliente actual
         const tecEl = document.getElementById('ticket-tecnico');
         tecEl.innerHTML = '';
         let targetTecs = dataState.usuarios.filter(u => u.role.toLowerCase().includes('técnico') || u.role.toLowerCase().includes('tecnico'));
@@ -462,6 +463,8 @@ const app = {
     saveTicket(e) {
         e.preventDefault();
         let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : document.getElementById('ticket-cliente').value;
+        const nowIso = new Date().toISOString().substring(0, 16);
+        const todayStr = new Date().toISOString().substring(0, 10);
         
         const ticket = {
             id: 'TK-' + Math.floor(Math.random() * 9000 + 1000),
@@ -473,7 +476,12 @@ const app = {
             sla: document.getElementById('ticket-sla').value,
             desc: document.getElementById('ticket-desc').value,
             estado: 'Asignado',
-            fecha: '2026-11'
+            fecha: todayStr,
+            fechaCreacion: nowIso,
+            fechaCumplido: null,
+            actividades: '',
+            materiales: '',
+            recomendaciones: ''
         };
         dataState.tickets.push(ticket);
         this.saveStorage();
@@ -483,7 +491,6 @@ const app = {
     },
     abrirCierre(id) {
         const ticket = dataState.tickets.find(t => t.id === id);
-        // RESTRICCIÓN 4: No permitir atender o editar un ticket que se encuentra en estado cumplido
         if(ticket && ticket.estado === 'Cumplido') {
             alert("Este ticket ya se encuentra en estado Cumplido y no puede ser modificado ni atendido.");
             return;
@@ -501,11 +508,25 @@ const app = {
                 return;
             }
             ticket.estado = 'Cumplido';
+            ticket.fechaCumplido = new Date().toISOString().substring(0, 16);
+            ticket.actividades = document.getElementById('cierre-actividades').value;
+            ticket.materiales = document.getElementById('cierre-materiales').value;
+            ticket.recomendaciones = document.getElementById('cierre-recomendaciones').value;
         }
         this.saveStorage();
         document.getElementById('modal-cierre').style.display = 'none';
         alert('Ticket marcado como Cumplido con éxito.');
         this.renderTicketsTable();
+    },
+    calcularTiempoResolucion(t) {
+        if(!t.fechaCreacion || !t.fechaCumplido) return 'Pendiente';
+        const start = new Date(t.fechaCreacion);
+        const end = new Date(t.fechaCumplido);
+        const diffMs = end - start;
+        if(diffMs < 0) return '0h';
+        const diffHrs = (diffMs / (1000 * 60 * 60)).toFixed(1);
+        const diffDays = (diffHrs / 24).toFixed(1);
+        return diffDays >= 1 ? `${diffDays} días (${diffHrs}h)` : `${diffHrs} horas`;
     },
     renderTicketsTable() {
         const tbody = document.getElementById('tickets-tbody');
@@ -525,9 +546,10 @@ const app = {
         tbody.innerHTML = '';
         filteredTickets.forEach(t => {
             const bg = t.estado === 'Cumplido' ? 'var(--success)' : 'var(--accent)';
-            // RESTRICCIÓN 4: Si está cumplido, deshabilitar botón de atender
+            const tiempoRes = this.calcularTiempoResolucion(t);
+            
             const atenderBtn = t.estado === 'Cumplido' 
-                ? `<button class="btn btn-outline btn-sm" disabled style="opacity:0.6; cursor:not-allowed;">Cumplido</button>`
+                ? `<div style="display:flex; gap:4px;"><button class="btn btn-outline btn-sm" disabled style="opacity:0.6; cursor:not-allowed;">Cumplido</button><button class="btn btn-secondary btn-sm" onclick="app.downloadSingleTicketReport('${t.id}')" title="Descargar Informe Individual"><i class="fas fa-download"></i></button></div>`
                 : `<button class="btn btn-primary btn-sm" onclick="app.abrirCierre('${t.id}')">Atender</button>`;
 
             tbody.innerHTML += `<tr>
@@ -537,14 +559,114 @@ const app = {
                 <td>${t.sistema}</td>
                 <td>${t.falla}</td>
                 <td>${t.tecnico}</td>
-                <td>${t.sla} Días</td>
+                <td><span style="font-weight:600; color:var(--secondary);">${tiempoRes}</span></td>
                 <td><span class="badge" style="background:${bg}">${t.estado}</span></td>
                 <td>${atenderBtn}</td>
             </tr>`;
         });
     },
 
-    // --- DASHBOARD & INDICADORES CON GRÁFICA APILADA POR ESTADOS (RESTRICCIÓN 7) ---
+    // --- REQUISITO 3 Y 7: DESCARGAR INFORME GENERAL E INDIVIDUAL / POR TÉCNICO ---
+    downloadSingleTicketReport(id) {
+        const t = dataState.tickets.find(item => item.id === id);
+        if(!t) { alert("Ticket no encontrado."); return; }
+        
+        const reportContent = `INFORME TÉCNICO DE CUMPLIMIENTO - SERVITRACK PWA
+===============================================
+ID del Ticket: ${t.id}
+Cliente: ${t.cliente}
+Sede: ${t.sede}
+Sistema Afectado: ${t.sistema}
+Tipo de Falla: ${t.falla}
+Técnico Responsable: ${t.tecnico}
+Estado Actual: ${t.estado}
+SLA Pactado: ${t.sla} Días
+Fecha de Creación: ${t.fechaCreacion || t.fecha}
+Fecha de Cierre / Cumplido: ${t.fechaCumplido || 'N/A'}
+Tiempo Total de Resolución: ${this.calcularTiempoResolucion(t)}
+
+ACTIVIDADES REALIZADAS:
+${t.actividades || 'Sin registro detallado.'}
+
+REPUESTOS Y MATERIALES UTILIZADOS:
+${t.materiales || 'Ninguno.'}
+
+RECOMENDACIONES PARA EL CLIENTE:
+${t.recomendaciones || 'Ninguna.'}
+===============================================
+Generado por ServiTrack PWA - Control Multi-Cliente`;
+
+        const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Informe_${t.id}_${t.tecnico.replace(/\s+/g, '_')}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    },
+    downloadGeneralTicketsReport() {
+        let csv = "ID,Cliente,Sede,Sistema,Falla,Tecnico,SLA,Estado,Fecha Creacion,Fecha Cumplido,Tiempo Resolucion\n";
+        let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
+        let ticketsToExport = dataState.tickets;
+        if(activeClient) ticketsToExport = ticketsToExport.filter(t => t.cliente === activeClient);
+
+        ticketsToExport.forEach(t => {
+            csv += `"${t.id}","${t.cliente}","${t.sede}","${t.sistema}","${t.falla}","${t.tecnico}","${t.sla}","${t.estado}","${t.fechaCreacion || ''}","${t.fechaCumplido || ''}","${this.calcularTiempoResolucion(t)}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Reporte_General_Tickets_${new Date().toISOString().substring(0,10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    },
+    downloadTechnicianReportPrompt() {
+        let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
+        let techs = dataState.usuarios.filter(u => u.role.toLowerCase().includes('técnico') || u.role.toLowerCase().includes('tecnico'));
+        if(activeClient) techs = techs.filter(u => u.assignedClient === activeClient || u.assignedClient === "TODOS");
+        
+        const techNames = techs.map(t => t.name).join(', ');
+        const tecInput = prompt(`Ingrese el nombre exacto del técnico para generar su informe completo de tickets cumplidos:\nDisponibles: ${techNames}`);
+        if(!tecInput) return;
+
+        const matchedTech = techs.find(u => u.name.toLowerCase() === tecInput.toLowerCase());
+        if(!matchedTech) { alert("Técnico no encontrado."); return; }
+
+        let techTickets = dataState.tickets.filter(t => t.tecnico.toLowerCase() === matchedTech.name.toLowerCase() && t.estado === 'Cumplido');
+        if(activeClient) techTickets = techTickets.filter(t => t.cliente === activeClient);
+
+        if(techTickets.length === 0) {
+            alert(`El técnico ${matchedTech.name} no registra tickets cumplidos para exportar.`);
+            return;
+        }
+
+        let report = `INFORME INTEGRAL DE RENDIMIENTO Y TICKETS CUMPLIDOS\n`;
+        report += `Técnico: ${matchedTech.name} | Cliente: ${matchedTech.assignedClient}\n`;
+        report += `Total Tickets Cumplidos: ${techTickets.length}\n`;
+        report += `====================================================\n\n`;
+
+        techTickets.forEach((t, index) => {
+            report += `[${index + 1}] Ticket: ${t.id} | Sede: ${t.sede}\n`;
+            report += `    - Sistema: ${t.sistema} (${t.falla})\n`;
+            report += `    - Tiempo de Resolución: ${this.calcularTiempoResolucion(t)}\n`;
+            report += `    - Actividades: ${t.actividades || 'N/A'}\n`;
+            report += `    - Materiales: ${t.materiales || 'N/A'}\n`;
+            report += `    - Recomendaciones: ${t.recomendaciones || 'N/A'}\n`;
+            report += `----------------------------------------------------\n`;
+        });
+
+        const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Informe_Tecnico_${matchedTech.name.replace(/\s+/g, '_')}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    },
+
+    // --- REQUISITO 4 Y 5: FILTROS DE FECHA Y ESTADO EN TIEMPO REAL ACTUALIZANDO GRÁFICAS ---
     renderDashboard() {
         let filtered = dataState.tickets;
         
@@ -556,13 +678,36 @@ const app = {
 
         const selectedSedes = Array.from(document.querySelectorAll('.sede-chk:checked')).map(cb => cb.value);
         const fTec = document.getElementById('filt-tecnico').value;
+        const fEstado = document.getElementById('filt-estado').value;
+        const fFechaInicio = document.getElementById('filt-fecha-inicio').value;
+        const fFechaFin = document.getElementById('filt-fecha-fin').value;
 
+        // Filtro por Sede
         if(selectedSedes.length > 0) {
             filtered = filtered.filter(t => selectedSedes.includes(t.sede));
         } else {
             filtered = [];
         }
+
+        // Filtro por Técnico
         if(fTec) filtered = filtered.filter(t => t.tecnico === fTec);
+
+        // REQUISITO 5: Filtro por Estado de Ticket
+        if(fEstado) filtered = filtered.filter(t => t.estado === fEstado);
+
+        // REQUISITO 4: Filtro por Rango de Fecha (Inicio y Fin)
+        if(fFechaInicio) {
+            filtered = filtered.filter(t => {
+                const tDate = t.fechaCreacion ? t.fechaCreacion.substring(0, 10) : t.fecha;
+                return tDate >= fFechaInicio;
+            });
+        }
+        if(fFechaFin) {
+            filtered = filtered.filter(t => {
+                const tDate = t.fechaCreacion ? t.fechaCreacion.substring(0, 10) : t.fecha;
+                return tDate <= fFechaFin;
+            });
+        }
 
         const creados = filtered.length;
         const asignados = filtered.filter(t => t.estado === 'Asignado').length;
@@ -597,7 +742,6 @@ const app = {
         }
         if(tecnicosList.length === 0) tecnicosList = dataState.usuarios.map(u => u.name);
 
-        // RESTRICCIÓN 7: Gráfica apilada (Stacked Bar Chart) diferenciando Asignado, En Proceso, Retrasado, Cumplido por sede
         const asignadoCounts = sedesList.map(sede => filtered.filter(t => t.sede === sede && t.estado === 'Asignado').length);
         const procesoCounts = sedesList.map(sede => filtered.filter(t => t.sede === sede && t.estado === 'En Proceso').length);
         const retrasadoCounts = sedesList.map(sede => filtered.filter(t => t.sede === sede && t.estado === 'Retrasado').length);
@@ -624,7 +768,7 @@ const app = {
                 plugins: { legend: { position: 'bottom' } }
             }
         });
-        document.getElementById('analysis-text-1').innerText = `Análisis: Desglose por estado de tickets en cada sede. Visualiza con claridad el volumen cumplido, en proceso y pendiente.`;
+        document.getElementById('analysis-text-1').innerText = `Análisis: Desglose por estado de tickets en cada sede bajo los filtros activos.`;
 
         const fallasSedesCounts = sedesList.map(sede => filtered.filter(t => t.sede === sede && t.falla).length);
         if(this.charts.fallasSedes) this.charts.fallasSedes.destroy();
@@ -633,7 +777,7 @@ const app = {
             data: { labels: sedesList, datasets: [{ label: 'Fallas Reportadas', data: fallasSedesCounts, backgroundColor: '#EF4444' }] },
             options: { responsive: true, plugins: { title: { display: false } } }
         });
-        document.getElementById('analysis-text-2').innerText = `Análisis: Correlación entre fallas e infraestructura de sedes. Recomendación: Revisar estabilidad de energía y redes en sitios críticos.`;
+        document.getElementById('analysis-text-2').innerText = `Análisis: Correlación entre fallas e infraestructura de sedes filtradas.`;
 
         const sistemasCounts = sistemasList.map(sis => filtered.filter(t => t.sistema === sis).length);
         if(this.charts.ticketSistemas) this.charts.ticketSistemas.destroy();
@@ -642,7 +786,7 @@ const app = {
             data: { labels: sistemasList, datasets: [{ data: sistemasCounts, backgroundColor: ['#1E3A8A', '#FF6B35', '#10B981', '#F59E0B'] }] },
             options: { responsive: true, plugins: { title: { display: false } } }
         });
-        document.getElementById('analysis-text-3').innerText = `Análisis: Distribución por tecnologías afectadas. Recomendación: Priorizar auditorías sobre sistemas con mayor índice de fallas.`;
+        document.getElementById('analysis-text-3').innerText = `Análisis: Distribución por tecnologías afectadas según los criterios seleccionados.`;
 
         const ticketTecCounts = tecnicosList.map(tec => filtered.filter(t => t.tecnico === tec).length);
         if(this.charts.ticketTecnico) this.charts.ticketTecnico.destroy();
@@ -651,7 +795,7 @@ const app = {
             data: { labels: tecnicosList, datasets: [{ label: 'Tickets Asignados', data: ticketTecCounts, backgroundColor: '#FF6B35' }] },
             options: { responsive: true, plugins: { title: { display: false } } }
         });
-        document.getElementById('analysis-text-4').innerText = `Análisis: Carga laboral asignada al personal técnico. Recomendación: Balancear órdenes para evitar saturación en campo.`;
+        document.getElementById('analysis-text-4').innerText = `Análisis: Carga laboral asignada al personal técnico para el período y estado filtrado.`;
 
         const slaTecProm = tecnicosList.map(tec => {
             const tecTickets = filtered.filter(t => t.tecnico === tec);
@@ -665,7 +809,7 @@ const app = {
             data: { labels: tecnicosList, datasets: [{ label: 'Promedio SLA (Días)', data: slaTecProm, backgroundColor: '#10B981' }] },
             options: { responsive: true, plugins: { title: { display: false } } }
         });
-        document.getElementById('analysis-text-5').innerText = `Análisis: Cumplimiento de tiempos meta por técnico. Recomendación: Capacitar al personal para reducir el SLA promedio.`;
+        document.getElementById('analysis-text-5').innerText = `Análisis: Cumplimiento de tiempos meta por técnico según el filtrado actual.`;
 
         if(this.charts.tendenciaSedes) this.charts.tendenciaSedes.destroy();
         this.charts.tendenciaSedes = new Chart(document.getElementById('chart-tendencia-sedes').getContext('2d'), {
@@ -676,10 +820,37 @@ const app = {
             },
             options: { responsive: true, plugins: { title: { display: false } } }
         });
-        document.getElementById('analysis-text-6').innerText = `Análisis: Evolución temporal de sedes impactadas. Recomendación: Establecer alertas tempranas ante picos de fallas.`;
+        document.getElementById('analysis-text-6').innerText = `Análisis: Evolución temporal de sedes impactadas con base en los filtros aplicados.`;
     },
 
-    // --- RENDERIZADO GENERAL Y AISLAMIENTO DE USUARIOS ---
+    // --- REQUISITO 2: EXPORTAR REPORTE DESDE EL DASHBOARD CON EL LOGO DEL CLIENTE ---
+    exportDashboardPDF() {
+        let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
+        const clientObj = dataState.clientes.find(c => c.name === activeClient) || dataState.clientes[0];
+        
+        let reportHtml = `REPORTE GERENCIAL DE INDICADORES - SERVITRACK PWA\n`;
+        reportHtml += `Cliente: ${clientObj ? clientObj.name : 'Master'}\n`;
+        reportHtml += `Logotipo Oficial: ${clientObj ? clientObj.logo : 'N/A'}\n`;
+        reportHtml += `Fecha de Emisión: ${new Date().toLocaleDateString()}\n`;
+        reportHtml += `====================================================\n\n`;
+        reportHtml += `RESUMEN DE INDICADORES (KPIs):\n`;
+        reportHtml += `- Total Creados: ${document.getElementById('kpi-creados').innerText}\n`;
+        reportHtml += `- Asignados: ${document.getElementById('kpi-asignados').innerText}\n`;
+        reportHtml += `- En Proceso: ${document.getElementById('kpi-proceso').innerText}\n`;
+        reportHtml += `- Retrasados: ${document.getElementById('kpi-retrasados').innerText}\n`;
+        reportHtml += `- Cumplidos: ${document.getElementById('kpi-cumplidos').innerText}\n`;
+        reportHtml += `- SLA Promedio: ${document.getElementById('kpi-tiempo').innerText}\n`;
+
+        const blob = new Blob([reportHtml], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Reporte_Dashboard_${clientObj ? clientObj.name.replace(/\s+/g, '_') : 'General'}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    },
+
+    // --- RENDERIZADO GENERAL ---
     renderAll() {
         const gClientSel = document.getElementById('global-client-filter');
         const sCli = document.getElementById('sede-client-select');
@@ -717,7 +888,6 @@ const app = {
 
         this.updateSedeCheckboxes();
 
-        // RESTRICCIÓN 1, 2 Y 3: Aislamiento estricto de usuarios y técnicos
         const tUsu = document.getElementById('table-usuarios');
         const fTec = document.getElementById('filt-tecnico');
         if(tUsu && fTec) {
@@ -806,14 +976,11 @@ const app = {
         setTimeout(() => this.map.invalidateSize(), 200);
         this.renderConnectedTechsTable();
     },
-    generatePDF() {
-        alert("Generando informe PDF gerencial...");
-    },
     saveStorage() {
-        localStorage.setItem('servitrack_db_v19', JSON.stringify(dataState));
+        localStorage.setItem('servitrack_db_v20', JSON.stringify(dataState));
     },
     loadStorage() {
-        const saved = localStorage.getItem('servitrack_db_v19');
+        const saved = localStorage.getItem('servitrack_db_v20');
         if(saved) dataState = JSON.parse(saved);
     }
 };
