@@ -979,14 +979,34 @@ exportarTicketsAvanzado() {
 
 // SOLUCIÓN 9: Ubicación GPS real de los técnicos
 updateLocation() {
-    if (navigator.geolocation && currentUser && currentUser.role.includes('Técnico')) {
-        navigator.geolocation.getCurrentPosition((position) => {
-            currentUser.lat = position.coords.latitude;
-            currentUser.lng = position.coords.longitude;
-            this.saveStorage();
+        if (navigator.geolocation && currentUser) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                const userIndex = dataState.usuarios.findIndex(u => u.name === currentUser.name);
+                if (userIndex !== -1) {
+                    dataState.usuarios[userIndex].lat = pos.coords.latitude;
+                    dataState.usuarios[userIndex].lng = pos.coords.longitude;
+                    this.saveStorage();
+                }
+            }, () => console.log("Permiso GPS denegado."));
+        }
+    },
+    initMap() {
+        if (!this.map) {
+            this.map = L.map('tech-map').setView([4.6097, -74.0817], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
+        }
+        // Limpiar pines antiguos
+        this.map.eachLayer(layer => { if (layer instanceof L.Marker) this.map.removeLayer(layer); });
+        
+        // Dibujar todos los usuarios logeados con coordenadas
+        dataState.usuarios.forEach(u => {
+            if (u.lat && u.lng) {
+                L.marker([u.lat, u.lng]).addTo(this.map)
+                 .bindPopup(`<b>${u.name}</b><br>Rol: ${u.role}<br>Última conexión: ${u.lastLogin || 'Reciente'}`);
+            }
         });
-    }
-},
+        setTimeout(() => this.map.invalidateSize(), 400); // Fuerza ajuste responsive
+    },
 // Modificar initMap para leer estas coordenadas
 initMap() {
     if(!this.map) {
