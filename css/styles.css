@@ -108,34 +108,25 @@ table {
 }
 
 /* --- CORRECCIONES RESPONSIVE MÓVIL (Puntos 2, 3, 4) --- */
+/* --- CORRECCIONES RESPONSIVE MÓVIL DEFINITIVAS --- */
 @media (max-width: 900px) {
     .sidebar { 
-        position: fixed; 
-        left: -280px; 
-        top: 0; 
-        width: 260px;
-        height: 100vh; 
-        transition: left 0.3s ease; 
-        z-index: 3000;
-        box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+        position: fixed; left: -280px; top: 0; width: 260px; height: 100vh; 
+        transition: left 0.3s ease; z-index: 3000; box-shadow: 5px 0 15px rgba(0,0,0,0.3);
     }
     .sidebar.mobile-open { left: 0; }
     
-    /* Contenedores y tablas con scroll horizontal fluido */
-    .table-responsive, table {
-        width: 100%;
-        overflow-x: auto;
-        display: block;
+    /* Tablas con scroll horizontal táctil (Gestión de Tickets y Ajustes) */
+    .table-responsive, .table, table {
+        width: 100%; display: block; overflow-x: auto; white-space: nowrap;
     }
     
-    /* Adaptar mapa geolocalizado en móvil */
-    #tech-map {
-        height: 45vh !important;
-        width: 100% !important;
-    }
-
-    /* Módulo de ajustes en columnas apiladas */
-    .grid-3, .grid-2 {
-        grid-template-columns: 1fr !important;
-    }
+    /* Ajustes y Parámetros: Formularios en 1 columna */
+    .grid-2, .grid-3 { grid-template-columns: 1fr !important; gap: 10px; }
+    
+    /* Mapa Geolocalizado: Altura controlada para móviles */
+    #tech-map { height: 60vh !important; width: 100% !important; z-index: 1; }
+    
+    /* Modales adaptados a pantalla pequeña */
+    .modal-content { width: 95% !important; padding: 15px !important; margin-top: 10px; }
 }
