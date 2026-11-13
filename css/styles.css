@@ -107,26 +107,39 @@ table {
     min-width: 600px; /* Evita que las columnas se aplasten */
 }
 
-/* --- CORRECCIONES RESPONSIVE MÓVIL (Puntos 2, 3, 4) --- */
 /* --- CORRECCIONES RESPONSIVE MÓVIL DEFINITIVAS --- */
 @media (max-width: 900px) {
+    /* 1. Menú Flotante */
     .sidebar { 
         position: fixed; left: -280px; top: 0; width: 260px; height: 100vh; 
         transition: left 0.3s ease; z-index: 3000; box-shadow: 5px 0 15px rgba(0,0,0,0.3);
     }
     .sidebar.mobile-open { left: 0; }
     
-    /* Tablas con scroll horizontal táctil (Gestión de Tickets y Ajustes) */
-    .table-responsive, .table, table {
-        width: 100%; display: block; overflow-x: auto; white-space: nowrap;
+    /* 2. Tablas fluidas (Gestión de Tickets y Ajustes) */
+    .table-responsive, .table, table, tbody, thead, tr { 
+        width: 100%; display: block; 
+    }
+    .table-responsive, .table {
+        overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;
     }
     
-    /* Ajustes y Parámetros: Formularios en 1 columna */
-    .grid-2, .grid-3 { grid-template-columns: 1fr !important; gap: 10px; }
+    /* 3. Formularios de Ajustes (Una sola columna) */
+    .grid-2, .grid-3 { 
+        display: flex !important; flex-direction: column !important; gap: 12px; width: 100%; 
+    }
     
-    /* Mapa Geolocalizado: Altura controlada para móviles */
-    #tech-map { height: 60vh !important; width: 100% !important; z-index: 1; }
+    /* 4. Mapa Geolocalizado */
+    #tech-map { 
+        height: 60vh !important; width: 100% !important; z-index: 1; 
+    }
     
-    /* Modales adaptados a pantalla pequeña */
-    .modal-content { width: 95% !important; padding: 15px !important; margin-top: 10px; }
+    /* 5. Modales (Atender Ticket y Edición) */
+    .modal { 
+        padding: 10px; align-items: flex-start; 
+    }
+    .modal-content { 
+        width: 100% !important; max-width: 100% !important; margin: 10px auto !important; 
+        max-height: 90vh; overflow-y: auto; padding: 15px !important; 
+    }
 }
