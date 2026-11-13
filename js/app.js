@@ -866,7 +866,7 @@ submitCierre(e) {
             }
         });
 
-        // ... (Mantén aquí el resto del código que dibuja las tablas: tCli, tSed, tUsu, etc.)
+       
     renderConnectedTechsTable() {
         const tbody = document.getElementById('table-connected-techs');
         if(!tbody) return;
