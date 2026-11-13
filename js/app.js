@@ -818,56 +818,21 @@ submitCierre(e) {
     },
 
     // --- RENDERIZADO GENERAL ---
-   renderAll() {
-        // ... (mantén el código existente al inicio de renderAll) ...
-
-        // Llenar selects de clientes en los formularios de ajustes
-        ['sistema-client', 'falla-client', 'sla-client'].forEach(selectId => {
-            const sel = document.getElementById(selectId);
-            if(sel) {
-                const currentVal = sel.value;
-                sel.innerHTML = '<option value="GLOBAL">🌐 Global (Todos los Clientes)</option>';
-                dataState.clientes.forEach(c => {
-                    sel.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-                });
-                sel.value = currentVal;
+  renderAll() {
+        // Rellenar selectores de clientes
+        const selects = ['sistema-client', 'falla-client', 'sla-client', 'purge-client-select'];
+        selects.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                const defaultOption = id === 'purge-client-select' ? '<option value="TODOS">⚠️ TODOS LOS TICKETS</option>' : '<option value="GLOBAL">🌐 Todos los Clientes</option>';
+                el.innerHTML = defaultOption;
+                dataState.clientes.forEach(c => el.innerHTML += `<option value="${c.name}">${c.name}</option>`);
             }
         });
-
-        // Renderizar tabla de Sistemas con su Cliente
-        const tSys = document.getElementById('table-sistemas');
-        if(tSys) {
-            tSys.innerHTML = ''; 
-            dataState.sistemas.forEach((s, i) => {
-                const sysName = typeof s === 'object' ? s.name : s;
-                const sysClient = typeof s === 'object' ? (s.client || 'GLOBAL') : 'GLOBAL';
-                tSys.innerHTML += `<tr><td><strong>${sysName}</strong></td><td><span class="badge" style="background:#1E3A8A;">${sysClient}</span></td><td><button class="btn btn-danger btn-sm" onclick="app.deleteSistema(${i})">Del</button></td></tr>`;
-            }); 
-        }
-
-        // Renderizar tabla de Fallas con su Cliente
-        const tFal = document.getElementById('table-fallas');
-        if(tFal) {
-            tFal.innerHTML = ''; 
-            dataState.fallas.forEach((f, i) => {
-                const fName = typeof f === 'object' ? f.name : f;
-                const fClient = typeof f === 'object' ? (f.client || 'GLOBAL') : 'GLOBAL';
-                tFal.innerHTML += `<tr><td><strong>${fName}</strong></td><td><span class="badge" style="background:#1E3A8A;">${fClient}</span></td><td><button class="btn btn-danger btn-sm" onclick="app.deleteFalla(${i})">Del</button></td></tr>`;
-            }); 
-        }
-
-        // Renderizar tabla de SLAs con su Cliente
-        const tSla = document.getElementById('table-sla');
-        if(tSla) {
-            tSla.innerHTML = '';
-            dataState.slaList.forEach((sla, i) => {
-                const slaClient = sla.client || 'GLOBAL';
-                tSla.innerHTML += `<tr><td>${sla.desc}</td><td><strong>${sla.days} Días</strong></td><td><span class="badge" style="background:#1E3A8A;">${slaClient}</span></td><td><button class="btn btn-danger btn-sm" onclick="app.deleteSla(${i})">Del</button></td></tr>`;
-            });
-        }
-
+        
+        // (Mantén aquí el resto del código que ya tenías en renderAll para pintar las tablas)
         this.renderDashboard();
-    },
+    }
     renderConnectedTechsTable() {
         const tbody = document.getElementById('table-connected-techs');
         if(!tbody) return;
