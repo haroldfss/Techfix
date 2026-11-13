@@ -107,25 +107,35 @@ table {
     min-width: 600px; /* Evita que las columnas se aplasten */
 }
 
-@media (max-width: 768px) {
-    .sidebar { width: 100%; height: auto; position: relative; padding: 10px; }
-    .main-content { margin-left: 0; padding: 10px; }
-    .btn { padding: 10px 15px; font-size: 14px; width: 100%; margin-bottom: 5px; }
-    .modal-content { width: 95%; margin: 10% auto; padding: 15px; }
-    .kpi-cards { grid-template-columns: 1fr 1fr; }
-}
+/* --- CORRECCIONES RESPONSIVE MÓVIL (Puntos 2, 3, 4) --- */
 @media (max-width: 900px) {
     .sidebar { 
         position: fixed; 
         left: -280px; 
         top: 0; 
-        width: 250px;
+        width: 260px;
         height: 100vh; 
         transition: left 0.3s ease; 
         z-index: 3000;
         box-shadow: 5px 0 15px rgba(0,0,0,0.3);
     }
-    .sidebar.mobile-open { 
-        left: 0; 
+    .sidebar.mobile-open { left: 0; }
+    
+    /* Contenedores y tablas con scroll horizontal fluido */
+    .table-responsive, table {
+        width: 100%;
+        overflow-x: auto;
+        display: block;
+    }
+    
+    /* Adaptar mapa geolocalizado en móvil */
+    #tech-map {
+        height: 45vh !important;
+        width: 100% !important;
+    }
+
+    /* Módulo de ajustes en columnas apiladas */
+    .grid-3, .grid-2 {
+        grid-template-columns: 1fr !important;
     }
 }
