@@ -779,7 +779,7 @@ submitCierre(e) {
                 this.saveStorage();
             }
         });
-    }
+    },
 // SOLUCIÓN 6: Depuración de datos a cero
 purgeData(tipo) {
     const pass = prompt(`ADVERTENCIA: Vas a eliminar todos los ${tipo}. Escribe "CONFIRMAR" para proceder:`);
