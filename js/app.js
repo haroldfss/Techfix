@@ -276,17 +276,20 @@ closeMobileMenuOnClick() {
     },
 
     // --- CRUD ---
-    addClient(e) {
-        e.preventDefault();
-        const name = document.getElementById('new-client-name').value;
-        const color = document.getElementById('new-client-color').value;
-        const logo = document.getElementById('new-client-logo').value;
-        dataState.clientes.push({ name, color, logo });
-        this.saveStorage();
-        e.target.reset();
-        this.renderAll();
-        alert("Cliente y logotipo guardados.");
-    },
+   addClient(e) {
+    e.preventDefault();
+    const name = document.getElementById('cliente-nombre').value;
+    const color = document.getElementById('cliente-color') ? document.getElementById('cliente-color').value : '#1E3A8A';
+    const logo = document.getElementById('cliente-logo') ? document.getElementById('cliente-logo').value : '';
+    
+    if (!name) { alert("El nombre del cliente es obligatorio."); return; }
+
+    dataState.clientes.push({ name, color, logo });
+    this.saveStorage();
+    e.target.reset();
+    this.renderAll();
+    alert("Cliente y logotipo guardados.");
+},
     deleteClient(idx) {
         if(confirm("¿Eliminar este cliente?")) {
             dataState.clientes.splice(idx, 1);
@@ -834,37 +837,37 @@ submitCierre(e) {
     },
 
     // --- RENDERIZADO GENERAL ---
- renderAll() {
-        // 1. Rellenar TODOS los selectores de clientes sin duplicar
-        const selectoresConfig = [
-            { id: 'ticket-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
-            { id: 'sede-client', defaultText: 'Seleccione Cliente...' },
-            { id: 'user-client', defaultText: 'Asignar Todos los Clientes (Master)' },
-            { id: 'sistema-client', defaultText: '🌐 Todos los Clientes' },
-            { id: 'falla-client', defaultText: '🌐 Todos los Clientes' },
-            { id: 'sla-client', defaultText: '🌐 Todos los Clientes' },
-            { id: 'purge-client-select', defaultText: '⚠️ TODOS LOS TICKETS' }
-        ];
+renderAll() {
+    // Limpiar y poblar selectores de clientes de forma única
+    const selectoresConfig = [
+        { id: 'ticket-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
+        { id: 'sede-client', defaultText: 'Seleccione Cliente...' },
+        { id: 'user-client', defaultText: 'Asignar Todos los Clientes (Master)' },
+        { id: 'sistema-client', defaultText: '🌐 Todos los Clientes' },
+        { id: 'falla-client', defaultText: '🌐 Todos los Clientes' },
+        { id: 'sla-client', defaultText: '🌐 Todos los Clientes' },
+        { id: 'purge-client-select', defaultText: '⚠️ TODOS LOS TICKETS' }
+    ];
 
-        selectoresConfig.forEach(config => {
-            const el = document.getElementById(config.id);
-            if (el) {
-                const currentVal = el.value;
-                // Formateamos el valor por defecto dependiendo del select
-                const defaultVal = config.id === 'purge-client-select' ? 'TODOS' : (config.id.includes('sistema') || config.id.includes('falla') || config.id.includes('sla') ? 'GLOBAL' : (config.id === 'sede-client' ? '' : 'TODOS'));
-                
-                // LIMPIEZA ABSOLUTA y opción por defecto
-                el.innerHTML = `<option value="${defaultVal}">${config.defaultText}</option>`;
-                
-                // Inyectar clientes actualizados
-                dataState.clientes.forEach(c => {
-                    el.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-                });
-                
-                // Mantener la selección previa si existía
-                if (currentVal) el.value = currentVal;
-            }
-        });
+    selectoresConfig.forEach(config => {
+        const el = document.getElementById(config.id);
+        if (el) {
+            const currentVal = el.value;
+            const defaultVal = config.id === 'purge-client-select' ? 'TODOS' : 'GLOBAL';
+            
+            // LIMPIEZA ABSOLUTA para evitar duplicados visuales
+            el.innerHTML = `<option value="${defaultVal}">${config.defaultText}</option>`;
+            
+            dataState.clientes.forEach(c => {
+                el.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+            });
+            
+            if (currentVal) el.value = currentVal;
+        }
+    });
+    
+    // ... (resto de tus funciones de renderizado de tablas tCli, tSed, etc.)
+    this.renderDashboard();
 },
        
     renderConnectedTechsTable() {
