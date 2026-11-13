@@ -191,6 +191,10 @@
                 <li id="menu-Mapa Geolocalizado" onclick="app.navigateTo('map')"><i class="fas fa-map-marked-alt"></i> Mapa Geolocalizado</li>
                 <li id="menu-Ajustes & Parámetros" onclick="app.navigateTo('settings')"><i class="fas fa-sliders-h"></i> Ajustes & Parámetros</li>
                 <li onclick="app.openMobileModal()"><i class="fas fa-mobile-alt"></i> Instalar App PWA</li>
+                <li onclick="app.navigateTo('dashboard'); app.closeMobileMenuOnClick();"><i class="fas fa-chart-pie"></i> Dashboard Gerencial</li>
+                <li onclick="app.navigateTo('tickets'); app.closeMobileMenuOnClick();"><i class="fas fa-ticket-alt"></i> Gestión de Tickets</li>
+                <li onclick="app.navigateTo('tickets'); app.closeMobileMenuOnClick();"><i class="fas fa-ticket-alt"></i> Mapa Geolocalizado</li>
+                <li onclick="app.navigateTo('tickets'); app.closeMobileMenuOnClick();"><i class="fas fa-ticket-alt"></i> Nuevo Ticket</li>
             </ul>
             <div class="sidebar-footer">
                 <button onclick="app.logout()" class="btn btn-outline btn-block" style="color:white; border-color:rgba(255,255,255,0.2);"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
@@ -584,7 +588,7 @@
                 <div class="form-group"><label>Actividades Realizadas</label><textarea id="cierre-actividades" class="form-control" rows="3" required placeholder="Solución..."></textarea></div>
                 <div class="form-group"><label>Materiales</label><textarea id="cierre-materiales" class="form-control" rows="2" placeholder="Repuestos..."></textarea></div>
                 <div class="form-group"><label>Recomendaciones</label><textarea id="cierre-recomendaciones" class="form-control" rows="2" placeholder="Notas..."></textarea></div>
-                <div class="form-group"><label>Evidencia Fotográfica</label><input type="file" class="form-control" multiple accept="image/*"></div>
+                <div class="form-group"><label>Evidencia Fotográfica</label><input type="file" id="cierre-fotos" class="form-control" multiple accept="image/*"></div>
                 <div class="form-group"><label>Correo Cliente</label><input type="email" id="cierre-correo" class="form-control" placeholder="correo@empresa.com" required></div>
                 <p style="font-size:0.9rem; color:var(--success); font-weight:600;"><i class="fas fa-map-marker-alt"></i> GPS Activo.</p>
                 <div class="modal-actions">
