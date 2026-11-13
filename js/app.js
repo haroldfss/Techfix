@@ -77,7 +77,7 @@ const app = {
             document.getElementById('app-view').classList.add('active');
             
             this.applyUserPrivileges();
-            
+            this.updateLocation();
             if(currentUser.perms.includes("Dashboard Gerencial") || currentUser.role === "Administrador") {
                 this.navigateTo('dashboard');
             } else if(currentUser.perms.includes("Gestión de Tickets")) {
@@ -361,44 +361,37 @@ const app = {
     },
 
     // --- MODAL EDICIÓN ---
-    openEditModal(type, idx) {
-        document.getElementById('edit-type').value = type;
-        document.getElementById('edit-index').value = idx;
-        const g2 = document.getElementById('edit-group-2');
-        const gPerms = document.getElementById('edit-group-perms');
-        g2.style.display = 'block';
-        gPerms.style.display = 'none';
+    JavaScript
+openEditModal(type, idx) {
+    document.getElementById('edit-type').value = type;
+    document.getElementById('edit-index').value = idx;
+    const g2 = document.getElementById('edit-group-2');
+    const g3 = document.getElementById('edit-group-3'); // Nuevo grupo para color
+    const gPerms = document.getElementById('edit-group-perms');
+    g2.style.display = 'block'; gPerms.style.display = 'none'; if(g3) g3.style.display = 'none';
 
-        if(type === 'client') {
-            document.getElementById('modal-edit-title').innerText = "Editar Cliente y Logo";
-            document.getElementById('edit-value-1').value = dataState.clientes[idx].name;
-            document.getElementById('edit-value-2').value = dataState.clientes[idx].logo;
-        } else if(type === 'sede') {
-            document.getElementById('modal-edit-title').innerText = "Editar Sede";
-            document.getElementById('edit-value-1').value = dataState.sedes[idx].sede;
-            g2.style.display = 'none';
-        } else if(type === 'user') {
-            document.getElementById('modal-edit-title').innerText = "Editar Usuario y Privilegios";
-            document.getElementById('edit-value-1').value = dataState.usuarios[idx].name;
-            document.getElementById('edit-value-2').value = dataState.usuarios[idx].pass;
-            gPerms.style.display = 'block';
-            const userPerms = dataState.usuarios[idx].perms || [];
-            document.querySelectorAll('.edit-perm-cb').forEach(cb => cb.checked = userPerms.includes(cb.value));
-        } else if(type === 'sistema') {
-            document.getElementById('modal-edit-title').innerText = "Editar Sistema";
-            document.getElementById('edit-value-1').value = dataState.sistemas[idx];
-            g2.style.display = 'none';
-        } else if(type === 'falla') {
-            document.getElementById('modal-edit-title').innerText = "Editar Falla";
-            document.getElementById('edit-value-1').value = dataState.fallas[idx];
-            g2.style.display = 'none';
-        } else if(type === 'sla') {
-            document.getElementById('modal-edit-title').innerText = "Editar SLA";
-            document.getElementById('edit-value-1').value = dataState.slaList[idx].desc;
-            document.getElementById('edit-value-2').value = dataState.slaList[idx].days;
-        }
-        document.getElementById('modal-edit').style.display = 'flex';
-    },
+    if(type === 'client') {
+        document.getElementById('modal-edit-title').innerText = "Editar Cliente, Logo y Color";
+        document.getElementById('edit-value-1').value = dataState.clientes[idx].name;
+        document.getElementById('edit-value-2').value = dataState.clientes[idx].logo;
+        if(g3) { g3.style.display = 'block'; document.getElementById('edit-value-3').value = dataState.clientes[idx].color; }
+    }
+    // ... (Mantén el resto igual)
+},
+saveEdit(e) {
+    e.preventDefault();
+    const type = document.getElementById('edit-type').value;
+    const idx = parseInt(document.getElementById('edit-index').value);
+    const v1 = document.getElementById('edit-value-1').value;
+    const v2 = document.getElementById('edit-value-2').value;
+    const v3 = document.getElementById('edit-value-3') ? document.getElementById('edit-value-3').value : '';
+
+    if(type === 'client') { dataState.clientes[idx].name = v1; dataState.clientes[idx].logo = v2; dataState.clientes[idx].color = v3; }
+    // ... (Mantén el resto igual)
+    this.saveStorage();
+    document.getElementById('modal-edit').style.display = 'none';
+    this.renderAll();
+},
     saveEdit(e) {
         e.preventDefault();
         const type = document.getElementById('edit-type').value;
@@ -488,13 +481,15 @@ const app = {
     },
     abrirCierre(id) {
     const ticket = dataState.tickets.find(t => t.id === id);
-    if(ticket && ticket.estado === 'Cumplido') { 
-        alert("Este ticket ya está Cumplido."); 
-        return; 
-    }
-    // SOLUCIÓN 7: Mostrar descripción detallada al técnico
-    alert(`DETALLE DE LA FALLA REPORTE:\n\n${ticket.desc || ticket.falla}\n\nPor favor, completa los datos de cierre a continuación.`);
+    if(ticket && ticket.estado === 'Cumplido') { alert("Ticket ya Cumplido."); return; }
     
+    // Limpiar formulario para evitar datos del ticket anterior
+    document.getElementById('cierre-actividades').value = '';
+    document.getElementById('cierre-materiales').value = '';
+    document.getElementById('cierre-recomendaciones').value = '';
+    const fileInput = document.getElementById('cierre-fotos');
+    if(fileInput) fileInput.value = '';
+
     document.getElementById('modal-ticket-id').innerText = id;
     document.getElementById('modal-cierre').style.display = 'flex';
 },
@@ -651,7 +646,11 @@ submitCierre(e) {
         const cumplidos = filtered.filter(t => t.estado === 'Cumplido').length; 
         const pctCumplidos = totalFilt > 0 ? ((cumplidos / totalFilt) * 100).toFixed(0) : 0;
         document.getElementById('analysis-text-1').innerText = `Análisis: Hay ${totalFilt} tickets activos bajo el filtro actual (${pctCumplidos}% cumplidos).`;
-        document.getElementById('analysis-text-2').innerText = `Análisis de Fallas: Se registran ${filtered.filter(t=>t.falla).length} incidencias.`;
+        const retrasados = filtered.filter(t => t.estado === 'Retrasado').length;
+        let recomendacion = retrasados > 0 
+        ? `⚠️ Alerta: Tienes ${retrasados} tickets retrasados. Prioriza su atención inmediata.` 
+        : `✅ Excelente: No hay tickets retrasados. El flujo operativo es óptimo.`;
+        document.getElementById('analysis-text-2').innerText = `Recomendación: ${recomendacion}`;
         document.getElementById('analysis-text-3').innerText = `Análisis por Sistema: Distribución sobre ${totalFilt} casos procesados.`;
         document.getElementById('analysis-text-4').innerText = `Análisis de Carga Técnica: Carga distribuida entre el personal asignado.`;
         document.getElementById('analysis-text-5').innerText = `Análisis de Cumplimiento SLA: Promedio calculado sobre los tickets filtrados.`;
@@ -781,6 +780,74 @@ submitCierre(e) {
             }
         });
     }
+// SOLUCIÓN 6: Depuración de datos a cero
+purgeData(tipo) {
+    const pass = prompt(`ADVERTENCIA: Vas a eliminar todos los ${tipo}. Escribe "CONFIRMAR" para proceder:`);
+    if(pass === "CONFIRMAR") {
+        if(tipo === 'tickets') dataState.tickets = [];
+        if(tipo === 'clientes') dataState.clientes = [];
+        if(tipo === 'sedes') dataState.sedes = [];
+        if(tipo === 'usuarios') dataState.usuarios = dataState.usuarios.filter(u => u.role === "Administrador"); // Protege al admin
+        this.saveStorage();
+        this.renderAll();
+        alert(`Base de datos de ${tipo} depurada a cero.`);
+    }
+},
+
+// SOLUCIÓN 10, 11 y 12: Descargar informe avanzado Excel/CSV con filtros
+exportarTicketsAvanzado() {
+    const fechaIni = document.getElementById('export-fecha-ini').value;
+    const fechaFin = document.getElementById('export-fecha-fin').value;
+    const tech = document.getElementById('export-tecnico').value;
+
+    let dataExport = dataState.tickets;
+    if(tech) dataExport = dataExport.filter(t => t.tecnico === tech);
+    if(fechaIni) dataExport = dataExport.filter(t => t.fecha >= fechaIni);
+    if(fechaFin) dataExport = dataExport.filter(t => t.fecha <= fechaFin);
+
+    if(dataExport.length === 0) { alert("No hay datos para exportar con estos filtros."); return; }
+
+    let csvContent = "data:text/csv;charset=utf-8,ID,Cliente,Sede,Sistema,Falla,Técnico,Estado,Fecha Creación,Fecha Cierre\n";
+    dataExport.forEach(t => {
+        let row = `${t.id},"${t.cliente}","${t.sede}","${t.sistema}","${t.falla}","${t.tecnico}","${t.estado}",${t.fechaCreacion},${t.fechaCumplido || 'N/A'}`;
+        csvContent += row + "\r\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "Informe_Tickets.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+},
+
+// SOLUCIÓN 9: Ubicación GPS real de los técnicos
+updateLocation() {
+    if (navigator.geolocation && currentUser && currentUser.role.includes('Técnico')) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            currentUser.lat = position.coords.latitude;
+            currentUser.lng = position.coords.longitude;
+            this.saveStorage();
+        });
+    }
+},
+// Modificar initMap para leer estas coordenadas
+initMap() {
+    if(!this.map) {
+        this.map = L.map('tech-map').setView([4.6097, -74.0817], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
+    }
+    // Limpiar marcadores previos
+    this.map.eachLayer((layer) => { if (layer instanceof L.Marker) { this.map.removeLayer(layer); } });
+    
+    dataState.usuarios.forEach(u => {
+        if(u.lat && u.lng) {
+            L.marker([u.lat, u.lng]).addTo(this.map).bindPopup(`<b>${u.name}</b><br>${u.role}`);
+        }
+    });
+    setTimeout(() => this.map.invalidateSize(), 200);
+},
 };
 
 window.onload = () => app.init();
