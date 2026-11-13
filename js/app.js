@@ -680,7 +680,7 @@ submitCierre(e) {
 
         document.getElementById('analysis-text-4').innerText = `Carga Técnica: Revisa la gráfica de barras para balancear asignaciones si un técnico supera significativamente al resto.`;
         
-        const avgSla = slaTecProm.length > 0 ? (slaTecProm.reduce((a,b)=>parseFloat(a)+parseFloat(b),0)/slaTecProm.length).toFixed(1) : 0;
+        const avgSla = filtered.length > 0 ? (filtered.reduce((suma, t) => suma + parseFloat(t.sla || 0), 0) / filtered.length).toFixed(1) : 0;
         document.getElementById('analysis-text-5').innerText = `Cumplimiento SLA: El tiempo promedio proyectado de resolución general es de ${avgSla} días.`;
         
         document.getElementById('analysis-text-6').innerText = `Tendencia: Histórico de ${totalFilt} registros. Vigila variaciones bruscas en la curva.`;
