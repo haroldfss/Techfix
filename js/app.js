@@ -338,12 +338,28 @@ closeMobileMenuOnClick() {
     },
     addSistema(e) {
         e.preventDefault();
-        const client = document.getElementById('sistema-client').value;
+        const clientEl = document.getElementById('sistema-client');
+        const client = clientEl ? clientEl.value : 'GLOBAL';
         const name = document.getElementById('new-sistema-name').value;
         dataState.sistemas.push({ client, name });
-        this.saveStorage();
-        e.target.reset();
-        this.renderAll();
+        this.saveStorage(); e.target.reset(); this.renderAll();
+    },
+    addFalla(e) {
+        e.preventDefault();
+        const clientEl = document.getElementById('falla-client');
+        const client = clientEl ? clientEl.value : 'GLOBAL';
+        const name = document.getElementById('new-falla-name').value;
+        dataState.fallas.push({ client, name });
+        this.saveStorage(); e.target.reset(); this.renderAll();
+    },
+    addSla(e) {
+        e.preventDefault();
+        const clientEl = document.getElementById('sla-client');
+        const client = clientEl ? clientEl.value : 'GLOBAL';
+        const desc = document.getElementById('new-sla-desc').value;
+        const days = document.getElementById('new-sla-days').value;
+        dataState.slaList.push({ client, desc, days });
+        this.saveStorage(); e.target.reset(); this.renderAll();
     },
     deleteSistema(idx) {
         dataState.sistemas.splice(idx, 1);
@@ -819,18 +835,80 @@ submitCierre(e) {
 
     // --- RENDERIZADO GENERAL ---
   renderAll() {
-        // Rellenar selectores de clientes
-        const selects = ['sistema-client', 'falla-client', 'sla-client', 'purge-client-select'];
+        // 1. Rellenar selectores de clientes en los formularios de Ajustes
+        const selects = ['sistema-client', 'falla-client', 'sla-client', 'purge-client-select', 'ticket-cliente'];
         selects.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
-                const defaultOption = id === 'purge-client-select' ? '<option value="TODOS">⚠️ TODOS LOS TICKETS</option>' : '<option value="GLOBAL">🌐 Todos los Clientes</option>';
+                const currentVal = el.value;
+                const defaultOption = id === 'purge-client-select' 
+                    ? '<option value="TODOS">⚠️ TODOS LOS TICKETS</option>' 
+                    : '<option value="GLOBAL">🌐 Todos los Clientes</option>';
                 el.innerHTML = defaultOption;
                 dataState.clientes.forEach(c => el.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+                if(currentVal) el.value = currentVal;
             }
         });
-        
-        // (Mantén aquí el resto del código que ya tenías en renderAll para pintar las tablas)
+
+        // 2. Renderizar Clientes
+        const tCli = document.getElementById('table-clientes');
+        if(tCli) {
+            tCli.innerHTML = '';
+            dataState.clientes.forEach((c, i) => {
+                tCli.innerHTML += `<tr><td><strong>${c.name}</strong></td><td><div style="width:20px;height:20px;background:${c.color||'#1E3A8A'};"></div></td><td>${c.logo?'<img src="'+c.logo+'" style="max-height:30px;">':'N/A'}</td><td><button class="btn btn-sm btn-outline" onclick="app.openEditModal('client', ${i})">Editar</button> <button class="btn btn-sm btn-danger" onclick="app.deleteClient(${i})">Del</button></td></tr>`;
+            });
+        }
+
+        // 3. Renderizar Sedes
+        const tSed = document.getElementById('table-sedes');
+        if(tSed) {
+            tSed.innerHTML = '';
+            dataState.sedes.forEach((s, i) => {
+                tSed.innerHTML += `<tr><td><strong>${s.sede}</strong></td><td>${s.client||'N/A'}</td><td><button class="btn btn-sm btn-outline" onclick="app.openEditModal('sede', ${i})">Editar</button> <button class="btn btn-sm btn-danger" onclick="app.deleteSede(${i})">Del</button></td></tr>`;
+            });
+        }
+
+        // 4. Renderizar Usuarios
+        const tUsu = document.getElementById('table-usuarios');
+        if(tUsu) {
+            tUsu.innerHTML = '';
+            dataState.usuarios.forEach((u, i) => {
+                tUsu.innerHTML += `<tr><td><strong>${u.name}</strong></td><td>${u.role}</td><td><button class="btn btn-sm btn-outline" onclick="app.openEditModal('user', ${i})">Editar</button> <button class="btn btn-sm btn-danger" onclick="app.deleteUser(${i})" ${u.role==='Administrador'?'disabled':''}>Del</button></td></tr>`;
+            });
+        }
+
+        // 5. Renderizar Sistemas por Cliente
+        const tSys = document.getElementById('table-sistemas');
+        if(tSys) {
+            tSys.innerHTML = '';
+            dataState.sistemas.forEach((s, i) => {
+                const sName = typeof s === 'object' ? s.name : s;
+                const sClient = typeof s === 'object' ? (s.client || 'GLOBAL') : 'GLOBAL';
+                tSys.innerHTML += `<tr><td><strong>${sName}</strong></td><td><span class="badge" style="background:#1E3A8A;">${sClient}</span></td><td><button class="btn btn-sm btn-outline" onclick="app.openEditModal('sistema', ${i})">Editar</button> <button class="btn btn-sm btn-danger" onclick="app.deleteSistema(${i})">Del</button></td></tr>`;
+            });
+        }
+
+        // 6. Renderizar Fallas por Cliente
+        const tFal = document.getElementById('table-fallas');
+        if(tFal) {
+            tFal.innerHTML = '';
+            dataState.fallas.forEach((f, i) => {
+                const fName = typeof f === 'object' ? f.name : f;
+                const fClient = typeof f === 'object' ? (f.client || 'GLOBAL') : 'GLOBAL';
+                tFal.innerHTML += `<tr><td><strong>${fName}</strong></td><td><span class="badge" style="background:#1E3A8A;">${fClient}</span></td><td><button class="btn btn-sm btn-outline" onclick="app.openEditModal('falla', ${i})">Editar</button> <button class="btn btn-sm btn-danger" onclick="app.deleteFalla(${i})">Del</button></td></tr>`;
+            });
+        }
+
+        // 7. Renderizar SLA por Cliente
+        const tSla = document.getElementById('table-sla');
+        if(tSla) {
+            tSla.innerHTML = '';
+            dataState.slaList.forEach((sla, i) => {
+                const slaClient = sla.client || 'GLOBAL';
+                tSla.innerHTML += `<tr><td>${sla.desc}</td><td><strong>${sla.days} Días</strong></td><td><span class="badge" style="background:#1E3A8A;">${slaClient}</span></td><td><button class="btn btn-sm btn-outline" onclick="app.openEditModal('sla', ${i})">Editar</button> <button class="btn btn-sm btn-danger" onclick="app.deleteSla(${i})">Del</button></td></tr>`;
+            });
+        }
+
         this.renderDashboard();
     },
     renderConnectedTechsTable() {
