@@ -361,7 +361,7 @@ const app = {
     },
 
     // --- MODAL EDICIÓN ---
-    JavaScript
+  
 openEditModal(type, idx) {
     document.getElementById('edit-type').value = type;
     document.getElementById('edit-index').value = idx;
