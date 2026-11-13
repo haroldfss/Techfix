@@ -311,9 +311,9 @@ closeMobileMenuOnClick() {
         }
     },
 
-    renderAll() {
-        // 1. Poblar selectores de clientes únicos en toda la app
-        const selectoresConfig = [
+   renderAll() {
+        // 1. Poblar selectores de clientes de forma limpia y sin duplicar
+        const selectsConfig = [
             { id: 'ticket-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
             { id: 'sede-client', defaultText: 'Seleccione Cliente...' },
             { id: 'user-client', defaultText: 'Asignar Todos los Clientes (Master)' },
@@ -323,27 +323,33 @@ closeMobileMenuOnClick() {
             { id: 'purge-client-select', defaultText: '⚠️ TODOS LOS TICKETS' }
         ];
 
-        selectoresConfig.forEach(config => {
-            const el = document.getElementById(config.id);
+        selectsConfig.forEach(cfg => {
+            const el = document.getElementById(cfg.id);
             if (el) {
                 const currentVal = el.value;
-                const defaultVal = config.id === 'purge-client-select' ? 'TODOS' : 'GLOBAL';
-                el.innerHTML = `<option value="${defaultVal}">${config.defaultText}</option>`;
-                dataState.clientes.forEach(c => {
-                    el.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+                const defaultVal = cfg.id === 'purge-client-select' ? 'TODOS' : 'GLOBAL';
+                
+                // Evitar duplicados limpiando e insertando una sola vez
+                el.innerHTML = `<option value="${defaultVal}">${cfg.defaultText}</option>`;
+                
+                // Usar un Set temporal para garantizar que los nombres de clientes sean únicos
+                const unicosClientes = [...new Set(dataState.clientes.map(c => c.name))];
+                unicosClientes.forEach(nombreCliente => {
+                    el.innerHTML += `<option value="${nombreCliente}">${nombreCliente}</option>`;
                 });
+                
                 if (currentVal) el.value = currentVal;
             }
         });
 
-        // 2. Renderizar Tabla de Clientes en Ajustes
+        // 2. Renderizar Tabla de Clientes
         const tCli = document.getElementById('table-clientes');
         if (tCli) {
             tCli.innerHTML = '';
             dataState.clientes.forEach((c, i) => {
                 tCli.innerHTML += `<tr>
                     <td><strong>${c.name}</strong></td>
-                    <td><div style="width:20px;height:20px;background:${c.color||'#1E3A8A'};border-radius:4px;"></div></td>
+                    <td><div style="width:20px;height:20px;background:${c.color || '#1E3A8A'};border-radius:4px;"></div></td>
                     <td>${c.logo ? `<img src="${c.logo}" style="max-height:30px;max-width:80px;object-fit:contain;">` : 'N/A'}</td>
                     <td>
                         <button class="btn btn-sm btn-outline" onclick="app.openEditModal('client', ${i})">Editar</button>
@@ -353,7 +359,7 @@ closeMobileMenuOnClick() {
             });
         }
 
-        // 3. Renderizar Sedes
+        // 3. Renderizar Tabla de Sedes
         const tSed = document.getElementById('table-sedes');
         if (tSed) {
             tSed.innerHTML = '';
@@ -369,7 +375,25 @@ closeMobileMenuOnClick() {
             });
         }
 
-        // 4. Renderizar Sistemas
+        // 4. Renderizar Tabla de Usuarios
+        const tUsu = document.getElementById('table-usuarios');
+        if (tUsu) {
+            tUsu.innerHTML = '';
+            dataState.usuarios.forEach((u, i) => {
+                tUsu.innerHTML += `<tr>
+                    <td><strong>${u.name}</strong></td>
+                    <td>${u.role}</td>
+                    <td>${u.assignedClient || 'TODOS'}</td>
+                    <td>${u.perms ? u.perms.join(', ') : 'N/A'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="app.openEditModal('user', ${i})">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="app.deleteUser(${i})" ${u.role==='Administrador'?'disabled':''}>Del</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        // 5. Renderizar Tabla de Sistemas
         const tSys = document.getElementById('table-sistemas');
         if (tSys) {
             tSys.innerHTML = '';
@@ -387,7 +411,7 @@ closeMobileMenuOnClick() {
             });
         }
 
-        // 5. Renderizar Fallas
+        // 6. Renderizar Tabla de Fallas
         const tFal = document.getElementById('table-fallas');
         if (tFal) {
             tFal.innerHTML = '';
@@ -405,7 +429,7 @@ closeMobileMenuOnClick() {
             });
         }
 
-        // 6. Renderizar SLA
+        // 7. Renderizar Tabla de SLA
         const tSla = document.getElementById('table-sla');
         if (tSla) {
             tSla.innerHTML = '';
@@ -971,40 +995,7 @@ submitCierre(e) {
         this.charts.tendenciaSedes = new Chart(document.getElementById('chart-tendencia-sedes').getContext('2d'), { type: 'line', data: { labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'], datasets: [{ label: 'Sedes con Novedades', data: [1, 2, 2, filtered.length], borderColor: '#0A192F', backgroundColor: 'rgba(10,25,47,0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true } });
     },
 
-    // --- RENDERIZADO GENERAL ---
-renderAll() {
-    // Limpiar y poblar selectores de clientes de forma única
-    const selectoresConfig = [
-        { id: 'ticket-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
-        { id: 'sede-client', defaultText: 'Seleccione Cliente...' },
-        { id: 'user-client', defaultText: 'Asignar Todos los Clientes (Master)' },
-        { id: 'sistema-client', defaultText: '🌐 Todos los Clientes' },
-        { id: 'falla-client', defaultText: '🌐 Todos los Clientes' },
-        { id: 'sla-client', defaultText: '🌐 Todos los Clientes' },
-        { id: 'purge-client-select', defaultText: '⚠️ TODOS LOS TICKETS' }
-    ];
-
-    selectoresConfig.forEach(config => {
-        const el = document.getElementById(config.id);
-        if (el) {
-            const currentVal = el.value;
-            const defaultVal = config.id === 'purge-client-select' ? 'TODOS' : 'GLOBAL';
-            
-            // LIMPIEZA ABSOLUTA para evitar duplicados visuales
-            el.innerHTML = `<option value="${defaultVal}">${config.defaultText}</option>`;
-            
-            dataState.clientes.forEach(c => {
-                el.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-            });
-            
-            if (currentVal) el.value = currentVal;
-        }
-    });
-    
-    // ... (resto de tus funciones de renderizado de tablas tCli, tSed, etc.)
-    this.renderDashboard();
-},
-       
+        
     renderConnectedTechsTable() {
         const tbody = document.getElementById('table-connected-techs');
         if(!tbody) return;
