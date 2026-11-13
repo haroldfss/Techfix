@@ -58,6 +58,15 @@ const app = {
     init() {
         this.loadStorage();
         this.renderAll();
+      document.addEventListener('click', (e) => {
+    const sb = document.getElementById('sidebar');
+    const hamburgerBtn = document.querySelector('.fa-bars') || document.querySelector('.menu-toggle');
+    if (window.innerWidth <= 900 && sb && sb.classList.contains('mobile-open')) {
+        if (!sb.contains(e.target) && (!hamburgerBtn || !hamburgerBtn.contains(e.target))) {
+            sb.classList.remove('mobile-open');
+        }
+    }
+});
     },
     login(e) {
         e.preventDefault();
@@ -211,9 +220,13 @@ const app = {
         }
     },
     toggleMobileMenu() {
-        const sb = document.getElementById('sidebar');
-        if(sb) sb.classList.toggle('mobile-open');
-    },
+    const sb = document.getElementById('sidebar');
+    if(sb) sb.classList.toggle('mobile-open');
+},
+closeMobileMenuOnClick() {
+    const sb = document.getElementById('sidebar');
+    if(sb) sb.classList.remove('mobile-open');
+},
     closeMobileMenuOnClick() {
         if(window.innerWidth <= 900) {
             const sb = document.getElementById('sidebar');
@@ -537,55 +550,60 @@ saveEdit(e) {
 },
 
 submitCierre(e) {
-        e.preventDefault();
-        const id = document.getElementById('modal-ticket-id').innerText;
-        const ticket = dataState.tickets.find(t => t.id === id);
-        const correoCliente = document.getElementById('cierre-correo').value;
-        const inputFile = document.getElementById('cierre-fotos');
-        
-        if (ticket) {
-            if (ticket.estado === 'Cumplido') return;
-            ticket.estado = 'Cumplido';
-            ticket.fechaCumplido = new Date().toISOString().substring(0, 16);
-            ticket.actividades = document.getElementById('cierre-actividades').value;
-            ticket.materiales = document.getElementById('cierre-materiales').value;
-            ticket.recomendaciones = document.getElementById('cierre-recomendaciones').value;
+    e.preventDefault();
+    const id = document.getElementById('modal-ticket-id').innerText;
+    const ticket = dataState.tickets.find(t => t.id === id);
+    const correoCliente = document.getElementById('cierre-correo').value;
+    const inputFile = document.getElementById('cierre-fotos');
+    
+    if (ticket) {
+        if (ticket.estado === 'Cumplido') return;
+        ticket.estado = 'Cumplido';
+        ticket.fechaCumplido = new Date().toISOString().substring(0, 16);
+        ticket.actividades = document.getElementById('cierre-actividades').value;
+        ticket.materiales = document.getElementById('cierre-materiales').value;
+        ticket.recomendaciones = document.getElementById('cierre-recomendaciones').value;
 
-            if (inputFile && inputFile.files && inputFile.files.length > 0) {
-                ticket.fotos = [];
-                let filesLoaded = 0;
-                
-                Array.from(inputFile.files).forEach((file) => {
-                    const reader = new FileReader();
-                    reader.onload = (uploadEvent) => {
-                        const img = new Image();
-                        img.onload = () => {
-                            // Compresión de imagen obligatoria para PWA (Evita saturar el LocalStorage)
-                            const canvas = document.createElement('canvas');
-                            const MAX_WIDTH = 700;
-                            const scaleSize = MAX_WIDTH / img.width;
-                            canvas.width = MAX_WIDTH;
-                            canvas.height = img.height * scaleSize;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                            
-                            // Guardar como JPEG comprimido al 60% de calidad
-                            ticket.fotos.push(canvas.toDataURL('image/jpeg', 0.6));
-                            
-                            filesLoaded++;
-                            if (filesLoaded === inputFile.files.length) {
-                                app.finalizarCierreProceso(ticket, correoCliente);
-                            }
-                        };
-                        img.src = uploadEvent.target.result;
+        // Si seleccionó fotos, procesarlas de forma segura
+        if (inputFile && inputFile.files && inputFile.files.length > 0) {
+            ticket.fotos = [];
+            let filesLoaded = 0;
+            
+            Array.from(inputFile.files).forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = (uploadEvent) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 600;
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        ticket.fotos.push(canvas.toDataURL('image/jpeg', 0.5));
+                        filesLoaded++;
+                        if (filesLoaded === inputFile.files.length) {
+                            app.finalizarCierreProceso(ticket, correoCliente);
+                        }
                     };
-                    reader.readAsDataURL(file);
-                });
-                return; // Espera la compresión asíncrona
-            }
+                    img.onerror = () => {
+                        // Si la imagen falla, avanza sin bloquear
+                        filesLoaded++;
+                        if (filesLoaded === inputFile.files.length) {
+                            app.finalizarCierreProceso(ticket, correoCliente);
+                        }
+                    };
+                    img.src = uploadEvent.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+            return; 
         }
-        this.finalizarCierreProceso(ticket, correoCliente);
-    },
+    }
+    this.finalizarCierreProceso(ticket, correoCliente);
+},
     calcularTiempoResolucion(t) {
         if(!t.fechaCreacion || !t.fechaCumplido) return 'Pendiente';
         const diffMs = new Date(t.fechaCumplido) - new Date(t.fechaCreacion);
