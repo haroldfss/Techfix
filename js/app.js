@@ -366,17 +366,57 @@ openEditModal(type, idx) {
     document.getElementById('edit-type').value = type;
     document.getElementById('edit-index').value = idx;
     const g2 = document.getElementById('edit-group-2');
-    const g3 = document.getElementById('edit-group-3'); // Nuevo grupo para color
+    const g3 = document.getElementById('edit-group-3');
     const gPerms = document.getElementById('edit-group-perms');
-    g2.style.display = 'block'; gPerms.style.display = 'none'; if(g3) g3.style.display = 'none';
+    
+    if(g2) g2.style.display = 'block';
+    if(g3) g3.style.display = 'none';
+    if(gPerms) gPerms.style.display = 'none';
 
     if(type === 'client') {
         document.getElementById('modal-edit-title').innerText = "Editar Cliente, Logo y Color";
-        document.getElementById('edit-value-1').value = dataState.clientes[idx].name;
-        document.getElementById('edit-value-2').value = dataState.clientes[idx].logo;
-        if(g3) { g3.style.display = 'block'; document.getElementById('edit-value-3').value = dataState.clientes[idx].color; }
+        document.getElementById('edit-label-1').innerText = "Nombre del Cliente";
+        document.getElementById('edit-value-1').value = dataState.clientes[idx].name || '';
+        document.getElementById('edit-label-2').innerText = "URL del Logotipo";
+        document.getElementById('edit-value-2').value = dataState.clientes[idx].logo || '';
+        if(g3) {
+            g3.style.display = 'block';
+            document.getElementById('edit-value-3').value = dataState.clientes[idx].color || '#1E3A8A';
+        }
+    } else if(type === 'sede') {
+        document.getElementById('modal-edit-title').innerText = "Editar Sede";
+        document.getElementById('edit-label-1').innerText = "Nombre de la Sede";
+        document.getElementById('edit-value-1').value = dataState.sedes[idx].sede || '';
+        if(g2) g2.style.display = 'none';
+    } else if(type === 'user') {
+        document.getElementById('modal-edit-title').innerText = "Editar Usuario y Privilegios";
+        document.getElementById('edit-label-1').innerText = "Nombre de Usuario";
+        document.getElementById('edit-value-1').value = dataState.usuarios[idx].name || '';
+        document.getElementById('edit-label-2').innerText = "Contraseña";
+        document.getElementById('edit-value-2').value = dataState.usuarios[idx].pass || '';
+        if(gPerms) gPerms.style.display = 'block';
+        const userPerms = dataState.usuarios[idx].perms || [];
+        document.querySelectorAll('.edit-perm-cb').forEach(cb => cb.checked = userPerms.includes(cb.value));
+    } else if(type === 'sistema') {
+        document.getElementById('modal-edit-title').innerText = "Editar Sistema";
+        document.getElementById('edit-label-1').innerText = "Nombre del Sistema";
+        document.getElementById('edit-value-1').value = dataState.sistemas[idx] || '';
+        if(g2) g2.style.display = 'none';
+    } else if(type === 'falla') {
+        document.getElementById('modal-edit-title').innerText = "Editar Falla";
+        document.getElementById('edit-label-1').innerText = "Descripción de la Falla";
+        document.getElementById('edit-value-1').value = dataState.fallas[idx] || '';
+        if(g2) g2.style.display = 'none';
+    } else if(type === 'sla') {
+        document.getElementById('modal-edit-title').innerText = "Editar SLA";
+        document.getElementById('edit-label-1').innerText = "Descripción SLA";
+        document.getElementById('edit-value-1').value = dataState.slaList[idx].desc || '';
+        document.getElementById('edit-label-2').innerText = "Días Meta";
+        document.getElementById('edit-value-2').value = dataState.slaList[idx].days || '';
     }
-    // ... (Mantén el resto igual)
+    
+    const modal = document.getElementById('modal-edit');
+    if(modal) modal.style.display = 'flex';
 },
 saveEdit(e) {
     e.preventDefault();
