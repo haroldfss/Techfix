@@ -865,7 +865,7 @@ submitCierre(e) {
                 if (currentVal) el.value = currentVal;
             }
         });
-
+},
        
     renderConnectedTechsTable() {
         const tbody = document.getElementById('table-connected-techs');
