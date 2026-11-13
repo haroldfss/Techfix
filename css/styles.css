@@ -114,3 +114,16 @@ table {
     .modal-content { width: 95%; margin: 10% auto; padding: 15px; }
     .kpi-cards { grid-template-columns: 1fr 1fr; }
 }
+@media (max-width: 900px) {
+    .sidebar { 
+        position: fixed; 
+        left: -260px; 
+        top: 0; 
+        height: 100vh; 
+        transition: left 0.3s ease; 
+        z-index: 1000;
+    }
+    .sidebar.mobile-open { 
+        left: 0; 
+    }
+}
