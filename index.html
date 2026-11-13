@@ -438,13 +438,13 @@
 
                 <div id="tab-clientes" class="card settings-tab-content">
                     <h3>Crear y Administrar Clientes & Logo</h3>
-                    <form onsubmit="app.addClient(event)" class="mt-1">
-                        <div class="grid-3">
-                            <input type="text" id="new-client-name" placeholder="Nombre de Cliente" class="form-control" required>
-                            <input type="color" id="new-client-color" class="form-control" value="#1E3A8A">
-                            <input type="text" id="new-client-logo" placeholder="URL del Logotipo (Imagen)" class="form-control" required>
-                            <button type="submit" class="btn btn-secondary btn-block" style="grid-column: span 3;">Guardar Cliente y Logo</button>
-                        </div>
+                    <form onsubmit="app.addClient(event)" style="margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 3fr; gap: 15px; margin-bottom: 10px;">
+                    <input type="text" id="cliente-nombre" placeholder="Nombre de Cliente" class="form-control" required>
+                    <input type="color" id="cliente-color" value="#1E3A8A" class="form-control" style="height: 40px; padding: 0; cursor: pointer;" title="Color Corporativo">
+                    <input type="text" id="cliente-logo" placeholder="URL del Logotipo (Imagen)" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" style="width: 100%;">Guardar Cliente y Logo</button>
                     </form>
                     <div class="table-responsive mt-2">
                         <table class="table">
