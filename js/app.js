@@ -834,83 +834,39 @@ submitCierre(e) {
     },
 
     // --- RENDERIZADO GENERAL ---
-  renderAll() {
-        // 1. Rellenar selectores de clientes en los formularios de Ajustes
-        const selects = ['sistema-client', 'falla-client', 'sla-client', 'purge-client-select', 'ticket-cliente'];
-        selects.forEach(id => {
-            const el = document.getElementById(id);
+ renderAll() {
+        // 1. Rellenar TODOS los selectores de clientes sin duplicar
+        const selectoresConfig = [
+            { id: 'ticket-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
+            { id: 'sede-client', defaultText: 'Seleccione Cliente...' },
+            { id: 'user-client', defaultText: 'Asignar Todos los Clientes (Master)' },
+            { id: 'sistema-client', defaultText: '🌐 Todos los Clientes' },
+            { id: 'falla-client', defaultText: '🌐 Todos los Clientes' },
+            { id: 'sla-client', defaultText: '🌐 Todos los Clientes' },
+            { id: 'purge-client-select', defaultText: '⚠️ TODOS LOS TICKETS' }
+        ];
+
+        selectoresConfig.forEach(config => {
+            const el = document.getElementById(config.id);
             if (el) {
                 const currentVal = el.value;
-                const defaultOption = id === 'purge-client-select' 
-                    ? '<option value="TODOS">⚠️ TODOS LOS TICKETS</option>' 
-                    : '<option value="GLOBAL">🌐 Todos los Clientes</option>';
-                el.innerHTML = defaultOption;
-                dataState.clientes.forEach(c => el.innerHTML += `<option value="${c.name}">${c.name}</option>`);
-                if(currentVal) el.value = currentVal;
+                // Formateamos el valor por defecto dependiendo del select
+                const defaultVal = config.id === 'purge-client-select' ? 'TODOS' : (config.id.includes('sistema') || config.id.includes('falla') || config.id.includes('sla') ? 'GLOBAL' : (config.id === 'sede-client' ? '' : 'TODOS'));
+                
+                // LIMPIEZA ABSOLUTA y opción por defecto
+                el.innerHTML = `<option value="${defaultVal}">${config.defaultText}</option>`;
+                
+                // Inyectar clientes actualizados
+                dataState.clientes.forEach(c => {
+                    el.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+                });
+                
+                // Mantener la selección previa si existía
+                if (currentVal) el.value = currentVal;
             }
         });
 
-        // 2. Renderizar Clientes
-        const tCli = document.getElementById('table-clientes');
-        if(tCli) {
-            tCli.innerHTML = '';
-            dataState.clientes.forEach((c, i) => {
-                tCli.innerHTML += `<tr><td><strong>${c.name}</strong></td><td><div style="width:20px;height:20px;background:${c.color||'#1E3A8A'};"></div></td><td>${c.logo?'<img src="'+c.logo+'" style="max-height:30px;">':'N/A'}</td><td><button class="btn btn-sm btn-outline" onclick="app.openEditModal('client', ${i})">Editar</button> <button class="btn btn-sm btn-danger" onclick="app.deleteClient(${i})">Del</button></td></tr>`;
-            });
-        }
-
-        // 3. Renderizar Sedes
-        const tSed = document.getElementById('table-sedes');
-        if(tSed) {
-            tSed.innerHTML = '';
-            dataState.sedes.forEach((s, i) => {
-                tSed.innerHTML += `<tr><td><strong>${s.sede}</strong></td><td>${s.client||'N/A'}</td><td><button class="btn btn-sm btn-outline" onclick="app.openEditModal('sede', ${i})">Editar</button> <button class="btn btn-sm btn-danger" onclick="app.deleteSede(${i})">Del</button></td></tr>`;
-            });
-        }
-
-        // 4. Renderizar Usuarios
-        const tUsu = document.getElementById('table-usuarios');
-        if(tUsu) {
-            tUsu.innerHTML = '';
-            dataState.usuarios.forEach((u, i) => {
-                tUsu.innerHTML += `<tr><td><strong>${u.name}</strong></td><td>${u.role}</td><td><button class="btn btn-sm btn-outline" onclick="app.openEditModal('user', ${i})">Editar</button> <button class="btn btn-sm btn-danger" onclick="app.deleteUser(${i})" ${u.role==='Administrador'?'disabled':''}>Del</button></td></tr>`;
-            });
-        }
-
-        // 5. Renderizar Sistemas por Cliente
-        const tSys = document.getElementById('table-sistemas');
-        if(tSys) {
-            tSys.innerHTML = '';
-            dataState.sistemas.forEach((s, i) => {
-                const sName = typeof s === 'object' ? s.name : s;
-                const sClient = typeof s === 'object' ? (s.client || 'GLOBAL') : 'GLOBAL';
-                tSys.innerHTML += `<tr><td><strong>${sName}</strong></td><td><span class="badge" style="background:#1E3A8A;">${sClient}</span></td><td><button class="btn btn-sm btn-outline" onclick="app.openEditModal('sistema', ${i})">Editar</button> <button class="btn btn-sm btn-danger" onclick="app.deleteSistema(${i})">Del</button></td></tr>`;
-            });
-        }
-
-        // 6. Renderizar Fallas por Cliente
-        const tFal = document.getElementById('table-fallas');
-        if(tFal) {
-            tFal.innerHTML = '';
-            dataState.fallas.forEach((f, i) => {
-                const fName = typeof f === 'object' ? f.name : f;
-                const fClient = typeof f === 'object' ? (f.client || 'GLOBAL') : 'GLOBAL';
-                tFal.innerHTML += `<tr><td><strong>${fName}</strong></td><td><span class="badge" style="background:#1E3A8A;">${fClient}</span></td><td><button class="btn btn-sm btn-outline" onclick="app.openEditModal('falla', ${i})">Editar</button> <button class="btn btn-sm btn-danger" onclick="app.deleteFalla(${i})">Del</button></td></tr>`;
-            });
-        }
-
-        // 7. Renderizar SLA por Cliente
-        const tSla = document.getElementById('table-sla');
-        if(tSla) {
-            tSla.innerHTML = '';
-            dataState.slaList.forEach((sla, i) => {
-                const slaClient = sla.client || 'GLOBAL';
-                tSla.innerHTML += `<tr><td>${sla.desc}</td><td><strong>${sla.days} Días</strong></td><td><span class="badge" style="background:#1E3A8A;">${slaClient}</span></td><td><button class="btn btn-sm btn-outline" onclick="app.openEditModal('sla', ${i})">Editar</button> <button class="btn btn-sm btn-danger" onclick="app.deleteSla(${i})">Del</button></td></tr>`;
-            });
-        }
-
-        this.renderDashboard();
-    },
+        // ... (Mantén aquí el resto del código que dibuja las tablas: tCli, tSed, tUsu, etc.)
     renderConnectedTechsTable() {
         const tbody = document.getElementById('table-connected-techs');
         if(!tbody) return;
@@ -1033,6 +989,23 @@ updateLocation() {
                     this.saveStorage();
                 }
             }, () => console.log("Permiso GPS denegado."));
+        },
+  // Llenar tabla de usuarios conectados
+        const tOnline = document.getElementById('table-online-users');
+        if (tOnline) {
+            tOnline.innerHTML = '';
+            dataState.usuarios.forEach(u => {
+                const isOnline = u.lat && u.lng ? '<span style="color:#10B981;">🟢 Conectado GPS</span>' : '<span style="color:#EF4444;">🔴 Sin GPS</span>';
+                const lastLog = u.lastLogin ? u.lastLogin : 'Nunca';
+                const uClient = u.assignedClient || 'TODOS';
+                tOnline.innerHTML += `<tr>
+                    <td><strong>${u.name}</strong></td>
+                    <td>${u.role}</td>
+                    <td>${uClient}</td>
+                    <td>${isOnline}</td>
+                    <td>${lastLog}</td>
+                </tr>`;
+            });
         }
     },
     initMap() {
