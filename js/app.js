@@ -988,7 +988,7 @@ updateLocation() {
                     dataState.usuarios[userIndex].lng = pos.coords.longitude;
                     this.saveStorage();
                 }
-            });
+            }
                 () => console.log("Permiso GPS denegado."));
         },
   // Llenar tabla de usuarios conectados
