@@ -379,28 +379,42 @@ openEditModal(type, idx) {
     // ... (Mantén el resto igual)
 },
 saveEdit(e) {
-        e.preventDefault();
-        const type = document.getElementById('edit-type').value;
-        const idx = parseInt(document.getElementById('edit-index').value);
-        const v1 = document.getElementById('edit-value-1') ? document.getElementById('edit-value-1').value : '';
-        const v2 = document.getElementById('edit-value-2') ? document.getElementById('edit-value-2').value : '';
-        const v3 = document.getElementById('edit-value-3') ? document.getElementById('edit-value-3').value : '';
+    e.preventDefault();
+    const type = document.getElementById('edit-type').value;
+    const idx = parseInt(document.getElementById('edit-index').value);
+    const v1 = document.getElementById('edit-value-1') ? document.getElementById('edit-value-1').value : '';
+    const v2 = document.getElementById('edit-value-2') ? document.getElementById('edit-value-2').value : '';
+    const v3 = document.getElementById('edit-value-3') ? document.getElementById('edit-value-3').value : '';
 
-        if(type === 'client') { dataState.clientes[idx].name = v1; dataState.clientes[idx].logo = v2; if(v3) dataState.clientes[idx].color = v3; }
-        else if(type === 'sede') { dataState.sedes[idx].sede = v1; }
-        else if(type === 'user') { 
-            dataState.usuarios[idx].name = v1; dataState.usuarios[idx].pass = v2; 
-            dataState.usuarios[idx].perms = Array.from(document.querySelectorAll('.edit-perm-cb:checked')).map(cb => cb.value);
-        }
-        else if(type === 'sistema') { dataState.sistemas[idx] = v1; }
-        else if(type === 'falla') { dataState.fallas[idx] = v1; }
-        else if(type === 'sla') { dataState.slaList[idx].desc = v1; dataState.slaList[idx].days = v2; }
+    if(type === 'client') { 
+        dataState.clientes[idx].name = v1; 
+        dataState.clientes[idx].logo = v2; 
+        if(v3) dataState.clientes[idx].color = v3; 
+    }
+    else if(type === 'sede') { 
+        dataState.sedes[idx].sede = v1; 
+    }
+    else if(type === 'user') { 
+        dataState.usuarios[idx].name = v1; 
+        dataState.usuarios[idx].pass = v2; 
+        dataState.usuarios[idx].perms = Array.from(document.querySelectorAll('.edit-perm-cb:checked')).map(cb => cb.value);
+    }
+    else if(type === 'sistema') { 
+        dataState.sistemas[idx] = v1; 
+    }
+    else if(type === 'falla') { 
+        dataState.fallas[idx] = v1; 
+    }
+    else if(type === 'sla') { 
+        dataState.slaList[idx].desc = v1; 
+        dataState.slaList[idx].days = v2; 
+    }
 
-        this.saveStorage();
-        document.getElementById('modal-edit').style.display = 'none';
-        this.renderAll();
-        alert("Cambios guardados con éxito.");
-    },
+    this.saveStorage();
+    document.getElementById('modal-edit').style.display = 'none';
+    this.renderAll();
+    alert("Cambios guardados con éxito.");
+},
     
 
     // --- TICKETS ---
@@ -810,28 +824,40 @@ submitCierre(e) {
     },
 // SOLUCIÓN 6: Depuración de datos a cero
 purgeData(tipo) {
-        const pass = prompt(`ADVERTENCIA: Vas a eliminar datos de ${tipo}. Escribe "CONFIRMAR" para proceder:`);
-        if(pass === "CONFIRMAR") {
-            if(tipo === 'tickets') {
-                const clienteBorrar = prompt(`Escribe el nombre exacto del CLIENTE para borrar sus tickets (o escribe "TODOS" para borrar absolutamente todo):`);
-                if (clienteBorrar === "TODOS") {
-                    dataState.tickets = [];
-                    alert(`Todos los tickets han sido borrados.`);
-                } else if (clienteBorrar) {
-                    const inicial = dataState.tickets.length;
-                    dataState.tickets = dataState.tickets.filter(t => t.cliente !== clienteBorrar);
-                    const borrados = inicial - dataState.tickets.length;
-                    alert(`Se borraron ${borrados} tickets del cliente ${clienteBorrar}.`);
-                }
+    const pass = prompt(`ADVERTENCIA: Vas a eliminar datos de ${tipo}. Escribe "CONFIRMAR" para proceder:`);
+    if(pass === "CONFIRMAR") {
+        if(tipo === 'tickets') {
+            const clienteBorrar = prompt(`Escribe el nombre exacto del CLIENTE cuyos tickets deseas borrar (o escribe "TODOS" para borrar absolutamente todos los tickets del sistema):`);
+            if (clienteBorrar === "TODOS") {
+                dataState.tickets = [];
+                alert(`Todos los tickets han sido borrados con éxito.`);
+            } else if (clienteBorrar && clienteBorrar.trim() !== "") {
+                const totalAntes = dataState.tickets.length;
+                dataState.tickets = dataState.tickets.filter(t => t.cliente.toLowerCase() !== clienteBorrar.trim().toLowerCase());
+                const borrados = totalAntes - dataState.tickets.length;
+                alert(`Se eliminaron ${borrados} tickets pertenecientes a "${clienteBorrar}".`);
+            } else {
+                alert("Operación cancelada: No escribiste un cliente válido.");
+                return;
             }
-            else if(tipo === 'clientes') { dataState.clientes = []; alert('Clientes borrados.'); }
-            else if(tipo === 'sedes') { dataState.sedes = []; alert('Sedes borradas.'); }
-            else if(tipo === 'usuarios') { dataState.usuarios = dataState.usuarios.filter(u => u.role === "Administrador"); alert('Usuarios (excepto Admin) borrados.'); }
-            
-            this.saveStorage();
-            this.renderAll();
         }
-    },
+        else if(tipo === 'clientes') { 
+            dataState.clientes = []; 
+            alert('Todos los clientes han sido borrados.'); 
+        }
+        else if(tipo === 'sedes') { 
+            dataState.sedes = []; 
+            alert('Todas las sedes han sido borradas.'); 
+        }
+        else if(tipo === 'usuarios') { 
+            dataState.usuarios = dataState.usuarios.filter(u => u.role === "Administrador"); 
+            alert('Usuarios (excepto el Administrador principal) borrados.'); 
+        }
+        
+        this.saveStorage();
+        this.renderAll();
+    }
+},
 
 // SOLUCIÓN 10, 11 y 12: Descargar informe avanzado Excel/CSV con filtros
 exportarTicketsAvanzado() {
