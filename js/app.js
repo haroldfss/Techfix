@@ -980,17 +980,22 @@ exportarTicketsAvanzado() {
 
 // SOLUCIÓN 9: Ubicación GPS real de los técnicos
 updateLocation() {
-        if (navigator.geolocation && currentUser) {
-            navigator.geolocation.getCurrentPosition(pos => {
+    if (navigator.geolocation && currentUser) {
+        navigator.geolocation.getCurrentPosition(
+            pos => {
                 const userIndex = dataState.usuarios.findIndex(u => u.name === currentUser.name);
                 if (userIndex !== -1) {
                     dataState.usuarios[userIndex].lat = pos.coords.latitude;
                     dataState.usuarios[userIndex].lng = pos.coords.longitude;
                     this.saveStorage();
                 }
+            },
+            () => {
+                console.log("Permiso GPS denegado.");
             }
-                () => console.log("Permiso GPS denegado."));
-        },
+        );
+    }
+},
   // Llenar tabla de usuarios conectados
         const tOnline = document.getElementById('table-online-users');
         if (tOnline) {
