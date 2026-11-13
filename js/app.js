@@ -1015,24 +1015,7 @@ updateLocation() {
         }
     },
     },
-    initMap() {
-        if (!this.map) {
-            this.map = L.map('tech-map').setView([4.6097, -74.0817], 12);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
-        }
-        // Limpiar pines antiguos
-        this.map.eachLayer(layer => { if (layer instanceof L.Marker) this.map.removeLayer(layer); });
-        
-        // Dibujar todos los usuarios logeados con coordenadas
-        dataState.usuarios.forEach(u => {
-            if (u.lat && u.lng) {
-                L.marker([u.lat, u.lng]).addTo(this.map)
-                 .bindPopup(`<b>${u.name}</b><br>Rol: ${u.role}<br>Última conexión: ${u.lastLogin || 'Reciente'}`);
-            }
-        });
-        setTimeout(() => this.map.invalidateSize(), 400); // Fuerza ajuste responsive
-        this.renderConnectedTechTable();
-    },
+   
 // Modificar initMap para leer estas coordenadas
 initMap() {
     if(!this.map) {
