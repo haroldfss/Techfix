@@ -832,7 +832,7 @@ submitCierre(e) {
         
         // (Mantén aquí el resto del código que ya tenías en renderAll para pintar las tablas)
         this.renderDashboard();
-    }
+    },
     renderConnectedTechsTable() {
         const tbody = document.getElementById('table-connected-techs');
         if(!tbody) return;
