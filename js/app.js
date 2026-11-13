@@ -180,25 +180,25 @@ const app = {
     updateSedeCheckboxes() {
         const container = document.getElementById('filt-sedes-container');
         if(!container) return;
-        container.innerHTML = '';
         
         let targetSedes = dataState.sedes;
         let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : activeClientContext;
         
-        if(activeClient) {
-            targetSedes = dataState.sedes.filter(s => s.client === activeClient);
-        }
+        if(activeClient) targetSedes = dataState.sedes.filter(s => s.client === activeClient);
         
         if(targetSedes.length === 0) {
             container.innerHTML = '<span style="font-size:0.85rem; color:var(--text-muted); padding:4px;">No hay sedes disponibles</span>';
             return;
         }
 
+        // Botón "Marcar Todas" dinámico para todos los roles
+        let htmlContent = `<div style="margin-bottom:8px;"><button class="btn btn-sm btn-outline" style="width:100%; border-color:var(--secondary); color:var(--secondary);" onclick="document.querySelectorAll('.sede-chk').forEach(cb => cb.checked = true); app.renderDashboard();">☑️ Seleccionar Todas las Sedes</button></div>`;
+        
         targetSedes.forEach(s => {
-            container.innerHTML += `
-                <label><input type="checkbox" value="${s.sede}" class="sede-chk" checked onchange="app.renderDashboard()"> ${s.sede}</label>
-            `;
+            htmlContent += `<label style="display:block; margin-bottom:5px;"><input type="checkbox" value="${s.sede}" class="sede-chk" checked onchange="app.renderDashboard()"> ${s.sede}</label>`;
         });
+        
+        container.innerHTML = htmlContent;
     },
     toggleAnalysis(boxId, btn) {
         const box = document.getElementById(boxId);
@@ -379,27 +379,14 @@ openEditModal(type, idx) {
     // ... (Mantén el resto igual)
 },
 saveEdit(e) {
-    e.preventDefault();
-    const type = document.getElementById('edit-type').value;
-    const idx = parseInt(document.getElementById('edit-index').value);
-    const v1 = document.getElementById('edit-value-1').value;
-    const v2 = document.getElementById('edit-value-2').value;
-    const v3 = document.getElementById('edit-value-3') ? document.getElementById('edit-value-3').value : '';
-
-    if(type === 'client') { dataState.clientes[idx].name = v1; dataState.clientes[idx].logo = v2; dataState.clientes[idx].color = v3; }
-    // ... (Mantén el resto igual)
-    this.saveStorage();
-    document.getElementById('modal-edit').style.display = 'none';
-    this.renderAll();
-},
-    saveEdit(e) {
         e.preventDefault();
         const type = document.getElementById('edit-type').value;
         const idx = parseInt(document.getElementById('edit-index').value);
-        const v1 = document.getElementById('edit-value-1').value;
-        const v2 = document.getElementById('edit-value-2').value;
+        const v1 = document.getElementById('edit-value-1') ? document.getElementById('edit-value-1').value : '';
+        const v2 = document.getElementById('edit-value-2') ? document.getElementById('edit-value-2').value : '';
+        const v3 = document.getElementById('edit-value-3') ? document.getElementById('edit-value-3').value : '';
 
-        if(type === 'client') { dataState.clientes[idx].name = v1; dataState.clientes[idx].logo = v2; }
+        if(type === 'client') { dataState.clientes[idx].name = v1; dataState.clientes[idx].logo = v2; if(v3) dataState.clientes[idx].color = v3; }
         else if(type === 'sede') { dataState.sedes[idx].sede = v1; }
         else if(type === 'user') { 
             dataState.usuarios[idx].name = v1; dataState.usuarios[idx].pass = v2; 
@@ -414,6 +401,7 @@ saveEdit(e) {
         this.renderAll();
         alert("Cambios guardados con éxito.");
     },
+    
 
     // --- TICKETS ---
     loadTicketSelectors() {
@@ -495,22 +483,54 @@ saveEdit(e) {
 },
 
 submitCierre(e) {
-    e.preventDefault();
-    const id = document.getElementById('modal-ticket-id').innerText;
-    const ticket = dataState.tickets.find(t => t.id === id);
-    const correoCliente = document.getElementById('cierre-correo').value;      
-        if(ticket) {
-            if(ticket.estado === 'Cumplido') return;
+        e.preventDefault();
+        const id = document.getElementById('modal-ticket-id').innerText;
+        const ticket = dataState.tickets.find(t => t.id === id);
+        const correoCliente = document.getElementById('cierre-correo').value;
+        const inputFile = document.getElementById('cierre-fotos');
+        
+        if (ticket) {
+            if (ticket.estado === 'Cumplido') return;
             ticket.estado = 'Cumplido';
             ticket.fechaCumplido = new Date().toISOString().substring(0, 16);
             ticket.actividades = document.getElementById('cierre-actividades').value;
             ticket.materiales = document.getElementById('cierre-materiales').value;
             ticket.recomendaciones = document.getElementById('cierre-recomendaciones').value;
+
+            if (inputFile && inputFile.files && inputFile.files.length > 0) {
+                ticket.fotos = [];
+                let filesLoaded = 0;
+                
+                Array.from(inputFile.files).forEach((file) => {
+                    const reader = new FileReader();
+                    reader.onload = (uploadEvent) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            // Compresión de imagen obligatoria para PWA (Evita saturar el LocalStorage)
+                            const canvas = document.createElement('canvas');
+                            const MAX_WIDTH = 700;
+                            const scaleSize = MAX_WIDTH / img.width;
+                            canvas.width = MAX_WIDTH;
+                            canvas.height = img.height * scaleSize;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            
+                            // Guardar como JPEG comprimido al 60% de calidad
+                            ticket.fotos.push(canvas.toDataURL('image/jpeg', 0.6));
+                            
+                            filesLoaded++;
+                            if (filesLoaded === inputFile.files.length) {
+                                app.finalizarCierreProceso(ticket, correoCliente);
+                            }
+                        };
+                        img.src = uploadEvent.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+                return; // Espera la compresión asíncrona
+            }
         }
-        this.saveStorage();
-        document.getElementById('modal-cierre').style.display = 'none';
-        alert(`Ticket cerrado.\n\nSe ha enviado el informe a: ${correoCliente}`);
-        this.renderTicketsTable();
+        this.finalizarCierreProceso(ticket, correoCliente);
     },
     calcularTiempoResolucion(t) {
         if(!t.fechaCreacion || !t.fechaCumplido) return 'Pendiente';
@@ -561,22 +581,22 @@ submitCierre(e) {
         });
     },
 
-    downloadSingleTicketPDF(id) {
+   downloadSingleTicketPDF(id) {
         const t = dataState.tickets.find(item => item.id === id);
         if(!t) { alert("Ticket no encontrado."); return; }
         const clientObj = dataState.clientes.find(c => c.name === t.cliente) || {};
-        const htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Informe Ticket ${t.id}</title><style>body { font-family: Arial, sans-serif; padding: 30px; color: #1E293B; } .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1E3A8A; padding-bottom: 15px; margin-bottom: 20px; } .logo { max-height: 50px; max-width: 150px; object-fit: contain; } h1 { font-size: 20px; color: #1E3A8A; margin: 0; } .info-box { background: #F8FAFC; border: 1px solid #E2E8F0; padding: 15px; border-radius: 8px; margin-bottom: 15px; } .info-box h3 { margin-top: 0; color: #0A192F; font-size: 15px; border-bottom: 1px solid #CBD5E1; padding-bottom: 5px; } p { margin: 6px 0; font-size: 13px; } .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 10px; }</style></head><body><div class="header"><div><h1>CERTIFICADO DE CUMPLIMIENTO</h1><p>Plataforma ServiTrack PWA</p></div><div>${clientObj.logo ? `<img src="${clientObj.logo}" class="logo" alt="Logo Cliente">` : `<strong>${t.cliente}</strong>`}</div></div><div class="info-box"><h3>1. Información General</h3><p><strong>ID del Ticket:</strong> ${t.id}</p><p><strong>Cliente / Empresa:</strong> ${t.cliente}</p><p><strong>Sede Operativa:</strong> ${t.sede}</p><p><strong>Sistema Afectado:</strong> ${t.sistema}</p><p><strong>Tipo de Falla:</strong> ${t.falla}</p></div><div class="info-box"><h3>2. Control de Tiempos y Personal</h3><p><strong>Técnico Asignado:</strong> ${t.tecnico}</p><p><strong>Estado Actual:</strong> <span style="color: #10B981; font-weight: bold;">${t.estado}</span></p><p><strong>SLA Pactado:</strong> ${t.sla} Días</p><p><strong>Fecha de Creación:</strong> ${t.fechaCreacion || t.fecha}</p><p><strong>Fecha de Cierre:</strong> ${t.fechaCumplido || 'N/A'}</p><p><strong>Tiempo Total de Resolución:</strong> ${this.calcularTiempoResolucion(t)}</p></div><div class="info-box"><h3>3. Detalle de Atención en Campo</h3><p><strong>Actividades Realizadas:</strong><br>${t.actividades || 'Sin registro detallado'}</p><p style="margin-top: 10px;"><strong>Repuestos y Materiales:</strong><br>${t.materiales || 'Ninguno'}</p><p style="margin-top: 10px;"><strong>Recomendaciones para el Cliente:</strong><br>${t.recomendaciones || 'Ninguna'}</p></div><div class="footer"><p>Documento generado electrónicamente por ServiTrack PWA - Control Multi-Cliente</p></div></body></html>`;
-        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url;
-        a.download = `Informe_Cumplimiento_${t.id}_${t.cliente.replace(/\s+/g, '_')}.html`; a.click();
-        URL.revokeObjectURL(url);
-    },
-    downloadSingleTicketPDF(id) {
-        const t = dataState.tickets.find(item => item.id === id);
-        if(!t) { alert("Ticket no encontrado."); return; }
-        const clientObj = dataState.clientes.find(c => c.name === t.cliente) || {};
-        const htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Informe Ticket ${t.id}</title><style>body { font-family: Arial, sans-serif; padding: 30px; color: #1E293B; } .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1E3A8A; padding-bottom: 15px; margin-bottom: 20px; } .logo { max-height: 50px; max-width: 150px; object-fit: contain; } h1 { font-size: 20px; color: #1E3A8A; margin: 0; } .info-box { background: #F8FAFC; border: 1px solid #E2E8F0; padding: 15px; border-radius: 8px; margin-bottom: 15px; } .info-box h3 { margin-top: 0; color: #0A192F; font-size: 15px; border-bottom: 1px solid #CBD5E1; padding-bottom: 5px; } p { margin: 6px 0; font-size: 13px; } .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 10px; }</style></head><body><div class="header"><div><h1>CERTIFICADO DE CUMPLIMIENTO</h1><p>Plataforma ServiTrack PWA</p></div><div>${clientObj.logo ? `<img src="${clientObj.logo}" class="logo" alt="Logo Cliente">` : `<strong>${t.cliente}</strong>`}</div></div><div class="info-box"><h3>1. Información General</h3><p><strong>ID del Ticket:</strong> ${t.id}</p><p><strong>Cliente / Empresa:</strong> ${t.cliente}</p><p><strong>Sede Operativa:</strong> ${t.sede}</p><p><strong>Sistema Afectado:</strong> ${t.sistema}</p><p><strong>Tipo de Falla:</strong> ${t.falla}</p></div><div class="info-box"><h3>2. Control de Tiempos y Personal</h3><p><strong>Técnico Asignado:</strong> ${t.tecnico}</p><p><strong>Estado Actual:</strong> <span style="color: #10B981; font-weight: bold;">${t.estado}</span></p><p><strong>SLA Pactado:</strong> ${t.sla} Días</p><p><strong>Fecha de Creación:</strong> ${t.fechaCreacion || t.fecha}</p><p><strong>Fecha de Cierre:</strong> ${t.fechaCumplido || 'N/A'}</p><p><strong>Tiempo Total de Resolución:</strong> ${this.calcularTiempoResolucion(t)}</p></div><div class="info-box"><h3>3. Detalle de Atención en Campo</h3><p><strong>Actividades Realizadas:</strong><br>${t.actividades || 'Sin registro detallado'}</p><p style="margin-top: 10px;"><strong>Repuestos y Materiales:</strong><br>${t.materiales || 'Ninguno'}</p><p style="margin-top: 10px;"><strong>Recomendaciones para el Cliente:</strong><br>${t.recomendaciones || 'Ninguna'}</p></div><div class="footer"><p>Documento generado electrónicamente por ServiTrack PWA - Control Multi-Cliente</p></div></body></html>`;
+        
+        let fotosHtml = '';
+        if (t.fotos && t.fotos.length > 0) {
+            fotosHtml = '<h3>4. Evidencia Fotográfica</h3><div style="display:flex; flex-wrap:wrap; gap:15px; margin-top: 10px;">';
+            t.fotos.forEach((f, idx) => {
+                fotosHtml += `<div style="border:1px solid #CBD5E1; padding:8px; border-radius:6px; background:#fff;"><img src="${f}" style="max-height:220px; max-width:280px; object-fit:contain; display:block;" /><p style="font-size:12px; font-weight:bold; text-align:center; margin:8px 0 0 0; color:#1E3A8A;">Foto #${idx + 1}</p></div>`;
+            });
+            fotosHtml += '</div>';
+        }
+
+        const htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Informe Ticket ${t.id}</title><style>body { font-family: Arial, sans-serif; padding: 30px; color: #1E293B; } .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1E3A8A; padding-bottom: 15px; margin-bottom: 20px; } .logo { max-height: 55px; max-width: 180px; object-fit: contain; } h1 { font-size: 22px; color: #1E3A8A; margin: 0; } .info-box { background: #F8FAFC; border: 1px solid #E2E8F0; padding: 15px; border-radius: 8px; margin-bottom: 15px; } .info-box h3 { margin-top: 0; color: #0A192F; font-size: 16px; border-bottom: 1px solid #CBD5E1; padding-bottom: 6px; } p { margin: 8px 0; font-size: 14px; } .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 10px; }</style></head><body><div class="header"><div><h1>CERTIFICADO DE CUMPLIMIENTO</h1><p style="margin-top:4px;">Plataforma ServiTrack PWA</p></div><div>${clientObj.logo ? `<img src="${clientObj.logo}" class="logo" alt="Logo Cliente">` : `<strong>${t.cliente}</strong>`}</div></div><div class="info-box"><h3>1. Información General</h3><p><strong>ID del Ticket:</strong> ${t.id}</p><p><strong>Cliente / Empresa:</strong> ${t.cliente}</p><p><strong>Sede Operativa:</strong> ${t.sede}</p><p><strong>Sistema Afectado:</strong> ${t.sistema}</p><p><strong>Tipo de Falla:</strong> ${t.falla}</p></div><div class="info-box"><h3>2. Control de Tiempos y Personal</h3><p><strong>Técnico Asignado:</strong> ${t.tecnico}</p><p><strong>Estado Actual:</strong> <span style="color: #10B981; font-weight: bold;">${t.estado}</span></p><p><strong>SLA Pactado:</strong> ${t.sla} Días</p><p><strong>Fecha de Creación:</strong> ${t.fechaCreacion || t.fecha}</p><p><strong>Fecha de Cierre:</strong> ${t.fechaCumplido || 'N/A'}</p><p><strong>Tiempo Total de Resolución:</strong> ${this.calcularTiempoResolucion(t)}</p></div><div class="info-box"><h3>3. Detalle de Atención en Campo</h3><p><strong>Actividades Realizadas:</strong><br>${t.actividades || 'Sin registro'}</p><p style="margin-top: 12px;"><strong>Repuestos y Materiales:</strong><br>${t.materiales || 'Ninguno'}</p><p style="margin-top: 12px;"><strong>Recomendaciones para el Cliente:</strong><br>${t.recomendaciones || 'Ninguna'}</p></div>${fotosHtml ? `<div class="info-box">${fotosHtml}</div>` : ''}<div class="footer"><p>Documento generado electrónicamente por ServiTrack PWA - Control Multi-Cliente</p></div></body></html>`;
+        
         const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url;
@@ -650,12 +670,28 @@ submitCierre(e) {
         let recomendacion = retrasados > 0 
         ? `⚠️ Alerta: Tienes ${retrasados} tickets retrasados. Prioriza su atención inmediata.` 
         : `✅ Excelente: No hay tickets retrasados. El flujo operativo es óptimo.`;
-        document.getElementById('analysis-text-2').innerText = `Recomendación: ${recomendacion}`;
-        document.getElementById('analysis-text-3').innerText = `Análisis por Sistema: Distribución sobre ${totalFilt} casos procesados.`;
-        document.getElementById('analysis-text-4').innerText = `Análisis de Carga Técnica: Carga distribuida entre el personal asignado.`;
-        document.getElementById('analysis-text-5').innerText = `Análisis de Cumplimiento SLA: Promedio calculado sobre los tickets filtrados.`;
-        document.getElementById('analysis-text-6').innerText = `Tendencia Temporal: Se observa un total de ${totalFilt} registros.`;
+        const totalFilt = filtered.length;
+        const cumplidos = filtered.filter(t => t.estado === 'Cumplido').length;
+        const pctCumplidos = totalFilt > 0 ? ((cumplidos / totalFilt) * 100).toFixed(0) : 0;
+        
+        document.getElementById('analysis-text-1').innerText = `Análisis: Hay ${totalFilt} tickets activos (${pctCumplidos}% de efectividad de cumplimiento).`;
+        
+        const retrasados = filtered.filter(t => t.estado === 'Retrasado').length;
+        document.getElementById('analysis-text-2').innerText = retrasados > 0 
+            ? `⚠️ Alerta: Tienes ${retrasados} tickets retrasados. Prioriza su atención operativa inmediata.` 
+            : `✅ Excelente: No hay tickets retrasados. El flujo de servicio es óptimo.`;
 
+        const fallasPorSis = sistemasList.map(sis => ({sis, count: filtered.filter(t => t.sistema === sis).length})).sort((a,b)=>b.count-a.count);
+        document.getElementById('analysis-text-3').innerText = (fallasPorSis[0] && fallasPorSis[0].count > 0)
+            ? `🛠️ Mantenimiento: "${fallasPorSis[0].sis}" presenta la mayor carga de fallas (${fallasPorSis[0].count} casos).` 
+            : `Distribución de sistemas estable.`;
+
+        document.getElementById('analysis-text-4').innerText = `Carga Técnica: Revisa la gráfica de barras para balancear asignaciones si un técnico supera significativamente al resto.`;
+        
+        const avgSla = slaTecProm.length > 0 ? (slaTecProm.reduce((a,b)=>parseFloat(a)+parseFloat(b),0)/slaTecProm.length).toFixed(1) : 0;
+        document.getElementById('analysis-text-5').innerText = `Cumplimiento SLA: El tiempo promedio proyectado de resolución general es de ${avgSla} días.`;
+        
+        document.getElementById('analysis-text-6').innerText = `Tendencia: Histórico de ${totalFilt} registros. Vigila variaciones bruscas en la curva.`;
         const fallasSedesCounts = sedesList.map(sede => filtered.filter(t => t.sede === sede && t.falla).length);
         if(this.charts.fallasSedes) this.charts.fallasSedes.destroy();
         this.charts.fallasSedes = new Chart(document.getElementById('chart-fallas-sedes').getContext('2d'), { type: 'bar', data: { labels: sedesList, datasets: [{ label: 'Fallas Reportadas', data: fallasSedesCounts, backgroundColor: '#EF4444' }] }, options: { responsive: true } });
@@ -782,17 +818,28 @@ submitCierre(e) {
     },
 // SOLUCIÓN 6: Depuración de datos a cero
 purgeData(tipo) {
-    const pass = prompt(`ADVERTENCIA: Vas a eliminar todos los ${tipo}. Escribe "CONFIRMAR" para proceder:`);
-    if(pass === "CONFIRMAR") {
-        if(tipo === 'tickets') dataState.tickets = [];
-        if(tipo === 'clientes') dataState.clientes = [];
-        if(tipo === 'sedes') dataState.sedes = [];
-        if(tipo === 'usuarios') dataState.usuarios = dataState.usuarios.filter(u => u.role === "Administrador"); // Protege al admin
-        this.saveStorage();
-        this.renderAll();
-        alert(`Base de datos de ${tipo} depurada a cero.`);
-    }
-},
+        const pass = prompt(`ADVERTENCIA: Vas a eliminar datos de ${tipo}. Escribe "CONFIRMAR" para proceder:`);
+        if(pass === "CONFIRMAR") {
+            if(tipo === 'tickets') {
+                const clienteBorrar = prompt(`Escribe el nombre exacto del CLIENTE para borrar sus tickets (o escribe "TODOS" para borrar absolutamente todo):`);
+                if (clienteBorrar === "TODOS") {
+                    dataState.tickets = [];
+                    alert(`Todos los tickets han sido borrados.`);
+                } else if (clienteBorrar) {
+                    const inicial = dataState.tickets.length;
+                    dataState.tickets = dataState.tickets.filter(t => t.cliente !== clienteBorrar);
+                    const borrados = inicial - dataState.tickets.length;
+                    alert(`Se borraron ${borrados} tickets del cliente ${clienteBorrar}.`);
+                }
+            }
+            else if(tipo === 'clientes') { dataState.clientes = []; alert('Clientes borrados.'); }
+            else if(tipo === 'sedes') { dataState.sedes = []; alert('Sedes borradas.'); }
+            else if(tipo === 'usuarios') { dataState.usuarios = dataState.usuarios.filter(u => u.role === "Administrador"); alert('Usuarios (excepto Admin) borrados.'); }
+            
+            this.saveStorage();
+            this.renderAll();
+        }
+    },
 
 // SOLUCIÓN 10, 11 y 12: Descargar informe avanzado Excel/CSV con filtros
 exportarTicketsAvanzado() {
