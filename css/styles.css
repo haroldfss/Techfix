@@ -117,13 +117,14 @@ table {
 @media (max-width: 900px) {
     .sidebar { 
         position: fixed; 
-        left: -260px; 
+        left: -300px; 
         top: 0; 
+        width: 260px; /* Forzar un ancho fijo que no cubra la pantalla */
+        max-width: 85vw; /* Nunca superar el 85% de la pantalla */
         height: 100vh; 
         transition: left 0.3s ease; 
         z-index: 1000;
     }
-    .sidebar.mobile-open { 
-        left: 0; 
-    }
+    .sidebar.mobile-open { left: 0; }
+    .sidebar .nav-links li { padding: 10px; font-size: 14px; }
 }
