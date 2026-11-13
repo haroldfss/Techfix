@@ -311,144 +311,86 @@ closeMobileMenuOnClick() {
         }
     },
 
-   renderAll() {
-        // 1. Poblar selectores de clientes de forma limpia y sin duplicar
-        const selectsConfig = [
-            { id: 'ticket-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
-            { id: 'sede-client', defaultText: 'Seleccione Cliente...' },
-            { id: 'user-client', defaultText: 'Asignar Todos los Clientes (Master)' },
-            { id: 'sistema-client', defaultText: '🌐 Todos los Clientes' },
-            { id: 'falla-client', defaultText: '🌐 Todos los Clientes' },
-            { id: 'sla-client', defaultText: '🌐 Todos los Clientes' },
-            { id: 'purge-client-select', defaultText: '⚠️ TODOS LOS TICKETS' }
-        ];
+  renderAll() {
+    const selectsConfig = [
+        { id: 'ticket-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
+        { id: 'dashboard-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
+        { id: 'sede-client', defaultText: 'Seleccione Cliente...' },
+        { id: 'user-client', defaultText: 'Asignar Todos los Clientes (Master)' },
+        { id: 'sistema-client', defaultText: '🌐 Todos los Clientes' },
+        { id: 'falla-client', defaultText: '🌐 Todos los Clientes' },
+        { id: 'sla-client', defaultText: '🌐 Todos los Clientes' },
+        { id: 'purge-client-select', defaultText: '⚠️ TODOS LOS TICKETS' }
+    ];
 
-        selectsConfig.forEach(cfg => {
-            const el = document.getElementById(cfg.id);
-            if (el) {
-                const currentVal = el.value;
-                const defaultVal = cfg.id === 'purge-client-select' ? 'TODOS' : 'GLOBAL';
-                
-                // Evitar duplicados limpiando e insertando una sola vez
-                el.innerHTML = `<option value="${defaultVal}">${cfg.defaultText}</option>`;
-                
-                // Usar un Set temporal para garantizar que los nombres de clientes sean únicos
-                const unicosClientes = [...new Set(dataState.clientes.map(c => c.name))];
-                unicosClientes.forEach(nombreCliente => {
-                    el.innerHTML += `<option value="${nombreCliente}">${nombreCliente}</option>`;
-                });
-                
-                if (currentVal) el.value = currentVal;
-            }
+    selectsConfig.forEach(cfg => {
+        const el = document.getElementById(cfg.id);
+        if (el) {
+            const currentVal = el.value;
+            const defaultVal = cfg.id === 'purge-client-select' ? 'TODOS' : (cfg.id === 'sede-client' ? '' : 'TODOS');
+
+            el.innerHTML = `<option value="${defaultVal}">${cfg.defaultText}</option>`;
+
+            const unicosClientes = [...new Set(dataState.clientes.map(c => c.name))];
+            unicosClientes.forEach(nombreCliente => {
+                el.innerHTML += `<option value="${nombreCliente}">${nombreCliente}</option>`;
+            });
+
+            if (currentVal) el.value = currentVal;
+        }
+    });
+
+    // Renderizado de tablas de ajustes
+    const tCli = document.getElementById('table-clientes');
+    if (tCli) {
+        tCli.innerHTML = '';
+        dataState.clientes.forEach((c, i) => {
+            tCli.innerHTML += `<tr>
+                <td><strong>${c.name}</strong></td>
+                <td><div style="width:20px;height:20px;background:${c.color || '#1E3A8A'};border-radius:4px;"></div></td>
+                <td>${c.logo ? `<img src="${c.logo}" style="max-height:30px;max-width:80px;object-fit:contain;">` : 'N/A'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline" onclick="app.openEditModal('client', ${i})">Editar</button>
+                    <button class="btn btn-sm btn-danger" onclick="app.deleteClient(${i})">Del</button>
+                </td>
+            </tr>`;
         });
+    }
 
-        // 2. Renderizar Tabla de Clientes
-        const tCli = document.getElementById('table-clientes');
-        if (tCli) {
-            tCli.innerHTML = '';
-            dataState.clientes.forEach((c, i) => {
-                tCli.innerHTML += `<tr>
-                    <td><strong>${c.name}</strong></td>
-                    <td><div style="width:20px;height:20px;background:${c.color || '#1E3A8A'};border-radius:4px;"></div></td>
-                    <td>${c.logo ? `<img src="${c.logo}" style="max-height:30px;max-width:80px;object-fit:contain;">` : 'N/A'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline" onclick="app.openEditModal('client', ${i})">Editar</button>
-                        <button class="btn btn-sm btn-danger" onclick="app.deleteClient(${i})">Del</button>
-                    </td>
-                </tr>`;
-            });
-        }
+    const tSed = document.getElementById('table-sedes');
+    if (tSed) {
+        tSed.innerHTML = '';
+        dataState.sedes.forEach((s, i) => {
+            tSed.innerHTML += `<tr>
+                <td><strong>${s.sede}</strong></td>
+                <td>${s.client || 'N/A'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline" onclick="app.openEditModal('sede', ${i})">Editar</button>
+                    <button class="btn btn-sm btn-danger" onclick="app.deleteSede(${i})">Del</button>
+                </td>
+            </tr>`;
+        });
+    }
 
-        // 3. Renderizar Tabla de Sedes
-        const tSed = document.getElementById('table-sedes');
-        if (tSed) {
-            tSed.innerHTML = '';
-            dataState.sedes.forEach((s, i) => {
-                tSed.innerHTML += `<tr>
-                    <td><strong>${s.sede}</strong></td>
-                    <td>${s.client || 'N/A'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline" onclick="app.openEditModal('sede', ${i})">Editar</button>
-                        <button class="btn btn-sm btn-danger" onclick="app.deleteSede(${i})">Del</button>
-                    </td>
-                </tr>`;
-            });
-        }
+    const tUsu = document.getElementById('table-usuarios');
+    if (tUsu) {
+        tUsu.innerHTML = '';
+        dataState.usuarios.forEach((u, i) => {
+            tUsu.innerHTML += `<tr>
+                <td><strong>${u.name}</strong></td>
+                <td>${u.role}</td>
+                <td>${u.assignedClient || 'TODOS'}</td>
+                <td>${u.perms ? u.perms.join(', ') : 'N/A'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline" onclick="app.openEditModal('user', ${i})">Editar</button>
+                    <button class="btn btn-sm btn-danger" onclick="app.deleteUser(${i})" ${u.role==='Administrador'?'disabled':''}>Del</button>
+                </td>
+            </tr>`;
+        });
+    }
 
-        // 4. Renderizar Tabla de Usuarios
-        const tUsu = document.getElementById('table-usuarios');
-        if (tUsu) {
-            tUsu.innerHTML = '';
-            dataState.usuarios.forEach((u, i) => {
-                tUsu.innerHTML += `<tr>
-                    <td><strong>${u.name}</strong></td>
-                    <td>${u.role}</td>
-                    <td>${u.assignedClient || 'TODOS'}</td>
-                    <td>${u.perms ? u.perms.join(', ') : 'N/A'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline" onclick="app.openEditModal('user', ${i})">Editar</button>
-                        <button class="btn btn-sm btn-danger" onclick="app.deleteUser(${i})" ${u.role==='Administrador'?'disabled':''}>Del</button>
-                    </td>
-                </tr>`;
-            });
-        }
-
-        // 5. Renderizar Tabla de Sistemas
-        const tSys = document.getElementById('table-sistemas');
-        if (tSys) {
-            tSys.innerHTML = '';
-            dataState.sistemas.forEach((s, i) => {
-                const sName = typeof s === 'object' ? s.name : s;
-                const sClient = typeof s === 'object' ? (s.client || 'GLOBAL') : 'GLOBAL';
-                tSys.innerHTML += `<tr>
-                    <td><strong>${sName}</strong></td>
-                    <td><span class="badge" style="background:#1E3A8A; color:#fff; padding:3px 8px; border-radius:4px;">${sClient}</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline" onclick="app.openEditModal('sistema', ${i})">Editar</button>
-                        <button class="btn btn-sm btn-danger" onclick="app.deleteSistema(${i})">Del</button>
-                    </td>
-                </tr>`;
-            });
-        }
-
-        // 6. Renderizar Tabla de Fallas
-        const tFal = document.getElementById('table-fallas');
-        if (tFal) {
-            tFal.innerHTML = '';
-            dataState.fallas.forEach((f, i) => {
-                const fName = typeof f === 'object' ? f.name : f;
-                const fClient = typeof f === 'object' ? (f.client || 'GLOBAL') : 'GLOBAL';
-                tFal.innerHTML += `<tr>
-                    <td><strong>${fName}</strong></td>
-                    <td><span class="badge" style="background:#1E3A8A; color:#fff; padding:3px 8px; border-radius:4px;">${fClient}</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline" onclick="app.openEditModal('falla', ${i})">Editar</button>
-                        <button class="btn btn-sm btn-danger" onclick="app.deleteFalla(${i})">Del</button>
-                    </td>
-                </tr>`;
-            });
-        }
-
-        // 7. Renderizar Tabla de SLA
-        const tSla = document.getElementById('table-sla');
-        if (tSla) {
-            tSla.innerHTML = '';
-            dataState.slaList.forEach((sla, i) => {
-                const slaClient = sla.client || 'GLOBAL';
-                tSla.innerHTML += `<tr>
-                    <td>${sla.desc}</td>
-                    <td><strong>${sla.days} Días</strong></td>
-                    <td><span class="badge" style="background:#1E3A8A; color:#fff; padding:3px 8px; border-radius:4px;">${slaClient}</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline" onclick="app.openEditModal('sla', ${i})">Editar</button>
-                        <button class="btn btn-sm btn-danger" onclick="app.deleteSla(${i})">Del</button>
-                    </td>
-                </tr>`;
-            });
-        }
-
-        if (typeof this.renderDashboard === 'function') this.renderDashboard();
-    },
+    if (typeof this.renderDashboard === 'function') this.renderDashboard();
+},
     deleteClient(idx) {
         if(confirm("¿Eliminar este cliente?")) {
             dataState.clientes.splice(idx, 1);
