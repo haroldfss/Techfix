@@ -1014,8 +1014,7 @@ updateLocation() {
             });
         }
     },
-    },
-   
+  
 // Modificar initMap para leer estas coordenadas
 initMap() {
     if(!this.map) {
