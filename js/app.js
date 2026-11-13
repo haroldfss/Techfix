@@ -996,7 +996,7 @@ updateLocation() {
         );
     }
 },
-  // Llenar tabla de usuarios conectados
+ renderConnectedTechTable() {
         const tOnline = document.getElementById('table-online-users');
         if (tOnline) {
             tOnline.innerHTML = '';
@@ -1014,6 +1014,7 @@ updateLocation() {
             });
         }
     },
+    },
     initMap() {
         if (!this.map) {
             this.map = L.map('tech-map').setView([4.6097, -74.0817], 12);
@@ -1030,6 +1031,7 @@ updateLocation() {
             }
         });
         setTimeout(() => this.map.invalidateSize(), 400); // Fuerza ajuste responsive
+        this.renderConnectedTechTable();
     },
 // Modificar initMap para leer estas coordenadas
 initMap() {
