@@ -117,14 +117,15 @@ table {
 @media (max-width: 900px) {
     .sidebar { 
         position: fixed; 
-        left: -300px; 
+        left: -280px; 
         top: 0; 
-        width: 260px; /* Forzar un ancho fijo que no cubra la pantalla */
-        max-width: 85vw; /* Nunca superar el 85% de la pantalla */
+        width: 250px;
         height: 100vh; 
         transition: left 0.3s ease; 
-        z-index: 1000;
+        z-index: 3000;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.3);
     }
-    .sidebar.mobile-open { left: 0; }
-    .sidebar .nav-links li { padding: 10px; font-size: 14px; }
+    .sidebar.mobile-open { 
+        left: 0; 
+    }
 }
