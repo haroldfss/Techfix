@@ -670,9 +670,6 @@ submitCierre(e) {
         let recomendacion = retrasados > 0 
         ? `⚠️ Alerta: Tienes ${retrasados} tickets retrasados. Prioriza su atención inmediata.` 
         : `✅ Excelente: No hay tickets retrasados. El flujo operativo es óptimo.`;
-        const totalFilt = filtered.length;
-        const cumplidos = filtered.filter(t => t.estado === 'Cumplido').length;
-        const pctCumplidos = totalFilt > 0 ? ((cumplidos / totalFilt) * 100).toFixed(0) : 0;
         
         document.getElementById('analysis-text-1').innerText = `Análisis: Hay ${totalFilt} tickets activos (${pctCumplidos}% de efectividad de cumplimiento).`;
         
