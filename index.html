@@ -510,6 +510,14 @@
                                 <input type="text" id="new-sistema-name" placeholder="Nuevo Sistema" class="form-control" required>
                                 <button type="submit" class="btn btn-secondary btn-block mt-1">Guardar</button>
                             </form>
+                            <!-- En el formulario addSistema: -->
+                            <select id="sistema-client" class="form-control" style="margin-bottom:8px;"><option value="GLOBAL">🌐 Todos los Clientes</option></select>
+
+                            <!-- En el formulario addFalla: -->
+                            <select id="falla-client" class="form-control" style="margin-bottom:8px;"><option value="GLOBAL">🌐 Todos los Clientes</option></select>
+
+                            <!-- En el formulario addSla: -->
+                            <select id="sla-client" class="form-control" style="margin-bottom:8px;"><option value="GLOBAL">🌐 Todos los Clientes</option></select>
                             <div class="table-responsive mt-1">
                                 <table class="table">
                                     <thead><tr><th>Sistema</th><th>Acciones</th></tr></thead>
@@ -551,8 +559,14 @@
                 </div>
                 <div style="margin-top: 20px; padding: 15px; border: 1px solid #ef4444; border-radius: 8px;">
             <h3 style="color: #ef4444; margin-top: 0;">Zona de Peligro (Depuración)</h3>
-            <button class="btn btn-danger" onclick="app.purgeData('tickets')">Borrar Todos los Tickets</button>
-            <button class="btn btn-danger" onclick="app.purgeData('clientes')">Borrar Clientes</button>
+           <div style="margin-top: 20px; padding: 15px; border: 1px solid #ef4444; border-radius: 8px;">
+    <h3 style="color: #ef4444; margin-top: 0;">Zona de Peligro (Depuración)</h3>
+    <select id="purge-client-select" class="form-control" style="margin-bottom:10px;">
+        <option value="TODOS">⚠️ BORRAR ABSOLUTAMENTE TODOS LOS TICKETS</option>
+    </select>
+    <button class="btn btn-danger" onclick="app.purgeData('tickets')">Borrar Tickets del Cliente Seleccionado</button>
+    <button class="btn btn-danger" onclick="app.purgeData('clientes')" style="margin-top:10px;">Borrar TODOS los Clientes y Sedes</button>
+</div>
         </div>
             </section>
         </main>
@@ -589,6 +603,7 @@
                     <label><input type="checkbox" value="Nuevo Ticket" class="edit-perm-cb"> Nuevo Ticket</label>
                     <label><input type="checkbox" value="Mapa Geolocalizado" class="edit-perm-cb"> Mapa Geolocalizado</label>
                     <label><input type="checkbox" value="Ajustes & Parámetros" class="edit-perm-cb"> Ajustes & Parámetros</label>
+                    <label><input type="checkbox" value="Borrar Datos" class="edit-perm-cb"> Privilegio: Borrar Tickets y Clientes</label>
                 </div>
             </div>
 
