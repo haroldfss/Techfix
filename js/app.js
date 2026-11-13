@@ -536,12 +536,12 @@ saveEdit(e) {
     },
     abrirCierre(id) {
     const ticket = dataState.tickets.find(t => t.id === id);
-    if(ticket && ticket.estado === 'Cumplido') { alert("Ticket ya Cumplido."); return; }
+    if(!ticket) { alert("Ticket no encontrado."); return; }
     
-    // Limpiar formulario para evitar datos del ticket anterior
-    document.getElementById('cierre-actividades').value = '';
-    document.getElementById('cierre-materiales').value = '';
-    document.getElementById('cierre-recomendaciones').value = '';
+    // Limpiar campos del modal
+    document.getElementById('cierre-actividades').value = ticket.actividades || '';
+    document.getElementById('cierre-materiales').value = ticket.materiales || '';
+    document.getElementById('cierre-recomendaciones').value = ticket.recomendaciones || '';
     const fileInput = document.getElementById('cierre-fotos');
     if(fileInput) fileInput.value = '';
 
@@ -561,19 +561,14 @@ submitCierre(e) {
         return;
     }
 
-    if (ticket.estado === 'Cumplido') {
-        alert("Este ticket ya está Cumplido.");
-        return;
-    }
-
-    // Guardar la información del cierre
+    // Registrar datos de cierre
     ticket.estado = 'Cumplido';
     ticket.fechaCumplido = new Date().toISOString().substring(0, 16);
     ticket.actividades = document.getElementById('cierre-actividades').value;
     ticket.materiales = document.getElementById('cierre-materiales').value;
     ticket.recomendaciones = document.getElementById('cierre-recomendaciones').value;
 
-    // Procesar fotografías de manera segura si se seleccionaron
+    // Si hay fotos, procesarlas de forma segura y rápida
     if (inputFile && inputFile.files && inputFile.files.length > 0) {
         ticket.fotos = [];
         let filesLoaded = 0;
@@ -585,21 +580,20 @@ submitCierre(e) {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 600;
+                    const MAX_WIDTH = 500;
                     const scaleSize = MAX_WIDTH / img.width;
                     canvas.width = MAX_WIDTH;
                     canvas.height = img.height * scaleSize;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     
-                    ticket.fotos.push(canvas.toDataURL('image/jpeg', 0.5));
+                    ticket.fotos.push(canvas.toDataURL('image/jpeg', 0.4));
                     filesLoaded++;
                     if (filesLoaded === totalFiles) {
                         this.finalizarCierreProceso(ticket, correoCliente);
                     }
                 };
                 img.onerror = () => {
-                    // Si una imagen falla al cargar, avanza para no bloquear al usuario
                     filesLoaded++;
                     if (filesLoaded === totalFiles) {
                         this.finalizarCierreProceso(ticket, correoCliente);
@@ -610,7 +604,6 @@ submitCierre(e) {
             reader.readAsDataURL(file);
         });
     } else {
-        // Si no hay fotos, finaliza de inmediato
         this.finalizarCierreProceso(ticket, correoCliente);
     }
 },
