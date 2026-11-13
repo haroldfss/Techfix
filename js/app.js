@@ -578,54 +578,49 @@ submitCierre(e) {
         e.preventDefault();
         const id = document.getElementById('modal-ticket-id').innerText;
         const ticket = dataState.tickets.find(t => t.id === id);
-        const correoCliente = document.getElementById('cierre-correo').value;
-        const inputFile = document.getElementById('cierre-fotos');
+        const correo = document.getElementById('cierre-correo').value;
+        const inputFiles = document.getElementById('cierre-fotos');
         
-        if (!ticket) { alert("Error: Ticket no encontrado."); return; }
+        if (!ticket || ticket.estado === 'Cumplido') { alert("Ticket inválido o ya cerrado."); return; }
 
         ticket.estado = 'Cumplido';
         ticket.fechaCumplido = new Date().toISOString().substring(0, 16);
         ticket.actividades = document.getElementById('cierre-actividades').value;
         ticket.materiales = document.getElementById('cierre-materiales').value;
         ticket.recomendaciones = document.getElementById('cierre-recomendaciones').value;
+        ticket.fotos = [];
 
-        if (inputFile && inputFile.files && inputFile.files.length > 0) {
-            ticket.fotos = [];
+        if (inputFiles && inputFiles.files.length > 0) {
             let filesLoaded = 0;
-            const totalFiles = inputFile.files.length;
-            
-            Array.from(inputFile.files).forEach((file) => {
+            Array.from(inputFiles.files).forEach(file => {
                 const reader = new FileReader();
-                reader.onload = (uploadEvent) => {
+                reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 600;
-                        const scaleSize = MAX_WIDTH / img.width;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scaleSize;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        
-                        ticket.fotos.push(canvas.toDataURL('image/jpeg', 0.6));
+                        const scale = 500 / img.width;
+                        canvas.width = 500; canvas.height = img.height * scale;
+                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                        ticket.fotos.push(canvas.toDataURL('image/jpeg', 0.5));
                         filesLoaded++;
-                        if (filesLoaded === totalFiles) {
-                            this.finalizarCierreProceso(ticket, correoCliente);
-                        }
+                        if (filesLoaded === inputFiles.files.length) this.finalizarCierreProceso(ticket, correo);
                     };
-                    img.onerror = () => {
-                        filesLoaded++;
-                        if (filesLoaded === totalFiles) {
-                            this.finalizarCierreProceso(ticket, correoCliente);
-                        }
-                    };
-                    img.src = uploadEvent.target.result;
+                    img.onerror = () => { filesLoaded++; if(filesLoaded === inputFiles.files.length) this.finalizarCierreProceso(ticket, correo); };
+                    img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             });
         } else {
-            this.finalizarCierreProceso(ticket, correoCliente);
+            this.finalizarCierreProceso(ticket, correo);
         }
+    },
+    finalizarCierreProceso(ticket, correo) {
+        this.saveStorage();
+        document.getElementById('modal-cierre').style.display = 'none';
+        this.downloadSingleTicketPDF(ticket.id); // Descarga el PDF con las fotos insertadas
+        window.location.href = `mailto:${correo}?subject=Cierre Ticket ${ticket.id}&body=Ticket cerrado exitosamente. Adjunte el PDF descargado.`;
+        alert("¡Ticket cerrado y guardado exitosamente!");
+        this.renderAll();
     },
     finalizarCierreProceso(ticket, correoCliente) {
         this.saveStorage();
