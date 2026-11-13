@@ -919,30 +919,27 @@ submitCierre(e) {
     },
 // SOLUCIÓN 6: Depuración de datos a cero
 purgeData(tipo) {
-        if(currentUser && currentUser.role !== "Administrador" && !currentUser.perms.includes("Ajustes & Parámetros")) {
-            alert("No tienes privilegios de Administrador para realizar esta acción de depuración.");
+        // Validar nuevo privilegio
+        if (!currentUser.perms.includes("Borrar Datos") && currentUser.role !== "Administrador") {
+            alert("No tienes el privilegio 'Borrar Datos' asignado a tu usuario.");
             return;
         }
 
-        const pass = prompt(`ADVERTENCIA: Vas a eliminar datos de ${tipo}. Escribe "CONFIRMAR" para proceder:`);
-        if(pass === "CONFIRMAR") {
-            if(tipo === 'tickets') {
-                let listaClientesStr = dataState.clientes.map(c => c.name).join(", ");
-                const clienteBorrar = prompt(`Escribe el nombre exacto del cliente cuyos tickets deseas borrar (Clientes disponibles: ${listaClientesStr}). Escribe "TODOS" para vaciar todo:`);
-                
+        const confirmacion = prompt(`ADVERTENCIA: Vas a eliminar ${tipo}. Escribe "CONFIRMAR":`);
+        if (confirmacion === "CONFIRMAR") {
+            if (tipo === 'tickets') {
+                const clienteBorrar = document.getElementById('purge-client-select').value;
                 if (clienteBorrar === "TODOS") {
                     dataState.tickets = [];
-                    alert(`Todos los tickets han sido borrados.`);
-                } else if (clienteBorrar) {
-                    const totalAntes = dataState.tickets.length;
-                    dataState.tickets = dataState.tickets.filter(t => t.cliente.toLowerCase() !== clienteBorrar.trim().toLowerCase());
-                    const borrados = totalAntes - dataState.tickets.length;
-                    alert(`Se eliminaron ${borrados} tickets del cliente "${clienteBorrar}".`);
+                    alert("Todos los tickets de la base de datos han sido borrados.");
+                } else {
+                    const inicial = dataState.tickets.length;
+                    dataState.tickets = dataState.tickets.filter(t => t.cliente !== clienteBorrar);
+                    alert(`Se eliminaron ${inicial - dataState.tickets.length} tickets de ${clienteBorrar}.`);
                 }
-            } else if(tipo === 'clientes') {
-                dataState.clientes = [];
-                dataState.sedes = [];
-                alert('Clientes y sedes borrados.');
+            } else if (tipo === 'clientes') {
+                dataState.clientes = []; dataState.sedes = [];
+                alert("Todos los clientes y sedes han sido borrados.");
             }
             this.saveStorage();
             this.renderAll();
