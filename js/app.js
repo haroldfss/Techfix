@@ -526,14 +526,19 @@ saveEdit(e) {
     loadSedesForClient() {
         const clientEl = document.getElementById('ticket-cliente');
         let client = clientEl ? clientEl.value : "";
-        let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : client;
-        
         const sedeEl = document.getElementById('ticket-sede');
         if(!sedeEl) return;
+        
         sedeEl.innerHTML = '';
-        dataState.sedes.filter(s => s.client === activeClient).forEach(s => {
-            sedeEl.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
-        });
+        // Filtrar sedes del cliente
+        const sedesFiltradas = dataState.sedes.filter(s => s.client === client || !s.client);
+        if (sedesFiltradas.length === 0) {
+            sedeEl.innerHTML = `<option value="">No hay sedes (Agregue en Ajustes)</option>`;
+        } else {
+            sedesFiltradas.forEach(s => {
+                sedeEl.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
+            });
+        }
     },
     saveTicket(e) {
         e.preventDefault();
