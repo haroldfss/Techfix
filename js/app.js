@@ -556,53 +556,63 @@ submitCierre(e) {
     const correoCliente = document.getElementById('cierre-correo').value;
     const inputFile = document.getElementById('cierre-fotos');
     
-    if (ticket) {
-        if (ticket.estado === 'Cumplido') return;
-        ticket.estado = 'Cumplido';
-        ticket.fechaCumplido = new Date().toISOString().substring(0, 16);
-        ticket.actividades = document.getElementById('cierre-actividades').value;
-        ticket.materiales = document.getElementById('cierre-materiales').value;
-        ticket.recomendaciones = document.getElementById('cierre-recomendaciones').value;
-
-        // Si seleccionó fotos, procesarlas de forma segura
-        if (inputFile && inputFile.files && inputFile.files.length > 0) {
-            ticket.fotos = [];
-            let filesLoaded = 0;
-            
-            Array.from(inputFile.files).forEach((file) => {
-                const reader = new FileReader();
-                reader.onload = (uploadEvent) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 600;
-                        const scaleSize = MAX_WIDTH / img.width;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scaleSize;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        
-                        ticket.fotos.push(canvas.toDataURL('image/jpeg', 0.5));
-                        filesLoaded++;
-                        if (filesLoaded === inputFile.files.length) {
-                            app.finalizarCierreProceso(ticket, correoCliente);
-                        }
-                    };
-                    img.onerror = () => {
-                        // Si la imagen falla, avanza sin bloquear
-                        filesLoaded++;
-                        if (filesLoaded === inputFile.files.length) {
-                            app.finalizarCierreProceso(ticket, correoCliente);
-                        }
-                    };
-                    img.src = uploadEvent.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-            return; 
-        }
+    if (!ticket) {
+        alert("Error: Ticket no encontrado.");
+        return;
     }
-    this.finalizarCierreProceso(ticket, correoCliente);
+
+    if (ticket.estado === 'Cumplido') {
+        alert("Este ticket ya está Cumplido.");
+        return;
+    }
+
+    // Guardar la información del cierre
+    ticket.estado = 'Cumplido';
+    ticket.fechaCumplido = new Date().toISOString().substring(0, 16);
+    ticket.actividades = document.getElementById('cierre-actividades').value;
+    ticket.materiales = document.getElementById('cierre-materiales').value;
+    ticket.recomendaciones = document.getElementById('cierre-recomendaciones').value;
+
+    // Procesar fotografías de manera segura si se seleccionaron
+    if (inputFile && inputFile.files && inputFile.files.length > 0) {
+        ticket.fotos = [];
+        let filesLoaded = 0;
+        const totalFiles = inputFile.files.length;
+        
+        Array.from(inputFile.files).forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = (uploadEvent) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 600;
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    ticket.fotos.push(canvas.toDataURL('image/jpeg', 0.5));
+                    filesLoaded++;
+                    if (filesLoaded === totalFiles) {
+                        this.finalizarCierreProceso(ticket, correoCliente);
+                    }
+                };
+                img.onerror = () => {
+                    // Si una imagen falla al cargar, avanza para no bloquear al usuario
+                    filesLoaded++;
+                    if (filesLoaded === totalFiles) {
+                        this.finalizarCierreProceso(ticket, correoCliente);
+                    }
+                };
+                img.src = uploadEvent.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    } else {
+        // Si no hay fotos, finaliza de inmediato
+        this.finalizarCierreProceso(ticket, correoCliente);
+    }
 },
     calcularTiempoResolucion(t) {
         if(!t.fechaCreacion || !t.fechaCumplido) return 'Pendiente';
