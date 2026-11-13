@@ -276,33 +276,155 @@ closeMobileMenuOnClick() {
     },
 
     // --- CRUD ---
-  addClient(e) {
-    e.preventDefault();
-    const nameInput = document.getElementById('cliente-nombre');
-    const colorInput = document.getElementById('cliente-color');
-    const logoInput = document.getElementById('cliente-logo');
+ addClient(e) {
+        e.preventDefault();
+        const nameInput = document.getElementById('cliente-nombre');
+        const colorInput = document.getElementById('cliente-color');
+        const logoInput = document.getElementById('cliente-logo');
 
-    const name = nameInput ? nameInput.value.trim() : '';
-    const color = colorInput ? colorInput.value : '#1E3A8A';
-    const logo = logoInput ? logoInput.value.trim() : '';
+        const name = nameInput ? nameInput.value.trim() : '';
+        const color = colorInput ? colorInput.value : '#1E3A8A';
+        const logo = logoInput ? logoInput.value.trim() : '';
 
-    if (!name) {
-        alert("Por favor ingrese el nombre del cliente.");
-        return;
-    }
+        if (!name) {
+            alert("Por favor ingrese el nombre del cliente.");
+            return;
+        }
 
-    // Inicializar el arreglo si por alguna razón no existe
-    if (!dataState.clientes) {
-        dataState.clientes = [];
-    }
+        if (!dataState.clientes) {
+            dataState.clientes = [];
+        }
 
-    dataState.clientes.push({ name, color, logo });
-    this.saveStorage();
-    
-    e.target.reset();
-    this.renderAll();
-    alert("¡Cliente y logotipo guardados con éxito!");
-},
+        dataState.clientes.push({ name, color, logo });
+        this.saveStorage();
+        
+        e.target.reset();
+        this.renderAll();
+        alert("¡Cliente y logotipo guardados con éxito!");
+    },
+
+    deleteClient(idx) {
+        if (confirm("¿Estás seguro de eliminar este cliente?")) {
+            dataState.clientes.splice(idx, 1);
+            this.saveStorage();
+            this.renderAll();
+        }
+    },
+
+    renderAll() {
+        // 1. Poblar selectores de clientes únicos en toda la app
+        const selectoresConfig = [
+            { id: 'ticket-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
+            { id: 'sede-client', defaultText: 'Seleccione Cliente...' },
+            { id: 'user-client', defaultText: 'Asignar Todos los Clientes (Master)' },
+            { id: 'sistema-client', defaultText: '🌐 Todos los Clientes' },
+            { id: 'falla-client', defaultText: '🌐 Todos los Clientes' },
+            { id: 'sla-client', defaultText: '🌐 Todos los Clientes' },
+            { id: 'purge-client-select', defaultText: '⚠️ TODOS LOS TICKETS' }
+        ];
+
+        selectoresConfig.forEach(config => {
+            const el = document.getElementById(config.id);
+            if (el) {
+                const currentVal = el.value;
+                const defaultVal = config.id === 'purge-client-select' ? 'TODOS' : 'GLOBAL';
+                el.innerHTML = `<option value="${defaultVal}">${config.defaultText}</option>`;
+                dataState.clientes.forEach(c => {
+                    el.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+                });
+                if (currentVal) el.value = currentVal;
+            }
+        });
+
+        // 2. Renderizar Tabla de Clientes en Ajustes
+        const tCli = document.getElementById('table-clientes');
+        if (tCli) {
+            tCli.innerHTML = '';
+            dataState.clientes.forEach((c, i) => {
+                tCli.innerHTML += `<tr>
+                    <td><strong>${c.name}</strong></td>
+                    <td><div style="width:20px;height:20px;background:${c.color||'#1E3A8A'};border-radius:4px;"></div></td>
+                    <td>${c.logo ? `<img src="${c.logo}" style="max-height:30px;max-width:80px;object-fit:contain;">` : 'N/A'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="app.openEditModal('client', ${i})">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="app.deleteClient(${i})">Del</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        // 3. Renderizar Sedes
+        const tSed = document.getElementById('table-sedes');
+        if (tSed) {
+            tSed.innerHTML = '';
+            dataState.sedes.forEach((s, i) => {
+                tSed.innerHTML += `<tr>
+                    <td><strong>${s.sede}</strong></td>
+                    <td>${s.client || 'N/A'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="app.openEditModal('sede', ${i})">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="app.deleteSede(${i})">Del</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        // 4. Renderizar Sistemas
+        const tSys = document.getElementById('table-sistemas');
+        if (tSys) {
+            tSys.innerHTML = '';
+            dataState.sistemas.forEach((s, i) => {
+                const sName = typeof s === 'object' ? s.name : s;
+                const sClient = typeof s === 'object' ? (s.client || 'GLOBAL') : 'GLOBAL';
+                tSys.innerHTML += `<tr>
+                    <td><strong>${sName}</strong></td>
+                    <td><span class="badge" style="background:#1E3A8A; color:#fff; padding:3px 8px; border-radius:4px;">${sClient}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="app.openEditModal('sistema', ${i})">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="app.deleteSistema(${i})">Del</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        // 5. Renderizar Fallas
+        const tFal = document.getElementById('table-fallas');
+        if (tFal) {
+            tFal.innerHTML = '';
+            dataState.fallas.forEach((f, i) => {
+                const fName = typeof f === 'object' ? f.name : f;
+                const fClient = typeof f === 'object' ? (f.client || 'GLOBAL') : 'GLOBAL';
+                tFal.innerHTML += `<tr>
+                    <td><strong>${fName}</strong></td>
+                    <td><span class="badge" style="background:#1E3A8A; color:#fff; padding:3px 8px; border-radius:4px;">${fClient}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="app.openEditModal('falla', ${i})">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="app.deleteFalla(${i})">Del</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        // 6. Renderizar SLA
+        const tSla = document.getElementById('table-sla');
+        if (tSla) {
+            tSla.innerHTML = '';
+            dataState.slaList.forEach((sla, i) => {
+                const slaClient = sla.client || 'GLOBAL';
+                tSla.innerHTML += `<tr>
+                    <td>${sla.desc}</td>
+                    <td><strong>${sla.days} Días</strong></td>
+                    <td><span class="badge" style="background:#1E3A8A; color:#fff; padding:3px 8px; border-radius:4px;">${slaClient}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="app.openEditModal('sla', ${i})">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="app.deleteSla(${i})">Del</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        if (typeof this.renderDashboard === 'function') this.renderDashboard();
+    },
     deleteClient(idx) {
         if(confirm("¿Eliminar este cliente?")) {
             dataState.clientes.splice(idx, 1);
