@@ -276,19 +276,32 @@ closeMobileMenuOnClick() {
     },
 
     // --- CRUD ---
-   addClient(e) {
+  addClient(e) {
     e.preventDefault();
-    const name = document.getElementById('cliente-nombre').value;
-    const color = document.getElementById('cliente-color') ? document.getElementById('cliente-color').value : '#1E3A8A';
-    const logo = document.getElementById('cliente-logo') ? document.getElementById('cliente-logo').value : '';
-    
-    if (!name) { alert("El nombre del cliente es obligatorio."); return; }
+    const nameInput = document.getElementById('cliente-nombre');
+    const colorInput = document.getElementById('cliente-color');
+    const logoInput = document.getElementById('cliente-logo');
+
+    const name = nameInput ? nameInput.value.trim() : '';
+    const color = colorInput ? colorInput.value : '#1E3A8A';
+    const logo = logoInput ? logoInput.value.trim() : '';
+
+    if (!name) {
+        alert("Por favor ingrese el nombre del cliente.");
+        return;
+    }
+
+    // Inicializar el arreglo si por alguna razón no existe
+    if (!dataState.clientes) {
+        dataState.clientes = [];
+    }
 
     dataState.clientes.push({ name, color, logo });
     this.saveStorage();
+    
     e.target.reset();
     this.renderAll();
-    alert("Cliente y logotipo guardados.");
+    alert("¡Cliente y logotipo guardados con éxito!");
 },
     deleteClient(idx) {
         if(confirm("¿Eliminar este cliente?")) {
