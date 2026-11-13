@@ -346,8 +346,12 @@
                 <div class="header-action">
                     <h1>Gestión de Tickets (Por Cliente)</h1>
                     <div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
-                        <button class="btn btn-outline" onclick="app.downloadTechnicianReportPrompt()"><i class="fas fa-file-download"></i> Informe por Técnico</button>
-                        <button class="btn btn-secondary" onclick="app.downloadGeneralTicketsReport()"><i class="fas fa-file-excel"></i> Exportar Listado Excel</button>
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <input type="date" id="export-fecha-ini" class="form-control" style="width: auto;">
+                        <input type="date" id="export-fecha-fin" class="form-control" style="width: auto;">
+                        <input type="text" id="export-tecnico" placeholder="Nombre Técnico" class="form-control" style="width: 150px;">
+                        <button class="btn btn-primary" onclick="app.exportarTicketsAvanzado()">Descargar Informe Detallado</button>
+                        </div>
                     </div>
                 </div>
                 <div class="card">
@@ -545,6 +549,11 @@
                         </table>
                     </div>
                 </div>
+                <div style="margin-top: 20px; padding: 15px; border: 1px solid #ef4444; border-radius: 8px;">
+            <h3 style="color: #ef4444; margin-top: 0;">Zona de Peligro (Depuración)</h3>
+            <button class="btn btn-danger" onclick="app.purgeData('tickets')">Borrar Todos los Tickets</button>
+            <button class="btn btn-danger" onclick="app.purgeData('clientes')">Borrar Clientes</button>
+        </div>
             </section>
         </main>
     </div>
@@ -558,6 +567,8 @@
                 <input type="hidden" id="edit-index">
                 <div class="form-group"><label>Valor Principal</label><input type="text" id="edit-value-1" class="form-control" required></div>
                 <div class="form-group" id="edit-group-2"><label>Valor Secundario (Contraseña / Logo / Rol)</label><input type="text" id="edit-value-2" class="form-control"></div>
+                <!-- PEGAR AQUÍ EL NUEVO CÓDIGO -->
+                <div class="form-group" id="edit-group-3" style="display:none;"><label>Color Corporativo (Hexadecimal)</label><input type="color" id="edit-value-3" class="form-control"></div>
                 
                 <div class="form-group" id="edit-group-perms" style="display:none;">
                     <label><strong>Editar Privilegios:</strong></label>
