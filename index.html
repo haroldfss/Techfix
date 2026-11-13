@@ -419,6 +419,7 @@
                                 <tr><th>Técnico</th><th>Rol / Perfil</th><th>Cliente Asignado</th><th>Estado GPS</th><th>Última Conexión</th></tr>
                             </thead>
                             <tbody id="table-connected-techs"></tbody>
+                            <tbody id="table-online-users"></tbody>
                         </table>
                     </div>
                 </div>
@@ -490,6 +491,7 @@
                                 <label><input type="checkbox" class="perm-cb" value="Nuevo Ticket" checked> Nuevo Ticket</label>
                                 <label><input type="checkbox" class="perm-cb" value="Mapa Geolocalizado"> Mapa Geolocalizado</label>
                                 <label><input type="checkbox" class="perm-cb" value="Ajustes & Parámetros"> Ajustes & Parámetros (Admin)</label>
+                                <label><input type="checkbox" value="Borrar Datos" class="perm-cb"> Borrar Tickets/Clientes</label>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-secondary btn-block mt-1">Registrar Usuario</button>
@@ -544,11 +546,12 @@
                 <div id="tab-sla" class="card settings-tab-content" style="display:none;">
                     <h3>Gestión SLA</h3>
                     <form onsubmit="app.addSla(event)" class="mt-1">
-                        <div class="grid-3">
-                            <input type="text" id="new-sla-desc" placeholder="Descripción" class="form-control" required>
-                            <input type="number" id="new-sla-days" placeholder="Días Meta" class="form-control" required>
-                            <button type="submit" class="btn btn-secondary btn-block">Guardar</button>
-                        </div>
+                    <select id="sla-client" class="form-control" style="margin-bottom:8px;">
+                    <option value="GLOBAL">🌐 Todos los Clientes</option>
+                    </select>
+                    <input type="text" id="new-sla-desc" placeholder="Descripción SLA" class="form-control" required style="margin-bottom:8px;">
+                    <input type="number" id="new-sla-days" placeholder="Días Meta" class="form-control" required style="margin-bottom:8px;">
+                    <button type="submit" class="btn btn-secondary btn-block">Guardar SLA</button>
                     </form>
                     <div class="table-responsive mt-2">
                         <table class="table">
