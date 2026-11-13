@@ -338,7 +338,9 @@ closeMobileMenuOnClick() {
     },
     addSistema(e) {
         e.preventDefault();
-        dataState.sistemas.push(document.getElementById('new-sistema-name').value);
+        const client = document.getElementById('sistema-client').value;
+        const name = document.getElementById('new-sistema-name').value;
+        dataState.sistemas.push({ client, name });
         this.saveStorage();
         e.target.reset();
         this.renderAll();
@@ -350,7 +352,9 @@ closeMobileMenuOnClick() {
     },
     addFalla(e) {
         e.preventDefault();
-        dataState.fallas.push(document.getElementById('new-falla-name').value);
+        const client = document.getElementById('falla-client').value;
+        const name = document.getElementById('new-falla-name').value;
+        dataState.fallas.push({ client, name });
         this.saveStorage();
         e.target.reset();
         this.renderAll();
@@ -362,7 +366,10 @@ closeMobileMenuOnClick() {
     },
     addSla(e) {
         e.preventDefault();
-        dataState.slaList.push({ desc: document.getElementById('new-sla-desc').value, days: document.getElementById('new-sla-days').value });
+        const client = document.getElementById('sla-client').value;
+        const desc = document.getElementById('new-sla-desc').value;
+        const days = document.getElementById('new-sla-days').value;
+        dataState.slaList.push({ client, desc, days });
         this.saveStorage();
         e.target.reset();
         this.renderAll();
@@ -474,29 +481,47 @@ saveEdit(e) {
     loadTicketSelectors() {
         const clientEl = document.getElementById('ticket-cliente');
         if(!clientEl) return;
-        clientEl.innerHTML = '';
-        let availableClients = dataState.clientes;
-        let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : "";
-        if(activeClient) availableClients = dataState.clientes.filter(c => c.name === activeClient);
-        
-        availableClients.forEach(c => clientEl.innerHTML += `<option value="${c.name}">${c.name}</option>`);
-        this.loadSedesForClient();
+        let selectedClient = clientEl.value;
 
+        // Cargar Sistemas filtrados por cliente o globales
         const sisEl = document.getElementById('ticket-sistema');
-        sisEl.innerHTML = ''; dataState.sistemas.forEach(s => sisEl.innerHTML += `<option value="${s}">${s}</option>`);
+        if(sisEl) {
+            sisEl.innerHTML = ''; 
+            dataState.sistemas.forEach(s => {
+                const sName = typeof s === 'object' ? s.name : s;
+                const sClient = typeof s === 'object' ? (s.client || 'GLOBAL') : 'GLOBAL';
+                if(sClient === 'GLOBAL' || sClient === selectedClient) {
+                    sisEl.innerHTML += `<option value="${sName}">${sName}</option>`;
+                }
+            });
+        }
 
+        // Cargar Fallas filtradas por cliente o globales
         const fallaEl = document.getElementById('ticket-falla');
-        fallaEl.innerHTML = ''; dataState.fallas.forEach(f => fallaEl.innerHTML += `<option value="${f}">${f}</option>`);
+        if(fallaEl) {
+            fallaEl.innerHTML = ''; 
+            dataState.fallas.forEach(f => {
+                const fName = typeof f === 'object' ? f.name : f;
+                const fClient = typeof f === 'object' ? (f.client || 'GLOBAL') : 'GLOBAL';
+                if(fClient === 'GLOBAL' || fClient === selectedClient) {
+                    fallaEl.innerHTML += `<option value="${fName}">${fName}</option>`;
+                }
+            });
+        }
 
-        const tecEl = document.getElementById('ticket-tecnico');
-        tecEl.innerHTML = '';
-        let targetTecs = dataState.usuarios.filter(u => u.role.toLowerCase().includes('técnico') || u.role.toLowerCase().includes('tecnico'));
-        if(activeClient) targetTecs = targetTecs.filter(u => u.assignedClient === activeClient || u.assignedClient === "TODOS");
-        if(targetTecs.length === 0) targetTecs = dataState.usuarios;
-        targetTecs.forEach(u => tecEl.innerHTML += `<option value="${u.name}">${u.name} (${u.role})</option>`);
-
+        // Cargar SLAs filtrados por cliente o globales
         const slaEl = document.getElementById('ticket-sla');
-        slaEl.innerHTML = ''; dataState.slaList.forEach(s => slaEl.innerHTML += `<option value="${s.days}">${s.desc} (${s.days} Días)</option>`);
+        if(slaEl) {
+            slaEl.innerHTML = ''; 
+            dataState.slaList.forEach(sla => {
+                const slaClient = sla.client || 'GLOBAL';
+                if(slaClient === 'GLOBAL' || slaClient === selectedClient) {
+                    slaEl.innerHTML += `<option value="${sla.days}">${sla.desc} (${sla.days} Días)</option>`;
+                }
+            });
+        }
+
+        this.loadSedesForClient();
     },
     loadSedesForClient() {
         const clientEl = document.getElementById('ticket-cliente');
@@ -550,63 +575,72 @@ saveEdit(e) {
 },
 
 submitCierre(e) {
-    e.preventDefault();
-    const id = document.getElementById('modal-ticket-id').innerText;
-    const ticket = dataState.tickets.find(t => t.id === id);
-    const correoCliente = document.getElementById('cierre-correo').value;
-    const inputFile = document.getElementById('cierre-fotos');
-    
-    if (!ticket) {
-        alert("Error: Ticket no encontrado.");
-        return;
-    }
-
-    // Registrar datos de cierre
-    ticket.estado = 'Cumplido';
-    ticket.fechaCumplido = new Date().toISOString().substring(0, 16);
-    ticket.actividades = document.getElementById('cierre-actividades').value;
-    ticket.materiales = document.getElementById('cierre-materiales').value;
-    ticket.recomendaciones = document.getElementById('cierre-recomendaciones').value;
-
-    // Si hay fotos, procesarlas de forma segura y rápida
-    if (inputFile && inputFile.files && inputFile.files.length > 0) {
-        ticket.fotos = [];
-        let filesLoaded = 0;
-        const totalFiles = inputFile.files.length;
+        e.preventDefault();
+        const id = document.getElementById('modal-ticket-id').innerText;
+        const ticket = dataState.tickets.find(t => t.id === id);
+        const correoCliente = document.getElementById('cierre-correo').value;
+        const inputFile = document.getElementById('cierre-fotos');
         
-        Array.from(inputFile.files).forEach((file) => {
-            const reader = new FileReader();
-            reader.onload = (uploadEvent) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 500;
-                    const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    ticket.fotos.push(canvas.toDataURL('image/jpeg', 0.4));
-                    filesLoaded++;
-                    if (filesLoaded === totalFiles) {
-                        this.finalizarCierreProceso(ticket, correoCliente);
-                    }
+        if (!ticket) { alert("Error: Ticket no encontrado."); return; }
+
+        ticket.estado = 'Cumplido';
+        ticket.fechaCumplido = new Date().toISOString().substring(0, 16);
+        ticket.actividades = document.getElementById('cierre-actividades').value;
+        ticket.materiales = document.getElementById('cierre-materiales').value;
+        ticket.recomendaciones = document.getElementById('cierre-recomendaciones').value;
+
+        if (inputFile && inputFile.files && inputFile.files.length > 0) {
+            ticket.fotos = [];
+            let filesLoaded = 0;
+            const totalFiles = inputFile.files.length;
+            
+            Array.from(inputFile.files).forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = (uploadEvent) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 600;
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        ticket.fotos.push(canvas.toDataURL('image/jpeg', 0.6));
+                        filesLoaded++;
+                        if (filesLoaded === totalFiles) {
+                            this.finalizarCierreProceso(ticket, correoCliente);
+                        }
+                    };
+                    img.onerror = () => {
+                        filesLoaded++;
+                        if (filesLoaded === totalFiles) {
+                            this.finalizarCierreProceso(ticket, correoCliente);
+                        }
+                    };
+                    img.src = uploadEvent.target.result;
                 };
-                img.onerror = () => {
-                    filesLoaded++;
-                    if (filesLoaded === totalFiles) {
-                        this.finalizarCierreProceso(ticket, correoCliente);
-                    }
-                };
-                img.src = uploadEvent.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-    } else {
-        this.finalizarCierreProceso(ticket, correoCliente);
-    }
-},
+                reader.readAsDataURL(file);
+            });
+        } else {
+            this.finalizarCierreProceso(ticket, correoCliente);
+        }
+    },
+    finalizarCierreProceso(ticket, correoCliente) {
+        this.saveStorage();
+        const modal = document.getElementById('modal-cierre');
+        if(modal) modal.style.display = 'none';
+        
+        this.downloadSingleTicketPDF(ticket.id);
+        
+        const asunto = encodeURIComponent(`Informe de Cumplimiento - Ticket ${ticket.id}`);
+        const cuerpo = encodeURIComponent(`Hola,\n\nSe ha completado satisfactoriamente el servicio del ticket ${ticket.id} (${ticket.sede}).\n\n- Actividades: ${ticket.actividades}\n- Materiales: ${ticket.materiales}\n\nPor favor adjunte el archivo PDF descargado.\n\nAtentamente,\nSoporte Técnico ServiTrack`);
+        
+        window.location.href = `mailto:${correoCliente}?subject=${asunto}&body=${cuerpo}`;
+        alert(`¡Ticket ${ticket.id} cerrado con éxito! Informe generado con fotos y correo preparado.`);
+        this.renderTicketsTable();
+    },
     calcularTiempoResolucion(t) {
         if(!t.fechaCreacion || !t.fechaCumplido) return 'Pendiente';
         const diffMs = new Date(t.fechaCumplido) - new Date(t.fechaCreacion);
@@ -784,50 +818,55 @@ submitCierre(e) {
     },
 
     // --- RENDERIZADO GENERAL ---
-    renderAll() {
-        const gClientSel = document.getElementById('global-client-filter');
-        const sCli = document.getElementById('sede-client-select');
-        const uClientSel = document.getElementById('new-user-client');
+   renderAll() {
+        // ... (mantén el código existente al inicio de renderAll) ...
 
-        if(gClientSel) { gClientSel.innerHTML = '<option value="">Todos los Clientes (Vista Master)</option>'; dataState.clientes.forEach(c => gClientSel.innerHTML += `<option value="${c.name}">${c.name}</option>`); gClientSel.value = activeClientContext; }
-        if(sCli) { sCli.innerHTML = '<option value="">Seleccione Cliente...</option>'; dataState.clientes.forEach(c => sCli.innerHTML += `<option value="${c.name}">${c.name}</option>`); }
-        if(uClientSel) { uClientSel.innerHTML = '<option value="TODOS">Asignar Todos los Clientes (Master)</option>'; dataState.clientes.forEach(c => uClientSel.innerHTML += `<option value="${c.name}">${c.name}</option>`); }
+        // Llenar selects de clientes en los formularios de ajustes
+        ['sistema-client', 'falla-client', 'sla-client'].forEach(selectId => {
+            const sel = document.getElementById(selectId);
+            if(sel) {
+                const currentVal = sel.value;
+                sel.innerHTML = '<option value="GLOBAL">🌐 Global (Todos los Clientes)</option>';
+                dataState.clientes.forEach(c => {
+                    sel.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+                });
+                sel.value = currentVal;
+            }
+        });
 
-        const tCli = document.getElementById('table-clientes');
-        if(tCli) { tCli.innerHTML = ''; dataState.clientes.forEach((c, i) => { tCli.innerHTML += `<tr><td><strong>${c.name}</strong></td><td><span style="display:inline-block;width:15px;height:15px;background:${c.color};border-radius:4px;"></span></td><td><img src="${c.logo}" style="height:25px; object-fit:contain;"></td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('client', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteClient(${i})">Del</button></td></tr>`; }); }
-
-        const tSed = document.getElementById('table-sedes');
-        if(tSed) { tSed.innerHTML = ''; dataState.sedes.forEach((s, i) => { tSed.innerHTML += `<tr><td><strong>${s.sede}</strong></td><td>${s.client}</td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('sede', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteSede(${i})">Del</button></td></tr>`; }); }
-
-        this.updateSedeCheckboxes();
-
-        const tUsu = document.getElementById('table-usuarios');
-        const fTec = document.getElementById('filt-tecnico');
-        if(tUsu && fTec) {
-            tUsu.innerHTML = ''; fTec.innerHTML = '<option value="">Técnico (Todos)</option>';
-            let visibleUsers = dataState.usuarios;
-            let activeClient = (currentUser && currentUser.assignedClient && currentUser.assignedClient !== "TODOS") ? currentUser.assignedClient : "";
-            if(currentUser && currentUser.role !== "Administrador" && activeClient) visibleUsers = dataState.usuarios.filter(u => u.assignedClient === activeClient || u.assignedClient === "TODOS");
-            visibleUsers.forEach((u, i) => {
-                const realIndex = dataState.usuarios.indexOf(u);
-                tUsu.innerHTML += `<tr><td><strong>${u.name}</strong></td><td>${u.role}</td><td>${u.assignedClient}</td><td><span style="font-size:0.85rem;color:var(--text-muted);">${(u.perms || []).join(', ')}</span></td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('user', ${realIndex})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteUser(${realIndex})">Del</button></td></tr>`;
-            });
-            let techListForFilter = dataState.usuarios.filter(u => u.role.toLowerCase().includes('técnico') || u.role.toLowerCase().includes('tecnico'));
-            if(activeClient) techListForFilter = techListForFilter.filter(u => u.assignedClient === activeClient || u.assignedClient === "TODOS");
-            techListForFilter.forEach(u => fTec.innerHTML += `<option value="${u.name}">${u.name}</option>`);
+        // Renderizar tabla de Sistemas con su Cliente
+        const tSys = document.getElementById('table-sistemas');
+        if(tSys) {
+            tSys.innerHTML = ''; 
+            dataState.sistemas.forEach((s, i) => {
+                const sysName = typeof s === 'object' ? s.name : s;
+                const sysClient = typeof s === 'object' ? (s.client || 'GLOBAL') : 'GLOBAL';
+                tSys.innerHTML += `<tr><td><strong>${sysName}</strong></td><td><span class="badge" style="background:#1E3A8A;">${sysClient}</span></td><td><button class="btn btn-danger btn-sm" onclick="app.deleteSistema(${i})">Del</button></td></tr>`;
+            }); 
         }
 
-        const tSys = document.getElementById('table-sistemas');
-        if(tSys) { tSys.innerHTML = ''; dataState.sistemas.forEach((s, i) => { tSys.innerHTML += `<tr><td>${s}</td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('sistema', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteSistema(${i})">Del</button></td></tr>`; }); }
-
+        // Renderizar tabla de Fallas con su Cliente
         const tFal = document.getElementById('table-fallas');
-        if(tFal) { tFal.innerHTML = ''; dataState.fallas.forEach((f, i) => { tFal.innerHTML += `<tr><td>${f}</td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('falla', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteFalla(${i})">Del</button></td></tr>`; }); }
+        if(tFal) {
+            tFal.innerHTML = ''; 
+            dataState.fallas.forEach((f, i) => {
+                const fName = typeof f === 'object' ? f.name : f;
+                const fClient = typeof f === 'object' ? (f.client || 'GLOBAL') : 'GLOBAL';
+                tFal.innerHTML += `<tr><td><strong>${fName}</strong></td><td><span class="badge" style="background:#1E3A8A;">${fClient}</span></td><td><button class="btn btn-danger btn-sm" onclick="app.deleteFalla(${i})">Del</button></td></tr>`;
+            }); 
+        }
 
+        // Renderizar tabla de SLAs con su Cliente
         const tSla = document.getElementById('table-sla');
-        if(tSla) { tSla.innerHTML = ''; dataState.slaList.forEach((sla, i) => { tSla.innerHTML += `<tr><td>${sla.desc}</td><td><strong>${sla.days} Días</strong></td><td><button class="btn btn-warning btn-sm" onclick="app.openEditModal('sla', ${i})" style="margin-right:4px;">Editar</button><button class="btn btn-danger btn-sm" onclick="app.deleteSla(${i})">Del</button></td></tr>`; }); }
+        if(tSla) {
+            tSla.innerHTML = '';
+            dataState.slaList.forEach((sla, i) => {
+                const slaClient = sla.client || 'GLOBAL';
+                tSla.innerHTML += `<tr><td>${sla.desc}</td><td><strong>${sla.days} Días</strong></td><td><span class="badge" style="background:#1E3A8A;">${slaClient}</span></td><td><button class="btn btn-danger btn-sm" onclick="app.deleteSla(${i})">Del</button></td></tr>`;
+            });
+        }
 
         this.renderDashboard();
-        this.renderConnectedTechsTable();
     },
     renderConnectedTechsTable() {
         const tbody = document.getElementById('table-connected-techs');
@@ -885,40 +924,35 @@ submitCierre(e) {
     },
 // SOLUCIÓN 6: Depuración de datos a cero
 purgeData(tipo) {
-    const pass = prompt(`ADVERTENCIA: Vas a eliminar datos de ${tipo}. Escribe "CONFIRMAR" para proceder:`);
-    if(pass === "CONFIRMAR") {
-        if(tipo === 'tickets') {
-            const clienteBorrar = prompt(`Escribe el nombre exacto del CLIENTE cuyos tickets deseas borrar (o escribe "TODOS" para borrar absolutamente todos los tickets del sistema):`);
-            if (clienteBorrar === "TODOS") {
-                dataState.tickets = [];
-                alert(`Todos los tickets han sido borrados con éxito.`);
-            } else if (clienteBorrar && clienteBorrar.trim() !== "") {
-                const totalAntes = dataState.tickets.length;
-                dataState.tickets = dataState.tickets.filter(t => t.cliente.toLowerCase() !== clienteBorrar.trim().toLowerCase());
-                const borrados = totalAntes - dataState.tickets.length;
-                alert(`Se eliminaron ${borrados} tickets pertenecientes a "${clienteBorrar}".`);
-            } else {
-                alert("Operación cancelada: No escribiste un cliente válido.");
-                return;
+        if(currentUser && currentUser.role !== "Administrador" && !currentUser.perms.includes("Ajustes & Parámetros")) {
+            alert("No tienes privilegios de Administrador para realizar esta acción de depuración.");
+            return;
+        }
+
+        const pass = prompt(`ADVERTENCIA: Vas a eliminar datos de ${tipo}. Escribe "CONFIRMAR" para proceder:`);
+        if(pass === "CONFIRMAR") {
+            if(tipo === 'tickets') {
+                let listaClientesStr = dataState.clientes.map(c => c.name).join(", ");
+                const clienteBorrar = prompt(`Escribe el nombre exacto del cliente cuyos tickets deseas borrar (Clientes disponibles: ${listaClientesStr}). Escribe "TODOS" para vaciar todo:`);
+                
+                if (clienteBorrar === "TODOS") {
+                    dataState.tickets = [];
+                    alert(`Todos los tickets han sido borrados.`);
+                } else if (clienteBorrar) {
+                    const totalAntes = dataState.tickets.length;
+                    dataState.tickets = dataState.tickets.filter(t => t.cliente.toLowerCase() !== clienteBorrar.trim().toLowerCase());
+                    const borrados = totalAntes - dataState.tickets.length;
+                    alert(`Se eliminaron ${borrados} tickets del cliente "${clienteBorrar}".`);
+                }
+            } else if(tipo === 'clientes') {
+                dataState.clientes = [];
+                dataState.sedes = [];
+                alert('Clientes y sedes borrados.');
             }
+            this.saveStorage();
+            this.renderAll();
         }
-        else if(tipo === 'clientes') { 
-            dataState.clientes = []; 
-            alert('Todos los clientes han sido borrados.'); 
-        }
-        else if(tipo === 'sedes') { 
-            dataState.sedes = []; 
-            alert('Todas las sedes han sido borradas.'); 
-        }
-        else if(tipo === 'usuarios') { 
-            dataState.usuarios = dataState.usuarios.filter(u => u.role === "Administrador"); 
-            alert('Usuarios (excepto el Administrador principal) borrados.'); 
-        }
-        
-        this.saveStorage();
-        this.renderAll();
-    }
-},
+    },
 
 // SOLUCIÓN 10, 11 y 12: Descargar informe avanzado Excel/CSV con filtros
 exportarTicketsAvanzado() {
