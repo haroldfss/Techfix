@@ -323,6 +323,22 @@ closeMobileMenuOnClick() {
             { id: 'sla-client', defaultText: '🌐 Todos los Clientes' },
             { id: 'purge-client-select', defaultText: '⚠️ TODOS LOS TICKETS' }
         ];
+   loadDashboardSedes() {
+    const clientFilter = document.getElementById('dashboard-cliente');
+    const sedeFilter = document.getElementById('dashboard-sede');
+    if (!clientFilter || !sedeFilter) return;
+
+    const selectedClient = clientFilter.value;
+    sedeFilter.innerHTML = '<option value="TODOS">Todas las Sedes</option>';
+
+    const sedesFiltradas = selectedClient === 'TODOS' 
+        ? dataState.sedes 
+        : dataState.sedes.filter(s => s.client === selectedClient);
+
+    sedesFiltradas.forEach(s => {
+        sedeFilter.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
+    });
+},
 
         selectsConfig.forEach(cfg => {
             const el = document.getElementById(cfg.id);
@@ -403,17 +419,36 @@ closeMobileMenuOnClick() {
             this.renderAll();
         }
     },
-    addSede(e) {
+   addSede(e) {
         e.preventDefault();
-        const client = document.getElementById('sede-client-select').value;
-        const sede = document.getElementById('new-sede-name').value;
-        if(!client) { alert("Seleccione un cliente."); return; }
+        const clientEl = document.getElementById('sede-client');
+        const nameEl = document.getElementById('new-sede-name');
+        
+        const client = clientEl ? clientEl.value : '';
+        const sede = nameEl ? nameEl.value.trim() : '';
+
+        if (!client || !sede) {
+            alert("Por favor seleccione un cliente y escriba el nombre de la sede.");
+            return;
+        }
+
+        if (!dataState.sedes) {
+            dataState.sedes = [];
+        }
+
         dataState.sedes.push({ client, sede });
         this.saveStorage();
         e.target.reset();
         this.renderAll();
-        this.updateSedeCheckboxes();
-        alert("Sede agregada.");
+        alert("¡Sede guardada y asignada con éxito!");
+    },
+
+    deleteSede(idx) {
+        if (confirm("¿Está seguro de eliminar esta sede?")) {
+            dataState.sedes.splice(idx, 1);
+            this.saveStorage();
+            this.renderAll();
+        }
     },
     deleteSede(idx) {
         if(confirm("¿Eliminar esta sede?")) {
