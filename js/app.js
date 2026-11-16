@@ -345,8 +345,6 @@ closeMobileMenuOnClick() {
         // ... (Mantén aquí el resto de tu código de renderizado de tablas: tCli, tSed, tUsu, etc.)
         
         if (typeof this.renderDashboard === 'function') this.renderDashboard();
-    },
-
     // Renderizado de tablas de ajustes
     const tCli = document.getElementById('table-clientes');
     if (tCli) {
