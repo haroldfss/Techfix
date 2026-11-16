@@ -501,30 +501,28 @@
                 <div id="tab-usuarios" class="card settings-tab-content" style="display:none;">
                     <h3>Gestión de Usuarios, Contraseñas y Privilegios</h3>
                     <form onsubmit="app.addUser(event)" class="mt-1">
-                        <div class="grid-3">
-                            <input type="text" id="new-user-name" placeholder="Nombre Usuario" class="form-control" required>
-                            <input type="password" id="new-user-pass" placeholder="Contraseña de Acceso" class="form-control" required>
-                            <select id="user-client" class="form-control" required>
-                                <option value="TODOS">Asignar Todos los Clientes (Master)</option>
-                                </select>
-                                <option value="TODOS">Asignar Todos los Clientes (Master)</option>
-                            </select>
-                        </div>
-                        <div class="grid-3 mt-1">
-                            <input type="text" id="new-role-name" placeholder="Rol (Ej. Operador, Técnico)" class="form-control" required>
-                        </div>
-                        <div class="form-group mt-1">
-                            <label><strong>Privilegios de Acceso a Módulos:</strong></label>
-                            <div class="checkbox-group">
-                                <label><input type="checkbox" class="perm-cb" value="Dashboard Gerencial"> Dashboard Gerencial</label>
-                                <label><input type="checkbox" class="perm-cb" value="Gestión de Tickets" checked> Gestión de Tickets</label>
-                                <label><input type="checkbox" class="perm-cb" value="Nuevo Ticket" checked> Nuevo Ticket</label>
-                                <label><input type="checkbox" class="perm-cb" value="Mapa Geolocalizado"> Mapa Geolocalizado</label>
-                                <label><input type="checkbox" class="perm-cb" value="Ajustes & Parámetros"> Ajustes & Parámetros (Admin)</label>
-                                <label><input type="checkbox" value="Borrar Datos" class="perm-cb"> Borrar Tickets/Clientes</label>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-secondary btn-block mt-1">Registrar Usuario</button>
+                    <div class="grid-3">
+                    <input type="text" id="new-user-name" placeholder="Nombre Usuario" class="form-control" required>
+                    <input type="password" id="new-user-pass" placeholder="Contraseña de Acceso" class="form-control" required>
+                    <select id="user-client" class="form-control">
+                    <option value="TODOS">Asignar Todos los Clientes (Master)</option>
+                    </select>
+                    </div>
+                    <div class="grid-3 mt-1">
+                    <input type="text" id="new-role-name" placeholder="Rol (Ej. Operador, Técnico)" class="form-control" required>
+                    </div>
+                    <div class="form-group mt-1">
+                    <label><strong>Privilegios de Acceso a Módulos:</strong></label>
+                    <div class="checkbox-group">
+                    <label><input type="checkbox" class="perm-cb" value="Dashboard Gerencial"> Dashboard Gerencial</label>
+                    <label><input type="checkbox" class="perm-cb" value="Gestión de Tickets"> Gestión de Tickets</label>
+                    <label><input type="checkbox" class="perm-cb" value="Nuevo Ticket"> Nuevo Ticket</label>
+                    <label><input type="checkbox" class="perm-cb" value="Mapa Geolocalizado"> Mapa Geolocalizado</label>
+                    <label><input type="checkbox" class="perm-cb" value="Ajustes & Parámetros"> Ajustes & Parámetros (Admin)</label>
+                    <label><input type="checkbox" class="perm-cb" value="Borrar Datos"> Borrar Tickets/Clientes</label>
+                    </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block mt-1">Registrar Usuario</button>
                     </form>
                     <div class="table-responsive mt-2">
                         <table class="table">
