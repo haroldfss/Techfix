@@ -312,7 +312,7 @@ closeMobileMenuOnClick() {
     },
 
  renderAll() {
-        // 1. Poblar todos los selectores de clientes de la plataforma de forma limpia
+        // 1. Lista completa de selectores que deben recibir la lista de Clientes
         const selectsConfig = [
             { id: 'ticket-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
             { id: 'dashboard-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
@@ -323,16 +323,16 @@ closeMobileMenuOnClick() {
             { id: 'sla-client', defaultText: '🌐 Todos los Clientes' },
             { id: 'purge-client-select', defaultText: '⚠️ TODOS LOS TICKETS' }
         ];
-   
+
         selectsConfig.forEach(cfg => {
             const el = document.getElementById(cfg.id);
             if (el) {
                 const currentVal = el.value;
-                const defaultVal = (cfg.id === 'purge-client-select' || cfg.id === 'dashboard-cliente' || cfg.id === 'ticket-cliente') ? 'TODOS' : (cfg.id === 'sede-client' ? '' : 'GLOBAL');
+                const defaultVal = (cfg.id.includes('purge') || cfg.id.includes('dashboard') || cfg.id.includes('ticket')) ? 'TODOS' : (cfg.id === 'sede-client' ? '' : 'GLOBAL');
                 
                 el.innerHTML = `<option value="${defaultVal}">${cfg.defaultText}</option>`;
                 
-                // Evitar duplicados usando Set con los nombres de los clientes
+                // Evitar duplicados con Set
                 const unicosClientes = [...new Set(dataState.clientes.map(c => c.name))];
                 unicosClientes.forEach(nombreCliente => {
                     el.innerHTML += `<option value="${nombreCliente}">${nombreCliente}</option>`;
@@ -342,60 +342,77 @@ closeMobileMenuOnClick() {
             }
         });
 
-        // ... (Mantén aquí el resto de tu código de renderizado de tablas: tCli, tSed, tUsu, etc.)
-        
+        // 2. Cargar sedes dinámicas en los filtros correspondientes
+        this.loadDashboardSedes();
+        if (typeof this.loadTicketSedes === 'function') this.loadTicketSedes();
+
+        // 3. Renderizar Tablas del sistema
+        const tCli = document.getElementById('table-clientes');
+        if (tCli) {
+            tCli.innerHTML = '';
+            dataState.clientes.forEach((c, i) => {
+                tCli.innerHTML += `<tr>
+                    <td><strong>${c.name}</strong></td>
+                    <td><div style="width:20px;height:20px;background:${c.color || '#1E3A8A'};border-radius:4px;"></div></td>
+                    <td>${c.logo ? `<img src="${c.logo}" style="max-height:30px;max-width:80px;object-fit:contain;">` : 'N/A'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="app.openEditModal('client', ${i})">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="app.deleteClient(${i})">Del</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        const tSed = document.getElementById('table-sedes');
+        if (tSed) {
+            tSed.innerHTML = '';
+            dataState.sedes.forEach((s, i) => {
+                tSed.innerHTML += `<tr>
+                    <td><strong>${s.sede}</strong></td>
+                    <td>${s.client || 'N/A'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="app.openEditModal('sede', ${i})">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="app.deleteSede(${i})">Del</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        const tUsu = document.getElementById('table-usuarios');
+        if (tUsu) {
+            tUsu.innerHTML = '';
+            dataState.usuarios.forEach((u, i) => {
+                tUsu.innerHTML += `<tr>
+                    <td><strong>${u.name}</strong></td>
+                    <td>${u.role}</td>
+                    <td>${u.assignedClient || 'TODOS'}</td>
+                    <td>${u.perms ? u.perms.join(', ') : 'N/A'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="app.openEditModal('user', ${i})">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="app.deleteUser(${i})" ${u.role==='Administrador'?'disabled':''}>Del</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
         if (typeof this.renderDashboard === 'function') this.renderDashboard();
-    // Renderizado de tablas de ajustes
-    const tCli = document.getElementById('table-clientes');
-    if (tCli) {
-        tCli.innerHTML = '';
-        dataState.clientes.forEach((c, i) => {
-            tCli.innerHTML += `<tr>
-                <td><strong>${c.name}</strong></td>
-                <td><div style="width:20px;height:20px;background:${c.color || '#1E3A8A'};border-radius:4px;"></div></td>
-                <td>${c.logo ? `<img src="${c.logo}" style="max-height:30px;max-width:80px;object-fit:contain;">` : 'N/A'}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline" onclick="app.openEditModal('client', ${i})">Editar</button>
-                    <button class="btn btn-sm btn-danger" onclick="app.deleteClient(${i})">Del</button>
-                </td>
-            </tr>`;
-        });
-    }
+    },
 
-    const tSed = document.getElementById('table-sedes');
-    if (tSed) {
-        tSed.innerHTML = '';
-        dataState.sedes.forEach((s, i) => {
-            tSed.innerHTML += `<tr>
-                <td><strong>${s.sede}</strong></td>
-                <td>${s.client || 'N/A'}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline" onclick="app.openEditModal('sede', ${i})">Editar</button>
-                    <button class="btn btn-sm btn-danger" onclick="app.deleteSede(${i})">Del</button>
-                </td>
-            </tr>`;
-        });
-    }
+    loadDashboardSedes() {
+        const clientFilter = document.getElementById('dashboard-cliente');
+        const sedeFilter = document.getElementById('dashboard-sede');
+        if (!clientFilter || !sedeFilter) return;
 
-    const tUsu = document.getElementById('table-usuarios');
-    if (tUsu) {
-        tUsu.innerHTML = '';
-        dataState.usuarios.forEach((u, i) => {
-            tUsu.innerHTML += `<tr>
-                <td><strong>${u.name}</strong></td>
-                <td>${u.role}</td>
-                <td>${u.assignedClient || 'TODOS'}</td>
-                <td>${u.perms ? u.perms.join(', ') : 'N/A'}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline" onclick="app.openEditModal('user', ${i})">Editar</button>
-                    <button class="btn btn-sm btn-danger" onclick="app.deleteUser(${i})" ${u.role==='Administrador'?'disabled':''}>Del</button>
-                </td>
-            </tr>`;
-        });
-    }
+        const selectedClient = clientFilter.value;
+        sedeFilter.innerHTML = '<option value="TODOS">Todas las Sedes</option>';
 
-    if (typeof this.renderDashboard === 'function') this.renderDashboard();
-    this.loadDashboardSedes();
+        const sedesFiltradas = selectedClient === 'TODOS' 
+            ? dataState.sedes 
+            : dataState.sedes.filter(s => s.client === selectedClient);
+
+        sedesFiltradas.forEach(s => {
+            sedeFilter.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
+        });
     },
     loadDashboardSedes() {
         const clientFilter = document.getElementById('dashboard-cliente');
@@ -462,18 +479,26 @@ closeMobileMenuOnClick() {
     },
     addUser(e) {
         e.preventDefault();
-        const name = document.getElementById('new-user-name').value;
-        const pass = document.getElementById('new-user-pass').value;
-        const client = document.getElementById('new-user-client').value;
-        const role = document.getElementById('new-role-name').value;
-        const perms = Array.from(document.querySelectorAll('.perm-cb:checked')).map(cb => cb.value);
+        const name = document.getElementById('new-user-name').value.trim();
+        const pass = document.getElementById('new-user-pass').value.trim();
+        const assignedClient = document.getElementById('user-client').value;
+        const role = document.getElementById('new-role-name').value.trim();
         
-        dataState.usuarios.push({ name, pass, role, assignedClient: client, perms, lastLogin: "Nunca" });
+        const perms = [];
+        document.querySelectorAll('.perm-cb:checked').forEach(cb => perms.push(cb.value));
+
+        if (!name || !pass || !role) {
+            alert("Por favor complete todos los campos obligatorios del usuario.");
+            return;
+        }
+
+        if (!dataState.usuarios) dataState.usuarios = [];
+
+        dataState.usuarios.push({ name, pass, assignedClient, role, perms });
         this.saveStorage();
         e.target.reset();
-        document.querySelectorAll('.perm-cb').forEach(cb => cb.checked = false);
         this.renderAll();
-        alert("Usuario registrado exitosamente. Ya puede iniciar sesión en este dispositivo.");
+        alert("¡Usuario registrado con éxito!");
     },
     deleteUser(idx) {
         if(confirm("¿Desea eliminar este usuario?")) {
