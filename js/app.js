@@ -311,34 +311,41 @@ closeMobileMenuOnClick() {
         }
     },
 
-  renderAll() {
-    const selectsConfig = [
-        { id: 'ticket-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
-        { id: 'dashboard-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
-        { id: 'sede-client', defaultText: 'Seleccione Cliente...' },
-        { id: 'user-client', defaultText: 'Asignar Todos los Clientes (Master)' },
-        { id: 'sistema-client', defaultText: '🌐 Todos los Clientes' },
-        { id: 'falla-client', defaultText: '🌐 Todos los Clientes' },
-        { id: 'sla-client', defaultText: '🌐 Todos los Clientes' },
-        { id: 'purge-client-select', defaultText: '⚠️ TODOS LOS TICKETS' }
-    ];
+ renderAll() {
+        // 1. Poblar todos los selectores de clientes de la plataforma de forma limpia
+        const selectsConfig = [
+            { id: 'ticket-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
+            { id: 'dashboard-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
+            { id: 'sede-client', defaultText: 'Seleccione Cliente...' },
+            { id: 'user-client', defaultText: 'Asignar Todos los Clientes (Master)' },
+            { id: 'sistema-client', defaultText: '🌐 Todos los Clientes' },
+            { id: 'falla-client', defaultText: '🌐 Todos los Clientes' },
+            { id: 'sla-client', defaultText: '🌐 Todos los Clientes' },
+            { id: 'purge-client-select', defaultText: '⚠️ TODOS LOS TICKETS' }
+        ];
 
-    selectsConfig.forEach(cfg => {
-        const el = document.getElementById(cfg.id);
-        if (el) {
-            const currentVal = el.value;
-            const defaultVal = cfg.id === 'purge-client-select' ? 'TODOS' : (cfg.id === 'sede-client' ? '' : 'TODOS');
+        selectsConfig.forEach(cfg => {
+            const el = document.getElementById(cfg.id);
+            if (el) {
+                const currentVal = el.value;
+                const defaultVal = (cfg.id === 'purge-client-select' || cfg.id === 'dashboard-cliente' || cfg.id === 'ticket-cliente') ? 'TODOS' : (cfg.id === 'sede-client' ? '' : 'GLOBAL');
+                
+                el.innerHTML = `<option value="${defaultVal}">${cfg.defaultText}</option>`;
+                
+                // Evitar duplicados usando Set con los nombres de los clientes
+                const unicosClientes = [...new Set(dataState.clientes.map(c => c.name))];
+                unicosClientes.forEach(nombreCliente => {
+                    el.innerHTML += `<option value="${nombreCliente}">${nombreCliente}</option>`;
+                });
+                
+                if (currentVal) el.value = currentVal;
+            }
+        });
 
-            el.innerHTML = `<option value="${defaultVal}">${cfg.defaultText}</option>`;
-
-            const unicosClientes = [...new Set(dataState.clientes.map(c => c.name))];
-            unicosClientes.forEach(nombreCliente => {
-                el.innerHTML += `<option value="${nombreCliente}">${nombreCliente}</option>`;
-            });
-
-            if (currentVal) el.value = currentVal;
-        }
-    });
+        // ... (Mantén aquí el resto de tu código de renderizado de tablas: tCli, tSed, tUsu, etc.)
+        
+        if (typeof this.renderDashboard === 'function') this.renderDashboard();
+    },
 
     // Renderizado de tablas de ajustes
     const tCli = document.getElementById('table-clientes');
