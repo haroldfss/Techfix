@@ -395,8 +395,7 @@ closeMobileMenuOnClick() {
     }
 
     if (typeof this.renderDashboard === 'function') this.renderDashboard();
-},
-this.loadDashboardSedes();
+    this.loadDashboardSedes();
     },
     loadDashboardSedes() {
         const clientFilter = document.getElementById('dashboard-cliente');
