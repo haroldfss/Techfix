@@ -323,23 +323,7 @@ closeMobileMenuOnClick() {
             { id: 'sla-client', defaultText: '🌐 Todos los Clientes' },
             { id: 'purge-client-select', defaultText: '⚠️ TODOS LOS TICKETS' }
         ];
-   loadDashboardSedes() {
-    const clientFilter = document.getElementById('dashboard-cliente');
-    const sedeFilter = document.getElementById('dashboard-sede');
-    if (!clientFilter || !sedeFilter) return;
-
-    const selectedClient = clientFilter.value;
-    sedeFilter.innerHTML = '<option value="TODOS">Todas las Sedes</option>';
-
-    const sedesFiltradas = selectedClient === 'TODOS' 
-        ? dataState.sedes 
-        : dataState.sedes.filter(s => s.client === selectedClient);
-
-    sedesFiltradas.forEach(s => {
-        sedeFilter.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
-    });
-},
-
+   
         selectsConfig.forEach(cfg => {
             const el = document.getElementById(cfg.id);
             if (el) {
@@ -412,6 +396,25 @@ closeMobileMenuOnClick() {
 
     if (typeof this.renderDashboard === 'function') this.renderDashboard();
 },
+this.loadDashboardSedes();
+    },
+    loadDashboardSedes() {
+        const clientFilter = document.getElementById('dashboard-cliente');
+        const sedeFilter = document.getElementById('dashboard-sede');
+        if (!clientFilter || !sedeFilter) return;
+
+        const selectedClient = clientFilter.value;
+        sedeFilter.innerHTML = '<option value="TODOS">Todas las Sedes</option>';
+
+        const sedesFiltradas = selectedClient === 'TODOS' 
+            ? dataState.sedes 
+            : dataState.sedes.filter(s => s.client === selectedClient);
+
+        sedesFiltradas.forEach(s => {
+            sedeFilter.innerHTML += `<option value="${s.sede}">${s.sede}</option>`;
+        });
+    },
+  
     deleteClient(idx) {
         if(confirm("¿Eliminar este cliente?")) {
             dataState.clientes.splice(idx, 1);
