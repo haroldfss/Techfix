@@ -466,15 +466,30 @@
 
                     <hr class="mt-2" style="margin-bottom:1.5rem;">
                     <h3>Administrar Sedes Exclusivas por Cliente</h3>
-                    <form onsubmit="app.addSede(event)">
-                        <div class="grid-3">
-                           <select id="sede-client" class="form-control" required>
-                            <option value="">Seleccione Cliente...</option>
-                            </select>
-                            <input type="text" id="new-sede-name" placeholder="Nombre Sede" class="form-control" required>
-                            <button type="submit" class="btn btn-secondary btn-block">Guardar Sede</button>
-                        </div>
+                   <form onsubmit="app.addSede(event)">
+                    <div style="display: grid; grid-template-columns: 2fr 3fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <select id="sede-client" class="form-control" required>
+                    <option value="">Seleccione Cliente...</option>
+                    </select>
+                    <input type="text" id="new-sede-name" placeholder="Nombre Sede" class="form-control" required>
+                    <button type="submit" class="btn btn-secondary btn-block">Guardar Sede</button>
+                    </div>
                     </form>
+
+<div class="table-responsive mt-2">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>SEDE</th>
+                <th>CLIENTE ASOCIADO</th>
+                <th>ACCIONES</th>
+            </tr>
+        </thead>
+        <tbody id="table-sedes">
+            <!-- Las sedes se cargan dinámicamente aquí -->
+        </tbody>
+    </table>
+</div>
                     <div class="table-responsive mt-2">
                         <table class="table">
                             <thead><tr><th>Sede</th><th>Cliente Asociado</th><th>Acciones</th></tr></thead>
