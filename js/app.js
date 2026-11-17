@@ -314,15 +314,15 @@ closeMobileMenuOnClick() {
  renderAll() {
         // 1. Lista completa de selectores que deben recibir la lista de Clientes
         const selectsConfig = [
-            { id: 'ticket-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
-            { id: 'dashboard-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
-            { id: 'sede-client', defaultText: 'Seleccione Cliente...' },
-            { id: 'user-client', defaultText: 'Asignar Todos los Clientes (Master)' },
-            { id: 'sistema-client', defaultText: '🌐 Todos los Clientes' },
-            { id: 'falla-client', defaultText: '🌐 Todos los Clientes' },
-            { id: 'sla-client', defaultText: '🌐 Todos los Clientes' },
-            { id: 'purge-client-select', defaultText: '⚠️ TODOS LOS TICKETS' }
-        ];
+        { id: 'ticket-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
+        { id: 'dashboard-cliente', defaultText: 'Todos los Clientes (Vista Master)' },
+        { id: 'sede-client', defaultText: 'Seleccione Cliente...' },
+        { id: 'user-client', defaultText: 'Asignar Todos los Clientes (Master)' },
+        { id: 'sistema-client', defaultText: '🌐 Todos los Clientes' },
+        { id: 'falla-client', defaultText: '🌐 Todos los Clientes' },
+        { id: 'sla-client', defaultText: '🌐 Todos los Clientes' },
+        { id: 'purge-client-select', defaultText: '⚠️ TODOS LOS TICKETS' }
+    ];
 
         selectsConfig.forEach(cfg => {
             const el = document.getElementById(cfg.id);
