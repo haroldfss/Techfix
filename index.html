@@ -245,8 +245,10 @@
                             <div id="filt-sedes-container" class="multiselect-container"></div>
                         </div>
                         <div class="form-group">
-                            <label>Filtrar por Técnico</label>
-                            <select id="filt-tecnico" class="form-control" onchange="app.renderDashboard()"><option value="">Técnico (Todos)</option></select>
+                        <label>Filtrar por Técnico</label>
+                        <select id="filt-tecnico" class="form-control" onchange="app.renderDashboard()">
+                        <option value="">Técnico (Todos)</option>
+                        </select>
                         </div>
                     </div>
                 </div>
@@ -371,41 +373,52 @@
                 <h1>Generación de Ticket</h1>
                 <div class="card">
                     <form onsubmit="app.saveTicket(event)">
-                        <div class="grid-3">
-                            <div class="form-group" id="ticket-cliente-group">
-                                <label>Cliente (Asignado)</label>
-                                <select id="dashboard-cliente" class="form-control" onchange="app.renderDashboard()">
-                                <option value="TODOS">Todos los Clientes (Vista Master)</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Sede (Exclusiva del Cliente)</label>
-                                <select id="ticket-sede" class="form-control" required></select>
-                            </div>
-                            <div class="form-group">
-                                <label>Tipo de Sistema</label>
-                                <select id="ticket-sistema" class="form-control" required></select>
-                            </div>
-                            <div class="form-group">
-                                <label>Tipo de Falla</label>
-                                <select id="ticket-falla" class="form-control" required></select>
-                            </div>
-                            <div class="form-group">
-                                <label>Asignar Técnico</label>
-                                <select id="ticket-tecnico" class="form-control" required></select>
-                            </div>
-                            <div class="form-group">
-                                <label>Tiempo Meta SLA</label>
-                                <select id="ticket-sla" class="form-control" required></select>
-                            </div>
-                        </div>
-                        <div class="form-group mt-1">
-                            <label>Descripción de la Falla</label>
-                            <textarea id="ticket-desc" class="form-control" rows="3" placeholder="Detalle técnico..." required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block mt-1">Crear y Asignar Ticket</button>
-                    </form>
-                </div>
+    <div class="grid-3">
+        <div class="form-group" id="ticket-cliente-group">
+            <label>Cliente (Asignado)</label>
+            <select id="ticket-cliente" class="form-control" onchange="app.loadTicketDependentFields()">
+                <option value="TODOS">Todos los Clientes (Vista Master)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Sede (Exclusiva del Cliente)</label>
+            <select id="ticket-sede" class="form-control" required>
+                <option value="">Seleccione Sede...</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Tipo de Sistema</label>
+            <select id="ticket-sistema" class="form-control" required>
+                <option value="">Seleccione Sistema...</option>
+            </select>
+        </div>
+    </div>
+    <div class="grid-3 mt-1">
+        <div class="form-group">
+            <label>Tipo de Falla</label>
+            <select id="ticket-falla" class="form-control" required>
+                <option value="">Seleccione Falla...</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Asignar Técnico</label>
+            <select id="ticket-tecnico" class="form-control" required>
+                <option value="">Seleccione Técnico...</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Tiempo Meta SLA</label>
+            <select id="ticket-sla" class="form-control" required>
+                <option value="">Seleccione SLA...</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group mt-1">
+        <label>Descripción de la Falla</label>
+        <textarea id="ticket-desc" class="form-control" rows="3" placeholder="Detalle técnico..." required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary btn-block mt-1">Crear y Asignar Ticket</button>
+</form>
             </section>
 
             <!-- Map View -->
